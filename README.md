@@ -1,0 +1,9 @@
+```mermaid
+graph TD;
+    STARTING-->SHUFFLING;
+    SHUFFLING-->DEALING;
+    DEALING-->SCORING;
+    SCORING-->PLAYING;
+    PLAYING-->DEALING;
+    DEALING-->SHUFFLING;
+```
