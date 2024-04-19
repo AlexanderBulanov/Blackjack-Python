@@ -158,6 +158,7 @@ class BlackjackStateMachine:
 
     # State Machine Actions #
     def wait_for_players(self):
+        print("Waiting for players to join...")
         while self.current_wait_timer != 0:
             if len(self.waiting_players) == 0:
                 # Reset timer if waiting player count drops to zero at any point before timer expires
@@ -166,6 +167,8 @@ class BlackjackStateMachine:
                 print("Game starting in",self.current_wait_timer,"seconds, waiting for more players to join...")
                 time.sleep(1)
                 self.current_wait_timer -= 1
+        # Reset timer and transition to next state
+        self.current_wait_timer = self.wait_timer_duration
         self.transition(GameState.STARTING)
                 
     def start_game(self):
