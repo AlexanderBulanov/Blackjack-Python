@@ -160,14 +160,16 @@ class BlackjackStateMachine:
     def wait_for_players(self):
         while self.current_wait_timer != 0:
             if len(self.waiting_players) == 0:
+                # Reset timer if waiting player count drops to zero at any point before timer expires
                 self.current_wait_timer = self.wait_timer_duration
             else:
                 print("Game starting in",self.current_wait_timer,"seconds, waiting for more players to join...")
                 time.sleep(1)
                 self.current_wait_timer -= 1
+        self.transition(GameState.STARTING)
                 
-
-
+    def start_game(self):
+        self.transition(GameState.SHUFFLING)
 
     def shuffle_cut_and_burn(self, cut_percentage):
         # Remove both cut cards as necessary
@@ -245,6 +247,8 @@ class BlackjackStateMachine:
         match self.state:
             case GameState.WAITING:
                 self.wait_for_players()
+            case GameState.STARTING:
+                self.start_game()
             case GameState.SHUFFLING:
                 self.shuffle_cut_and_burn(None) # Todo: AB - pen % is different upon each reshuffle in a single session
             case GameState.DEALING:
