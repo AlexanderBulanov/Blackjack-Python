@@ -64,7 +64,7 @@ class Player:
         Dealer.action = None
         return Dealer
     
-    def create_new_player(player_name):
+    def create_new_player_from_template(player_name):
         NewPlayer = Player()
         NewPlayer.name = player_name
         NewPlayer.has_priority = False

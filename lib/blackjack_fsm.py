@@ -37,7 +37,7 @@ class BlackjackStateMachine:
         self.wait_timer_duration = 30
         self.current_wait_timer = self.wait_timer_duration # how long WAITING state lasts once at least 1 player joins, default is 30 seconds
         self.waiting_players = [] # list of players waiting either for a hand or shoe to end, to join
-        self.active_players = [] # list of players currently playing a shoe
+        self.active_players = [bjp.Player.create_new_player_from_template('Alex')] # list of players currently playing a shoe
         self.known_players = [] # list of all players who have played a shoe, now or in the past
         self.dealer_actions = {
             'deal': lambda: self.deal(),
@@ -172,6 +172,7 @@ class BlackjackStateMachine:
         self.transition(GameState.STARTING)
                 
     def start_game(self):
+        print("STARTING GAME")
         self.transition(GameState.SHUFFLING)
 
     def shuffle_cut_and_burn(self, cut_percentage):
@@ -237,11 +238,14 @@ class BlackjackStateMachine:
         self.transition(GameState.SCORING)
 
     def play(self):
-        self.action = input("Enter an action: ").strip().lower()
-        if self.action not in self.player_actions:
-            print("Unknown action", repr(self.action), "entered, please enter one of the following: stand")
+        # Get action from leftmost player
+        self.active_players[0].action = input("Enter an action: ").strip().lower()
+        #self.action = input("Enter an action: ").strip().lower()
+        # Process player action
+        if self.active_players[0].action not in self.player_turn_actions:
+            print("Unknown action", repr(self.active_players[0].action), "entered, please enter one of the following: stand")
         else:
-            print("Executing player action:",repr(self.action))
+            print("Executing player action:",repr(self.active_players[0].action))
             self.discard.extend(self.hand)
             self.round_end_handler()
 
@@ -266,6 +270,7 @@ class BlackjackStateMachine:
 
     def run(self):
         self.dealer.print_player_stats()
+        self.active_players[0].print_player_stats()
         # Set initial state manually for time being
         self.transition(GameState.SHUFFLING)
         try:
