@@ -232,15 +232,21 @@ class BlackjackStateMachine:
             # Todo AB: OFFER INSURANCE OR EVEN MONEY SIDE BETS
             if (bjo.cards[dealer_hole_card[:-1]] == 10):
                 # Todo AB: PAYOUT INSURANCE OR EVEN MONEY SIDE BETS
-                # Todo AB: PUSH AGAINST ALL OTHER BLACKJACK HANDS, GATHER ALL NON-BLACKJACK BETS/HANDS
+                # Todo AB: PUSH AGAINST ALL OTHER BLACKJACK HANDS
+                # Todo AB: GATHER ALL NON-BLACKJACK BETS/HANDS
                 pass
             else:
                 # Todo AB: COLLECT INSURANCE OR EVEN MONEY SIDE BETS
-                pass
+                self.transition(GameState.PLAYER_PLAYING)
         elif (bjo.cards[dealer_face_up_card[:-1]] == 10):
             # Todo AB: Peek to Check for Blackjack
+            if (dealer_hole_card in ['AH', 'AC', 'AD', 'AS']):
+                # Todo AB: PUSH AGAINST ALL OTHER BLACKJACK HANDS
+                # Todo AB: GATHER ALL NON-BLACKJACK BETS/HANDS
+                pass
+            else:
+                self.transition(GameState.PLAYER_PLAYING)
 
-            pass
 
 
         if (self.dealer.current_hand_scores[0] == 21):
