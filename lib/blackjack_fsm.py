@@ -23,7 +23,9 @@ class GameState(Enum):
     SHUFFLING = 2
     DEALING = 3
     SCORING = 4
-    PLAYING = 5
+    PLAYER_PLAYING = 5
+    DEALER_PLAYING = 6
+    CLEANUP = 7
 
 
 class BlackjackStateMachine:
@@ -37,8 +39,9 @@ class BlackjackStateMachine:
         self.wait_timer_duration = 30
         self.current_wait_timer = self.wait_timer_duration # how long WAITING state lasts once at least 1 player joins, default is 30 seconds
         self.waiting_players = [] # list of players waiting either for a hand or shoe to end, to join
-        self.active_players = [bjp.Player.create_new_player_from_template('Alex')] # list of players currently playing a shoe
+        self.joined_players = [bjp.Player.create_new_player_from_template('Alex')] # list of players currently playing a shoe
         self.known_players = [] # list of all players who have played a shoe, now or in the past
+        self.active_player = None
         self.dealer_actions = {
             'deal': lambda: self.deal(),
             'stand': lambda: self.stand(),
@@ -155,6 +158,14 @@ class BlackjackStateMachine:
             print("The following cards are missing -", missing_cards)
             print("*  *  *")
 
+    def print_all_hands(self):
+        print("*  *  *")
+        print(self.dealer.name, "has hand of", self.dealer.current_hands)
+        print("  *  *  ")
+        for player in self.joined_players:
+            print(player.name, "has the following hands:", player.current_hands)
+
+
 
     # State Machine Actions #
     def wait_for_players(self):
@@ -173,6 +184,11 @@ class BlackjackStateMachine:
                 
     def start_game(self):
         print("STARTING GAME")
+        # Initialize first player (sitting leftmost w.r.t. dealer) to be active
+        #self.joined_players[0].is_active = True
+        self.active_player = self.joined_players[0]
+        # Add all joined players to known
+        # YOUR CODE HERE
         self.transition(GameState.SHUFFLING)
 
     def shuffle_cut_and_burn(self, cut_percentage):
@@ -225,27 +241,40 @@ class BlackjackStateMachine:
         return self.score
 
     def deal(self):
-        # Slide 'front_cut_card' to discard if encountered when dealing any In-Round hand
-        if 'front_cut_card' in self.shoe[0:2]:
-            self.discard.extend([self.shoe.pop(self.shoe.index('front_cut_card'))])
-        # Deal a hand
-        self.hand = []
-        self.hand.extend([self.shoe.pop(0), self.shoe.pop(0)])
-        # Print debug info on players hand and % of shoe dealt
-        print("Player hand is: "+str(self.hand))
+        for x in range(0, 2):
+            # Deal a card to each player, then dealer, repeat once
+            for player in self.joined_players:
+                # Slide 'front_cut_card' to discard if encountered when dealing any In-Round hand
+                if ('front_cut_card' == self.shoe[0]):
+                    self.discard.extend([self.shoe.pop(0)])
+                player.current_hands.extend([self.shoe.pop(0)])
+            # Slide 'front_cut_card' to discard if encountered when dealing any In-Round hand
+            if ('front_cut_card' == self.shoe[0]):
+                self.discard.extend([self.shoe.pop(0)])
+            self.dealer.current_hands.extend([self.shoe.pop(0)])
+        # Print debug info on players hands and % of shoe dealt
+        self.print_all_hands()
+        #print("Player hand is: "+str(self.hand))
         print(str(int(round(100-(100*(len(self.shoe)/(2+self.num_of_decks*52))), 0)))+"%"+" of the shoe dealt "
             +"(reshuffling at round end past "+str(self.pen)+"%"+")")
         self.transition(GameState.SCORING)
 
     def play(self):
-        # Get action from leftmost player
-        self.active_players[0].action = input("Enter an action: ").strip().lower()
-        #self.action = input("Enter an action: ").strip().lower()
-        # Process player action
-        if self.active_players[0].action not in self.player_turn_actions:
-            print("Unknown action", repr(self.active_players[0].action), "entered, please enter one of the following: stand")
+        # Get action from currently active player (starting leftmost at hand start)
+        self.active_player.action = input("Enter an action: ").strip().lower()
+        # Check that active player action is valid
+        if self.active_player.action not in self.player_turn_actions:
+            print("Unknown action", repr(self.active_player.action), "entered, please enter one of the following: stand")
         else:
-            print("Executing Player "+self.active_players[0].name+"'s action "+repr(self.active_players[0].action))
+            print("Executing Player "+self.active_player.name+"'s action "+repr(self.active_player.action))
+            # Execute player's entered action
+            if self.active_player.action == 'stand':
+                pass
+
+
+            self.player_turn_actions[self.active_player.action]()
+
+
             self.discard.extend(self.hand)
             self.round_end_handler()
 
@@ -270,9 +299,7 @@ class BlackjackStateMachine:
 
     def run(self):
         self.dealer.print_player_stats()
-        self.active_players[0].print_player_stats()
-        # Set initial state manually for time being
-        self.transition(GameState.SHUFFLING)
+        self.joined_players[0].print_player_stats()
         try:
             while True:
                 self.step()

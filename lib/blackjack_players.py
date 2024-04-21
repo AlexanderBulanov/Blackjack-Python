@@ -13,7 +13,7 @@ Author: Alexander Bulanov
 class Player:
     def __init__(self):
         self.name = None # assign when new player is created
-        self.has_priority = False # update to True/False as priority passes
+        self.is_active = False # update to True/False as priority passes
         self.is_dealer = False
         self.current_balance = None
         self.White = 0
@@ -47,7 +47,7 @@ class Player:
     def create_casino_dealer():
         Dealer = Player()
         Dealer.name = 'Dealer'
-        Dealer.has_priority = False
+        Dealer.is_active = False
         Dealer.is_dealer = True
         Dealer.current_balance = 10000
         Dealer.White = 1000
@@ -67,7 +67,7 @@ class Player:
     def create_new_player_from_template(player_name):
         NewPlayer = Player()
         NewPlayer.name = player_name
-        NewPlayer.has_priority = False
+        NewPlayer.is_active = False
         NewPlayer.is_dealer = False
         NewPlayer.current_balance = 100
         NewPlayer.White = 50
