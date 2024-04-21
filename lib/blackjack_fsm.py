@@ -245,7 +245,7 @@ class BlackjackStateMachine:
         if self.active_players[0].action not in self.player_turn_actions:
             print("Unknown action", repr(self.active_players[0].action), "entered, please enter one of the following: stand")
         else:
-            print("Executing player action:",repr(self.active_players[0].action))
+            print("Executing Player "+self.active_players[0].name+"'s action "+repr(self.active_players[0].action))
             self.discard.extend(self.hand)
             self.round_end_handler()
 
