@@ -21,10 +21,11 @@ class GameState(Enum):
     STARTING = 1
     SHUFFLING = 2
     DEALING = 3
-    SCORING = 4
-    PLAYER_PLAYING = 5
-    DEALER_PLAYING = 6
-    CLEANUP = 7
+    BLACKJACK_CHECKING = 4
+    SCORING = 5
+    PLAYER_PLAYING = 6
+    DEALER_PLAYING = 7
+    CLEANUP = 8
 
 
 class BlackjackStateMachine:
@@ -224,6 +225,49 @@ class BlackjackStateMachine:
             self.discard.extend([self.shoe.pop(0)])
 
 
+    def check_for_blackjack(self):
+        dealer_face_up_card = self.dealer.current_hands[0][0]
+        dealer_hole_card = self.dealer.current_hands[0][1]
+        if (dealer_face_up_card in ['AH', 'AC', 'AD', 'AS']):
+            # Todo AB: OFFER INSURANCE OR EVEN MONEY SIDE BETS
+            if (bjo.cards[dealer_hole_card[:-1]] == 10):
+                # Todo AB: PAYOUT INSURANCE OR EVEN MONEY SIDE BETS
+                # Todo AB: PUSH AGAINST ALL OTHER BLACKJACK HANDS, GATHER ALL NON-BLACKJACK BETS/HANDS
+                pass
+            else:
+                # Todo AB: COLLECT INSURANCE OR EVEN MONEY SIDE BETS
+                pass
+        elif (bjo.cards[dealer_face_up_card[:-1]] == 10):
+            # Todo AB: Peek to Check for Blackjack
+
+            pass
+
+
+        if (self.dealer.current_hand_scores[0] == 21):
+            pass
+
+
+
+        non_blackjack_hand_count = 0
+        # Score every hand each player has (at round start)
+        for player in self.joined_players:
+            for hand in player.current_hands:
+                hand_score = bjl.highest_hand_score(hand)
+                if (hand_score == 21):
+                    # Todo AB: Pay Blackjack according to table's ratio
+                    self.discard.extend(hand)
+                    player.current_hands.remove(hand)
+                else:
+                    non_blackjack_hand_count += 1
+        if (non_blackjack_hand_count == 0):
+            self.transition(GameState.CLEANUP)
+        else:
+            self.transition(GameState.PLAYER_PLAYING)
+                
+        # Transition to DEALING if all players had Blackjack
+
+
+
     def score_active_player_hands(self):
         # Score every hand a player has
         for hand in self.active_player.current_hands:
@@ -302,11 +346,11 @@ class BlackjackStateMachine:
                 self.discard.extend(hand)
             # Reset all player hands and scores
             player.current_hands = [[]]
-            player.current_hand_scores = []
+            player.current_hand_scores.clear()
         # Put all dealer hands into discard
         self.discard.extend(self.dealer.current_hands[0])
         self.dealer.current_hands = [[]]
-        self.dealer.current_hand_scores = []
+        self.dealer.current_hand_scores.clear()
         # Reshuffle at round end if 'front_cut_card' was reached
         if 'front_cut_card' in self.discard:
             print("SHOE END, reshuffling!")
@@ -326,6 +370,8 @@ class BlackjackStateMachine:
                 self.shuffle_cut_and_burn(None) # Todo: AB - pen % is different upon each reshuffle in a single session
             case GameState.DEALING:
                 self.deal()
+            case GameState.BLACKJACK_CHECKING:
+                self.check_for_blackjack()
             case GameState.SCORING:
                 self.score_active_player_hands()
             case GameState.PLAYER_PLAYING:
