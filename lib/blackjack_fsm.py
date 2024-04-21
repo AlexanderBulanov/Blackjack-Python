@@ -48,7 +48,6 @@ class BlackjackStateMachine:
             'hit': lambda: self.hit()
         }
         self.player_turn_actions = {
-            'skip': lambda: self.skip_turn(),
             'bet': lambda: self.bet(),
             'stand': lambda: self.stand(),
             'hit': lambda: self.hit(),
@@ -60,6 +59,7 @@ class BlackjackStateMachine:
         }
         self.player_connection_actions = {
             'join': lambda: self.join(),
+            'skip': lambda: self.skip_turn(),
             'leave': lambda: self.leave()
         }
 
@@ -259,24 +259,25 @@ class BlackjackStateMachine:
             +"(reshuffling at round end past "+str(self.pen)+"%"+")")
         self.transition(GameState.SCORING)
 
-    def play(self):
+    def player_plays(self):
         # Get action from currently active player (starting leftmost at hand start)
         self.active_player.action = input("Enter an action: ").strip().lower()
         # Check that active player action is valid
         if self.active_player.action not in self.player_turn_actions:
-            print("Unknown action", repr(self.active_player.action), "entered, please enter one of the following: stand")
+            print("Unknown action", repr(self.active_player.action), "from player", self.active_player.name,
+                  "entered, please enter one of the following:")
+            print(self.player_turn_actions.keys)
         else:
             print("Executing Player "+self.active_player.name+"'s action "+repr(self.active_player.action))
             # Execute player's entered action
-            if self.active_player.action == 'stand':
-                pass
-
-
             self.player_turn_actions[self.active_player.action]()
 
-
+            
             self.discard.extend(self.hand)
             self.round_end_handler()
+
+    def dealer_plays():
+        pass
 
     def step(self):
         print(f"Current state: {self.state}")
@@ -291,8 +292,10 @@ class BlackjackStateMachine:
                 self.deal()
             case GameState.SCORING:
                 self.score_hand()
-            case GameState.PLAYING:
-                self.play()
+            case GameState.PLAYER_PLAYING:
+                self.player_plays()
+            case GameState.DEALER_PLAYING:
+                self.dealer_plays()
             case other:
                 print("Invalid state!")
                 raise NameError
