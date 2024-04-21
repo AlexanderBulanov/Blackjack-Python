@@ -11,15 +11,14 @@ from enum import Enum
 # Local Imports #
 from . import blackjack_game_logic as bjl
 from . import blackjack_game_objects as bjo
-#from . import blackjack_game_settings as bjs
 from . import blackjack_players as bjp
 from . import cut_helper as cut
 
 
 ### Blackjack State Machine ###
 class GameState(Enum):
-    STARTING = 0
-    WAITING = 1
+    WAITING = 0
+    STARTING = 1
     SHUFFLING = 2
     DEALING = 3
     SCORING = 4
@@ -36,19 +35,14 @@ class BlackjackStateMachine:
         self.shoe = bjo.get_shoe_of_n_decks(self.num_of_decks)
         self.discard = []
         self.dealer = bjp.Player.create_casino_dealer()
+        self.seventeen_rule = 'S17'
         self.wait_timer_duration = 30
-        self.current_wait_timer = self.wait_timer_duration # how long WAITING state lasts once at least 1 player joins, default is 30 seconds
-        self.waiting_players = [] # list of players waiting either for a hand or shoe to end, to join
-        self.joined_players = [bjp.Player.create_new_player_from_template('Alex')] # list of players currently playing a shoe
+        self.current_wait_timer = self.wait_timer_duration
+        self.waiting_players = []
+        self.joined_players = [bjp.Player.create_new_player_from_template('Alex')]
         self.known_players = [] # list of all players who have played a shoe, now or in the past
         self.active_player = None
-        self.dealer_actions = {
-            'deal': lambda: self.deal(),
-            'stand': lambda: self.stand(),
-            'hit': lambda: self.hit()
-        }
         self.player_turn_actions = {
-            'bet': lambda: self.bet(),
             'stand': lambda: self.stand(),
             'hit': lambda: self.hit(),
             'double down': lambda: self.double_down(),
@@ -57,29 +51,32 @@ class BlackjackStateMachine:
             'insurance': lambda: self.insurance(),
             'even money': lambda: self.even_money()
         }
-        self.player_connection_actions = {
+        self.player_special_actions = {
             'join': lambda: self.join(),
+            'bet': lambda: self.bet(),
             'skip': lambda: self.skip_turn(),
             'leave': lambda: self.leave()
         }
 
+
     def transition(self, next_state):
         self.state = next_state
 
-    
 
-    # Player Turn Actions #
-    def skip_turn(self):
-        pass
-    
-    def bet(self):
-        pass
-    
+    # Player Turn Actions #    
     def stand(self):
-        self.transition(GameState.DEALING)
+        # Pass to next player
+        if (self.active_player != self.joined_players[-1]):
+            self.active_player = self.joined_players[self.joined_players.index(self.active_player)+1]
+            self.transition(GameState.PLAYER_PLAYING)
+        else:
+            # If there is no next player, pass to dealer
+            self.transition(GameState.DEALER_PLAYING)
 
-    def hit(self):
-        pass
+    def hit(self, player):
+        self.handle_front_cut_card()
+        player.current_hands[0].extend([self.shoe.pop(0)])
+        self.transition(GameState.SCORING)
 
     def double_down(self):
         pass
@@ -96,20 +93,19 @@ class BlackjackStateMachine:
     def even_money(self):
         pass
 
-    # Player Connection Actions #
+    # Other Player Actions #
+    def bet(self):
+        pass
+    
+    def skip_turn(self):
+        pass
+
     def join(self):
         pass
 
     def leave(self):
         pass
 
-    """
-    def hit(self):
-        # Deal 1 card from the deck
-        self.hand.extend([self.shoe.pop()])
-        print("Player hand after hit is:",self.hand)
-        self.transition(GameState.SCORING)
-    """
 
     # Debug #
     def dump_state_machine_data(self):
@@ -171,6 +167,7 @@ class BlackjackStateMachine:
 
 
     # State Machine Actions #
+    """
     def wait_for_players(self):
         print("Waiting for players to join...")
         while self.current_wait_timer != 0:
@@ -184,7 +181,9 @@ class BlackjackStateMachine:
         # Reset timer and transition to next state
         self.current_wait_timer = self.wait_timer_duration
         self.transition(GameState.STARTING)
-                
+    """
+
+
     def start_game(self):
         print("STARTING GAME")
         # Initialize first player (sitting leftmost w.r.t. dealer) to be active
@@ -219,15 +218,10 @@ class BlackjackStateMachine:
         print("Burned card is", self.discard)
         self.transition(GameState.DEALING)
 
-
-    def round_end_handler(self):
-        print("ROUND END")
-        # Reshuffle at round end if 'front_cut_card' was reached
-        if 'front_cut_card' in self.discard:
-            print("SHOE END, reshuffling!")
-            self.transition(GameState.SHUFFLING)
-        else:
-            self.transition(GameState.DEALING)
+    
+    def handle_front_cut_card(self):
+        if ('front_cut_card' == self.shoe[0]):
+            self.discard.extend([self.shoe.pop(0)])
 
 
     def score_active_player_hands(self):
@@ -236,35 +230,32 @@ class BlackjackStateMachine:
             hand_score = bjl.highest_hand_score(hand)
             self.active_player.current_hand_scores.append(hand_score)
         # Check if a player has only one hand and one score; process accordingly
-        self.print_all_hands()
+        #self.print_all_hands()
         if (len(self.active_player.current_hands) == 1) and (len(self.active_player.current_hand_scores) == 1):
-            pass
-
-
-        if (self.active_player.current_hand_scores[0] == 21):
-            print("Blackjack!")
-            self.discard.extend(self.active_player.current_hands[0])
-            self.round_end_handler()
-        elif (self.active_player.current_hand_scores[0]  == -1):
-            print("Bust!")
-            self.discard.extend(self.active_player.current_hands[0])
-            self.round_end_handler()
-        else:
-            self.transition(GameState.PLAYER_PLAYING)
-        print("Player score is:", self.active_player.current_hand_scores[0])
-        return self.active_player.current_hand_scores[0] 
+            if (self.active_player.current_hand_scores[0] == 21):
+                # Payout Blackjack to all winning hands from left to right
+                print("Blackjack!")
+                self.transition(GameState.CLEANUP)
+            elif (self.active_player.current_hand_scores[0]  == -1):
+                print("Bust!")
+                # Take bet associated /w hand
+                # Put bust hand into discard
+                pass
+                #self.transition(GameState.CLEANUP)
+            else:
+                self.transition(GameState.PLAYER_PLAYING)
+            print("Player score is:", self.active_player.current_hand_scores[0])
+            return self.active_player.current_hand_scores[0] 
 
     def deal(self):
         for x in range(0, 2):
             # Deal a card to each player, then dealer, repeat once
             for player in self.joined_players:
                 # Slide 'front_cut_card' to discard if encountered when dealing any In-Round hand
-                if ('front_cut_card' == self.shoe[0]):
-                    self.discard.extend([self.shoe.pop(0)])
+                self.handle_front_cut_card()
                 player.current_hands[0].extend([self.shoe.pop(0)])
             # Slide 'front_cut_card' to discard if encountered when dealing any In-Round hand
-            if ('front_cut_card' == self.shoe[0]):
-                self.discard.extend([self.shoe.pop(0)])
+            self.handle_front_cut_card()
             self.dealer.current_hands[0].extend([self.shoe.pop(0)])
         # Print debug info on players hands and % of shoe dealt
         self.print_all_hands()
@@ -279,20 +270,50 @@ class BlackjackStateMachine:
         # Check that active player action is valid
         if self.active_player.action not in self.player_turn_actions:
             print("Unknown action", repr(self.active_player.action), "from player", self.active_player.name,
-                  "entered, please enter one of the following:")
-            print(self.player_turn_actions.keys)
+                  "entered, please enter one of the following without quotes:")
+            print(list(self.player_turn_actions.keys()))
         else:
             print("Executing Player "+self.active_player.name+"'s action "+repr(self.active_player.action))
             # Execute player's entered action
             self.player_turn_actions[self.active_player.action]()
-            self.transition(GameState.SCORING)
+            # Transitions are handled by each respective player action function
 
-            
-            self.discard.extend(self.active_player.current_hands[0])
-            self.round_end_handler()
 
-    def dealer_plays():
-        pass
+    def dealer_plays(self):
+        if self.seventeen_rule == 'S17':
+            while self.dealer.current_hand_scores[0] < 17:
+                # Execute 'hit'
+                self.hit(self.dealer)
+            self.transition(GameState.CLEANUP)
+        elif self.seventeen_rule == 'H17':
+            while self.dealer.current_hand_scores[0] <= 17:
+                # Execute 'hit'
+                self.hit(self.dealer)
+            self.transition(GameState.CLEANUP)
+        else:
+            print("[ERR] Seventeen rule syntax not recognized")
+
+
+    def cleanup(self):
+        print("ROUND END")
+        # Put all player hands into discard
+        for player in self.joined_players:
+            for hand in player.current_hands:
+                self.discard.extend(hand)
+            # Reset all player hands and scores
+            player.current_hands = [[]]
+            player.current_hand_scores = []
+        # Put all dealer hands into discard
+        self.discard.extend(self.dealer.current_hands[0])
+        self.dealer.current_hands = [[]]
+        self.dealer.current_hand_scores = []
+        # Reshuffle at round end if 'front_cut_card' was reached
+        if 'front_cut_card' in self.discard:
+            print("SHOE END, reshuffling!")
+            self.transition(GameState.SHUFFLING)
+        else:
+            self.transition(GameState.DEALING)
+
 
     def step(self):
         print(f"Current state: {self.state}")
@@ -311,6 +332,8 @@ class BlackjackStateMachine:
                 self.player_plays()
             case GameState.DEALER_PLAYING:
                 self.dealer_plays()
+            case GameState.CLEANUP:
+                self.cleanup()
             case other:
                 print("Invalid state!")
                 raise NameError
