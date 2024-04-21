@@ -11,17 +11,17 @@ import lib.blackjack_game_settings as bjs
 
 class TestFirstCut:
     def test_single_deck_shoe_size_after_first_cut_becomes_53_cards(self):
-        shoe = bjo.base_deck
+        shoe = bjo.get_shoe_of_n_decks(1)
         cut.first_cut(shoe)
         assert len(shoe) == 53
 
     def test_last_card_in_deck_after_first_cut_becomes_back_cut_card(self):
-        shoe = bjo.base_deck
+        shoe = bjo.get_shoe_of_n_decks(1)
         cut.first_cut(shoe)
         assert shoe[-1] == 'back_cut_card'
 
     def test_first_fifteen_cards_become_last_fifteen_after_first_cut(self, monkeypatch):
-        shoe = bjo.base_deck
+        shoe = bjo.get_shoe_of_n_decks(1)
         first_fifteen = shoe[0:15]
         #print(shoe)
         #print(first_fifteen)
@@ -34,7 +34,7 @@ class TestFirstCut:
         assert first_fifteen == last_fifteen
 
     def test_last_fifteen_cards_become_first_fifteen_after_first_cut(self, monkeypatch):
-        shoe = bjo.base_deck
+        shoe = bjo.get_shoe_of_n_decks(1)
         last_fifteen = shoe[-15:]
         #print(shoe)
         #print(last_fifteen)
@@ -63,13 +63,13 @@ class TestFirstCut:
 
 class TestSecondCut:
     def test_single_deck_shoe_size_becomes_54_cards_after_second_cut(self):
-        shoe = bjo.base_deck
+        shoe = bjo.get_shoe_of_n_decks(1)
         cut.first_cut(shoe)
         cut.second_cut(shoe, None)
         assert len(shoe) == 54
 
     def test_shoe_contains_front_cut_card_after_second_cut(self):
-        shoe = bjo.base_deck
+        shoe = bjo.get_shoe_of_n_decks(1)
         cut.first_cut(shoe)
         cut.second_cut(shoe, None)
         assert 'front_cut_card' in shoe
@@ -90,27 +90,27 @@ class TestSecondCut:
                 assert card_occurrence_counts[card] == 1
 
     def test_front_cut_card_placed_at_min_pen_depth_for_single_deck_after_second_cut(self, monkeypatch):
-        shoe = bjo.base_deck
+        shoe = bjo.get_shoe_of_n_decks(1)
         cut.first_cut(shoe)
         monkeypatch.setattr('random.randrange', lambda first, last, step: bjs.casino_deck_pen_percentage_bounds[1][0])
         cut.second_cut(shoe, None)
         assert 'front_cut_card' == shoe[27]
 
     def test_front_cut_card_placed_at_max_pen_depth_for_single_deck_after_second_cut(self, monkeypatch):
-        shoe = bjo.base_deck
+        shoe = bjo.get_shoe_of_n_decks(1)
         cut.first_cut(shoe)
         monkeypatch.setattr('random.randrange', lambda first, last, step: bjs.casino_deck_pen_percentage_bounds[1][1])
         cut.second_cut(shoe, None)
         assert 'front_cut_card' == shoe[37]
 
     def test_front_cut_card_placed_in_valid_range_for_single_deck_after_second_cut(self):
-        shoe = bjo.base_deck
+        shoe = bjo.get_shoe_of_n_decks(1)
         cut.first_cut(shoe)
         cut.second_cut(shoe, None)
         assert 'front_cut_card' in shoe[27:38]
 
     def test_back_cut_card_placed_at_end_of_shoe_after_second_cut(self):
-        shoe = bjo.base_deck
+        shoe = bjo.get_shoe_of_n_decks(1)
         cut.first_cut(shoe)
         cut.second_cut(shoe, None)
         assert 'back_cut_card' == shoe[-1]
