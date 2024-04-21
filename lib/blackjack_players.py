@@ -24,7 +24,8 @@ class Player:
         self.Purple = 0
         self.Yellow = 0
         self.Brown = 0
-        self.current_hands = [[]]
+        self.hole_card_face_down = False
+        self.current_hands = []
         self.current_hand_scores = []
         self.action = None
 
@@ -57,7 +58,8 @@ class Player:
         Dealer.Purple = 1000
         Dealer.Yellow = 1000
         Dealer.Brown = 1000
-        Dealer.current_hands = [[]]
+        Dealer.hole_card_face_down = True
+        Dealer.current_hands = []
         Dealer.current_hand_scores = []
         Dealer.action = None
         return Dealer
@@ -76,7 +78,8 @@ class Player:
         NewPlayer.Purple = 0
         NewPlayer.Yellow = 0
         NewPlayer.Brown = 0
-        NewPlayer.current_hands = [[]]
+        NewPlayer.hole_card_face_down = False
+        NewPlayer.current_hands = []
         NewPlayer.current_hand_scores = []
         NewPlayer.action = None
         return NewPlayer
@@ -90,6 +93,20 @@ class Player:
         for key, value in self.__dict__.items():
             if key == 'current_balance':
                 print(str(key)+": $"+str(value))
+            elif (key == 'current_hands') and (self.hole_card_face_down == True):
+                if self.hole_card_face_down == True:
+                    hands = "["
+                    if (len(self.current_hands) == 0):
+                        hands = hands+"]"
+                    else:
+                        for hand in self.current_hands:
+                            face_up_card = hand[0]
+                            if (self.current_hands.index(hand) == (len(self.current_hands) - 1)):
+                                hands = hands+"["+str(face_up_card)+", '**']]"
+                            else:
+                                hands = hands+"["+str(face_up_card)+", '**'], "
+                    # Print hole card as '**'
+                    print(str(key)+": "+hands)
             else:
                 print(str(key)+": "+str(value))
         print("*  *  *  *  *")

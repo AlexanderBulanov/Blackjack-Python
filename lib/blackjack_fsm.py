@@ -21,11 +21,10 @@ class GameState(Enum):
     STARTING = 1
     SHUFFLING = 2
     DEALING = 3
-    BLACKJACK_CHECKING = 4
-    SCORING = 5
-    PLAYER_PLAYING = 6
-    DEALER_PLAYING = 7
-    CLEANUP = 8
+    SCORING = 4
+    PLAYER_PLAYING = 5
+    DEALER_PLAYING = 6
+    ROUND_ENDING = 7
 
 
 class BlackjackStateMachine:
@@ -188,13 +187,14 @@ class BlackjackStateMachine:
     def start_game(self):
         print("STARTING GAME")
         # Initialize first player (sitting leftmost w.r.t. dealer) to be active
-        #self.joined_players[0].is_active = True
         self.active_player = self.joined_players[0]
         # Add all joined players to known
-        # YOUR CODE HERE
+        # YOUR CODE HERE #
         self.dealer.print_player_stats()
-        self.joined_players[0].print_player_stats()
+        for player in self.joined_players:
+            player.print_player_stats()
         self.transition(GameState.SHUFFLING)
+
 
     def shuffle_cut_and_burn(self, cut_percentage):
         # Remove both cut cards as necessary
@@ -225,60 +225,56 @@ class BlackjackStateMachine:
             self.discard.extend([self.shoe.pop(0)])
 
 
-    def check_for_blackjack(self):
-        dealer_face_up_card = self.dealer.current_hands[0][0]
-        dealer_hole_card = self.dealer.current_hands[0][1]
-        if (dealer_face_up_card in ['AH', 'AC', 'AD', 'AS']):
-            # Todo AB: OFFER INSURANCE OR EVEN MONEY SIDE BETS
-            if (bjo.cards[dealer_hole_card[:-1]] == 10):
-                # Todo AB: PAYOUT INSURANCE OR EVEN MONEY SIDE BETS
-                # Todo AB: PUSH AGAINST ALL OTHER BLACKJACK HANDS
-                # Todo AB: GATHER ALL NON-BLACKJACK BETS/HANDS
-                pass
-            else:
-                # Todo AB: COLLECT INSURANCE OR EVEN MONEY SIDE BETS
-                self.transition(GameState.PLAYER_PLAYING)
-        elif (bjo.cards[dealer_face_up_card[:-1]] == 10):
-            # Todo AB: Peek to Check for Blackjack
-            if (dealer_hole_card in ['AH', 'AC', 'AD', 'AS']):
-                # Todo AB: PUSH AGAINST ALL OTHER BLACKJACK HANDS
-                # Todo AB: GATHER ALL NON-BLACKJACK BETS/HANDS
-                pass
-            else:
-                self.transition(GameState.PLAYER_PLAYING)
-
-
-
-        if (self.dealer.current_hand_scores[0] == 21):
-            pass
-
-
-
-        non_blackjack_hand_count = 0
-        # Score every hand each player has (at round start)
+    def score_joined_players_hands(self):
+        # Score each player's hands
         for player in self.joined_players:
             for hand in player.current_hands:
-                hand_score = bjl.highest_hand_score(hand)
-                if (hand_score == 21):
-                    # Todo AB: Pay Blackjack according to table's ratio
-                    self.discard.extend(hand)
-                    player.current_hands.remove(hand)
-                else:
-                    non_blackjack_hand_count += 1
-        if (non_blackjack_hand_count == 0):
-            self.transition(GameState.CLEANUP)
+                player_hand_score = bjl.highest_hand_score(hand)
+                player.current_hand_scores.append(player_hand_score)
+        # Score dealer's hand
+        dealer_hand_score = bjl.highest_hand_score(self.dealer.current_hands[0])
+        self.dealer.current_hand_scores.append(dealer_hand_score)
+
+
+    def check_for_dealer_blackjack(self):
+        dealer_face_up_card = self.dealer.current_hands[0][0]
+        dealer_face_up_card_value = bjo.cards[dealer_face_up_card[:-1]][0]
+        dealer_hole_card = self.dealer.current_hands[0][1]
+        dealer_hole_card_value = bjo.cards[dealer_hole_card[:-1]][0]
+        if (dealer_face_up_card in ['AH', 'AC', 'AD', 'AS']):
+            print("Offering 'insurance' and 'even money' side bets")
+            if (dealer_hole_card_value == 10):
+                print("1. Reveal dealer hole card")
+                print("2. Pay out side bets to participating hands left-to-right, discarding them at the same time")
+                print("3. Push against all hands with Blackjack left-to-right, discarding them at the same time")
+                print("4. Collect bets from all players without side bets or Blackjack left-to-right, discarding them at the same time")
+                print("5. Discard dealer hand")
+                print("ROUND END")
+                self.transition(GameState.DEALING)
+            else:
+                print("Dealer doesn't have Blackjack!")
+                print("Collecting side bets from all participating hands left-to-right")
+                self.transition(GameState.PLAYER_PLAYING)
+        elif (dealer_face_up_card_value == 10):
+            if (dealer_hole_card in ['AH', 'AC', 'AD', 'AS']):
+                print("1. Reveal dealer hole card")
+                print("2. Push against all hands with Blackjack left-to-right, discarding them at the same time")
+                print("3. Collect bets from all players without side bets or Blackjack left-to-right, discarding them at the same time")
+                print("4. Discard dealer hand")
+                print("ROUND END")
+                self.transition(GameState.DEALING)
+            else:
+                print("Dealer doesn't have Blackjack!")
+                self.transition(GameState.PLAYER_PLAYING)
         else:
+            print("Dealer can't have Blackjack.")
             self.transition(GameState.PLAYER_PLAYING)
-                
-        # Transition to DEALING if all players had Blackjack
 
 
+    def check_for_player_blackjack(self):
+        pass
 
-    def score_active_player_hands(self):
-        # Score every hand a player has
-        for hand in self.active_player.current_hands:
-            hand_score = bjl.highest_hand_score(hand)
-            self.active_player.current_hand_scores.append(hand_score)
+        """
         # Check if a player has only one hand and one score; process accordingly
         #self.print_all_hands()
         if (len(self.active_player.current_hands) == 1) and (len(self.active_player.current_hand_scores) == 1):
@@ -295,24 +291,33 @@ class BlackjackStateMachine:
             else:
                 self.transition(GameState.PLAYER_PLAYING)
             print("Player score is:", self.active_player.current_hand_scores[0])
-            return self.active_player.current_hand_scores[0] 
+            return self.active_player.current_hand_scores[0]
+        """
+
 
     def deal(self):
         for x in range(0, 2):
             # Deal a card to each player, then dealer, repeat once
             for player in self.joined_players:
-                # Slide 'front_cut_card' to discard if encountered when dealing any In-Round hand
+                # Slide 'front_cut_card' to discard if encountered mid-shoe
                 self.handle_front_cut_card()
+                if len(player.current_hands) == 0:
+                    player.current_hands.append([])
                 player.current_hands[0].extend([self.shoe.pop(0)])
-            # Slide 'front_cut_card' to discard if encountered when dealing any In-Round hand
+            # Slide 'front_cut_card' to discard if encountered mid-shoe
             self.handle_front_cut_card()
+            if len(self.dealer.current_hands) == 0:
+                self.dealer.current_hands.append([])
             self.dealer.current_hands[0].extend([self.shoe.pop(0)])
         # Print debug info on players hands and % of shoe dealt
         self.print_all_hands()
-        #print("Player hand is: "+str(self.hand))
+        self.dealer.print_player_stats()
+        for player in self.joined_players:
+            player.print_player_stats()
         print(str(int(round(100-(100*(len(self.shoe)/(2+self.num_of_decks*52))), 0)))+"%"+" of the shoe dealt "
             +"(reshuffling at round end past "+str(self.pen)+"%"+")")
         self.transition(GameState.SCORING)
+
 
     def player_plays(self):
         # Get action from currently active player (starting leftmost at hand start)
@@ -334,12 +339,14 @@ class BlackjackStateMachine:
             while self.dealer.current_hand_scores[0] < 17:
                 # Execute 'hit'
                 self.hit(self.dealer)
-            self.transition(GameState.CLEANUP)
+            self.transition(GameState.ROUND_ENDING)
         elif self.seventeen_rule == 'H17':
             while self.dealer.current_hand_scores[0] <= 17:
                 # Execute 'hit'
                 self.hit(self.dealer)
-            self.transition(GameState.CLEANUP)
+            self.transition(GameState.ROUND_ENDING)
+        # debug log and assert
+
         else:
             print("[ERR] Seventeen rule syntax not recognized")
 
@@ -376,15 +383,15 @@ class BlackjackStateMachine:
                 self.shuffle_cut_and_burn(None) # Todo: AB - pen % is different upon each reshuffle in a single session
             case GameState.DEALING:
                 self.deal()
-            case GameState.BLACKJACK_CHECKING:
-                self.check_for_blackjack()
             case GameState.SCORING:
-                self.score_active_player_hands()
+                self.score_joined_players_hands()
+                self.check_for_dealer_blackjack()
+                self.check_for_player_blackjack()
             case GameState.PLAYER_PLAYING:
                 self.player_plays()
             case GameState.DEALER_PLAYING:
                 self.dealer_plays()
-            case GameState.CLEANUP:
+            case GameState.ROUND_ENDING:
                 self.cleanup()
             case other:
                 print("Invalid state!")

@@ -420,7 +420,7 @@ class TestShuffling:
             test_machine.step() # executes score_hand() in GameState.SCORING
             if test_machine.state == bjfsm.GameState.DEALING:
                 pass
-            elif test_machine.state == bjfsm.GameState.PLAYING:
+            elif test_machine.state == bjfsm.GameState.PLAYER_PLAYING:
                 monkeypatch.setattr('builtins.input', lambda _: 'stand')
                 test_machine.step() # executes play() in GameState.PLAYING /w supplied user input of 'stand'
         # Check that next card to be dealt is 'front_cut_card' and we haven't reshuffled yet
