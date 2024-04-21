@@ -113,7 +113,7 @@ class BlackjackStateMachine:
 
     # Debug #
     def dump_state_machine_data(self):
-        print("*  *  *")
+        print("*  *  *  *  *")
         print("START - DUMPING STATE MACHINE DATA")
         for attr, value in self.__dict__.items():
             if attr == 'shoe':
@@ -125,10 +125,10 @@ class BlackjackStateMachine:
             else:
                 print(attr+': '+str(value))
         print("END OF DUMPING ALL STATE MACHINE DATA")
-        print("*  *  *")
+        print("*  *  *  *  *")
 
     def dump_shoe_data(self):
-        print("*  *  *")
+        print("*  *  *  *  *")
         print("START - DUMPING SHOE DATA")
         print('shoe_size:',len(self.shoe))
         print('discard_size:',len(self.discard))
@@ -138,7 +138,7 @@ class BlackjackStateMachine:
             elif attr == 'discard':
                 print(attr+': '+str(value))
         print("END OF DUMPING SHOE DATA")
-        print("*  *  *")
+        print("*  *  *  *  *")
 
     def dump_state_mode(self):
         pass
@@ -150,20 +150,23 @@ class BlackjackStateMachine:
         if len(missing_cards) == 0:
             print("*** No cards missing in shoe ***")
         else:
-            print("*  *  *")
+            print("*  *  *  *  *")
             print(len(bjo.base_deck), "CARDS IN REFERENCE SINGLE DECK:")
             print(bjo.base_deck)
             print(len(self.shoe), "CARDS IN SHOE:")
             print(self.shoe)
             print("The following cards are missing -", missing_cards)
-            print("*  *  *")
+            print("*  *  *  *  *")
 
     def print_all_hands(self):
-        print("*  *  *")
-        print(self.dealer.name, "has hand of", self.dealer.current_hands)
-        print("  *  *  ")
+        print("*  *  *  *  *")
+        print(self.dealer.name, "has a hand of", self.dealer.current_hands[0])
         for player in self.joined_players:
-            print(player.name, "has the following hands:", player.current_hands)
+            if len(player.current_hands) <= 1:
+                print(player.name, "has a hand of", player.current_hands[0])
+            else:
+                print(player.name, "has the following hands:", player.current_hands)
+        print("*  *  *  *  *")
 
 
 
@@ -189,6 +192,8 @@ class BlackjackStateMachine:
         self.active_player = self.joined_players[0]
         # Add all joined players to known
         # YOUR CODE HERE
+        self.dealer.print_player_stats()
+        self.joined_players[0].print_player_stats()
         self.transition(GameState.SHUFFLING)
 
     def shuffle_cut_and_burn(self, cut_percentage):
@@ -225,20 +230,29 @@ class BlackjackStateMachine:
             self.transition(GameState.DEALING)
 
 
-    def score_hand(self):
-        self.score = bjl.highest_hand_score(self.hand)
-        if (self.score == 21):
+    def score_active_player_hands(self):
+        # Score every hand a player has
+        for hand in self.active_player.current_hands:
+            hand_score = bjl.highest_hand_score(hand)
+            self.active_player.current_hand_scores.append(hand_score)
+        # Check if a player has only one hand and one score; process accordingly
+        self.print_all_hands()
+        if (len(self.active_player.current_hands) == 1) and (len(self.active_player.current_hand_scores) == 1):
+            pass
+
+
+        if (self.active_player.current_hand_scores[0] == 21):
             print("Blackjack!")
-            self.discard.extend(self.hand)
+            self.discard.extend(self.active_player.current_hands[0])
             self.round_end_handler()
-        elif (self.score == -1):
+        elif (self.active_player.current_hand_scores[0]  == -1):
             print("Bust!")
-            self.discard.extend(self.hand)
+            self.discard.extend(self.active_player.current_hands[0])
             self.round_end_handler()
         else:
-            self.transition(GameState.PLAYING)
-        print("Player score is:", self.score)
-        return self.score
+            self.transition(GameState.PLAYER_PLAYING)
+        print("Player score is:", self.active_player.current_hand_scores[0])
+        return self.active_player.current_hand_scores[0] 
 
     def deal(self):
         for x in range(0, 2):
@@ -247,11 +261,11 @@ class BlackjackStateMachine:
                 # Slide 'front_cut_card' to discard if encountered when dealing any In-Round hand
                 if ('front_cut_card' == self.shoe[0]):
                     self.discard.extend([self.shoe.pop(0)])
-                player.current_hands.extend([self.shoe.pop(0)])
+                player.current_hands[0].extend([self.shoe.pop(0)])
             # Slide 'front_cut_card' to discard if encountered when dealing any In-Round hand
             if ('front_cut_card' == self.shoe[0]):
                 self.discard.extend([self.shoe.pop(0)])
-            self.dealer.current_hands.extend([self.shoe.pop(0)])
+            self.dealer.current_hands[0].extend([self.shoe.pop(0)])
         # Print debug info on players hands and % of shoe dealt
         self.print_all_hands()
         #print("Player hand is: "+str(self.hand))
@@ -271,9 +285,10 @@ class BlackjackStateMachine:
             print("Executing Player "+self.active_player.name+"'s action "+repr(self.active_player.action))
             # Execute player's entered action
             self.player_turn_actions[self.active_player.action]()
+            self.transition(GameState.SCORING)
 
             
-            self.discard.extend(self.hand)
+            self.discard.extend(self.active_player.current_hands[0])
             self.round_end_handler()
 
     def dealer_plays():
@@ -291,7 +306,7 @@ class BlackjackStateMachine:
             case GameState.DEALING:
                 self.deal()
             case GameState.SCORING:
-                self.score_hand()
+                self.score_active_player_hands()
             case GameState.PLAYER_PLAYING:
                 self.player_plays()
             case GameState.DEALER_PLAYING:
@@ -301,8 +316,6 @@ class BlackjackStateMachine:
                 raise NameError
 
     def run(self):
-        self.dealer.print_player_stats()
-        self.joined_players[0].print_player_stats()
         try:
             while True:
                 self.step()

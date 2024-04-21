@@ -445,4 +445,29 @@ class TestShuffling:
                 test_machine.step() # executes play() in GameState.PLAYING /w supplied user input of 'stand'
         # Verify state machine is reshuffling at round end after dealing 28 cards
         assert test_machine.state == bjfsm.GameState.SHUFFLING
+
+
+class TestPlayerSetup:
+    def test_first_player_set_to_active_in_STARTING(self):
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step()
+        assert test_machine.active_player == test_machine.joined_players[0]
+
+    def test_first_player_has_one_hand_dealt_in_DEALING(self):
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step()
+        test_machine.step()
+        test_machine.step()
+        assert len(test_machine.joined_players[0].current_hands) == 1
+
+    def test_dealer_has_one_hand_dealt_in_DEALING(self):
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step()
+        test_machine.step()
+        test_machine.step()
+        assert len(test_machine.dealer.current_hands) == 1
+
     

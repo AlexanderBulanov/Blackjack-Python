@@ -13,7 +13,6 @@ Author: Alexander Bulanov
 class Player:
     def __init__(self):
         self.name = None # assign when new player is created
-        self.is_active = False # update to True/False as priority passes
         self.is_dealer = False
         self.current_balance = None
         self.White = 0
@@ -25,8 +24,8 @@ class Player:
         self.Purple = 0
         self.Yellow = 0
         self.Brown = 0
-        self.current_hands = []
-        self.current_hand_scores = [0]
+        self.current_hands = [[]]
+        self.current_hand_scores = []
         self.action = None
 
     # Player actions are:
@@ -47,7 +46,6 @@ class Player:
     def create_casino_dealer():
         Dealer = Player()
         Dealer.name = 'Dealer'
-        Dealer.is_active = False
         Dealer.is_dealer = True
         Dealer.current_balance = 10000
         Dealer.White = 1000
@@ -59,15 +57,14 @@ class Player:
         Dealer.Purple = 1000
         Dealer.Yellow = 1000
         Dealer.Brown = 1000
-        Dealer.current_hands = []
-        Dealer.current_hand_scores = [0]
+        Dealer.current_hands = [[]]
+        Dealer.current_hand_scores = []
         Dealer.action = None
         return Dealer
     
     def create_new_player_from_template(player_name):
         NewPlayer = Player()
         NewPlayer.name = player_name
-        NewPlayer.is_active = False
         NewPlayer.is_dealer = False
         NewPlayer.current_balance = 100
         NewPlayer.White = 50
@@ -79,13 +76,13 @@ class Player:
         NewPlayer.Purple = 0
         NewPlayer.Yellow = 0
         NewPlayer.Brown = 0
-        NewPlayer.current_hands = []
-        NewPlayer.current_hand_scores = [0]
+        NewPlayer.current_hands = [[]]
+        NewPlayer.current_hand_scores = []
         NewPlayer.action = None
         return NewPlayer
     
     def print_player_stats(self):
-        print("*  *  *")
+        print("*  *  *  *  *")
         if self.name == 'Dealer':
             print("Printing Dealer Statistics")
         else:
@@ -95,4 +92,4 @@ class Player:
                 print(str(key)+": $"+str(value))
             else:
                 print(str(key)+": "+str(value))
-        print("*  *  *")
+        print("*  *  *  *  *")
