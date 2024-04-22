@@ -486,7 +486,7 @@ class TestPlayerSetup:
     def test_first_player_with_two_blackjack_hands_has_them_tracked_correctly(self):
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        # Deal a blackjack hand to first player
+        # Deal two blackjack hands to first player
         first_blackjack_hand = ['AH', 'QD']
         second_blackjack_hand = ['KC', 'AS']
         first_player = test_machine.joined_players[0]
@@ -504,7 +504,7 @@ class TestPlayerSetup:
     def test_first_player_with_blackjack_regular_blackjack_hands_has_blackjacks_tracked_correctly(self):
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        # Deal a blackjack hand to first player
+        # Deal blackjack regular and blackjack hands to first player
         first_hand = ['AH', 'QD']
         second_hand = ['8D', '4C']
         third_hand = ['KC', 'AS']
@@ -521,6 +521,60 @@ class TestPlayerSetup:
         assert first_player_first_logged_blackjack_hand == first_hand
         assert first_player_second_logged_blackjack_hand == third_hand
 
-    def test_dealer_face_up_card_is_ace_has_blackjack_first_player_with_blackjack_hand_pushes_correctly(self):
-        pass
+    def test_dealer_face_up_card_ace_has_blackjack_first_player_with_blackjack_hand_pushes_correctly_single_deck(self):
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        # Deal a blackjack hand to first player
+        player_hand = ['QD', 'AH']
+        first_player = test_machine.joined_players[0]
+        first_player.current_hands.append(player_hand)
+        # Deal a blackjack hand to dealer
+        dealer_hand = ['AS', 'KC']
+        test_machine.dealer.current_hands.append(dealer_hand)
+        # Add each player and their respective blackjack hands to a dictionary within score method
+        test_machine.score_all_joined_players_hands()
+        # Verify player's blackjack hand is tracked correctly
+        assert test_machine.current_round_natural_blackjacks[first_player][0] == player_hand
+        # Verify player's blackjack hand is no longer tracked after checking for dealer blackjack
+        test_machine.check_for_and_handle_dealer_blackjack()
+        assert test_machine.current_round_natural_blackjacks[first_player] == []
+        # Verify player's blackjack hand is discarded and score is removed
+        assert first_player.current_hands == []
+        assert first_player.current_hand_scores == []
+        # Verify dealer's blackjack hand is discarded and score is removed
+        assert test_machine.dealer.current_hands == []
+        assert test_machine.dealer.current_hand_scores == []
+
+    
+    def test_card_count_is_correct_for_single_deck_shoe_after_checking_for_dealer_blackjack_with_two_blackjacks(self):
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step() # executes start_game() in STARTING
+        test_machine.step() # executes shuffle_cut_and_burn(None) in SHUFFLING
+
+        # Manually deal player blackjack hand
+        player_hand = ['QD', 'AH']
+        first_player = test_machine.joined_players[0]
+        first_player.current_hands.append([player_hand])
+        # Remove manually dealt player's blackjack hand cards from shoe
+        test_machine.shoe.remove('QD')
+        test_machine.shoe.remove('AH')
+
+        # Manually deal blackjack hand to dealer
+        dealer_hand = ['AS', 'KC']
+        first_player = test_machine.joined_players[0]
+        first_player.current_hands.append([dealer_hand])
+        # Remove manually dealt dealer's blackjack hand cards from shoe
+        test_machine.shoe.remove('AS')
+        test_machine.shoe.remove('KC')
+
+        # Manually transition to SCORING
+        test_machine.transition(bjfsm.GameState.SCORING)
+        test_machine.step() # scores all players' hands, checks for and handles dealer and player blackjacks in SCORING
+
+
+        # Verify card count between shoe and discard is correct for a single deck after checking for dealer blackjack
+        assert (len(test_machine.shoe) + len(test_machine.discard)) == 53
+
+
         

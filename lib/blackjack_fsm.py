@@ -316,7 +316,7 @@ class BlackjackStateMachine:
 
 
     def check_for_and_handle_players_blackjacks(self):
-        if (self.num_of_naturally_dealt_blackjacks == 0):
+        if (len(self.current_round_natural_blackjacks.keys()) == 0):
             pass
         else:
             # Pay Blackjack to each natural hand
@@ -430,7 +430,6 @@ class BlackjackStateMachine:
                 self.deal()
             case GameState.SCORING:
                 self.score_all_joined_players_hands()
-
                 self.check_for_and_handle_dealer_blackjack()
                 self.check_for_and_handle_players_blackjacks()
             case GameState.PLAYER_PLAYING:
