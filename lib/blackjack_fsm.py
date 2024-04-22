@@ -42,7 +42,7 @@ class BlackjackStateMachine:
         self.joined_players = [bjp.Player.create_new_player_from_template('Alex')]
         self.known_players = [] # list of all players who have played a shoe, now or in the past
         self.active_player = None
-        self.num_of_naturally_dealt_blackjacks = 0
+        self.current_round_natural_blackjacks = {} # dictionary storing all naturally dealt blackjacks per player
         self.player_turn_actions = {
             'stand': lambda: self.stand(),
             'hit': lambda: self.hit(),
@@ -233,7 +233,27 @@ class BlackjackStateMachine:
                 player_hand_score = bjl.highest_hand_score(hand)
                 player.current_hand_scores.append(player_hand_score)
                 if (player_hand_score == 21):
-                    self.num_of_naturally_dealt_blackjacks += 1
+                    if (player not in self.current_round_natural_blackjacks.keys()):
+                        self.current_round_natural_blackjacks[player] = [hand]
+                    else:
+                        self.current_round_natural_blackjacks[player].extend(hand)
+
+        
+        for player in self.current_round_natural_blackjacks.keys():
+            for hand in self.current_round_natural_blackjacks[player]:
+                print(player.name,"has natural blackjack of", hand)
+        #print(self.current_round_natural_blackjacks)
+
+
+        """
+        for card in shoe_reference:
+            if card[:-1] not in card_counts.keys():
+                card_counts[card[:-1]] = [card]
+            else:
+                card_counts[card[:-1]].append(card)
+
+        print(card_counts)
+        """
         """
         # Score dealer's hand
         dealer_hand_score = bjl.highest_hand_score(self.dealer.current_hands[0])
@@ -249,7 +269,6 @@ class BlackjackStateMachine:
         if (dealer_face_up_card in ['AH', 'AC', 'AD', 'AS']):
             print("Offering 'insurance' and 'even money' side bets")
             if (dealer_hole_card_value == 10):
-                self.dealer.print_player_stats()
                 print("1. Reveal dealer hole card")
                 print("Dealer hand is: ", self.dealer.current_hands[0])
                 print("2. Pay out side bets to participating hands left-to-right, discard them")
@@ -257,6 +276,8 @@ class BlackjackStateMachine:
                 # YOUR CODE HERE #
                 print("3. Push against all hands with Blackjack left-to-right, discard them")
                 # Todo AB: ITERATE OVER ALL PLAYERS' BLACKJACK HANDS AND DISCARD THEM
+                for blackjack_hand in self.current_round_natural_blackjacks:
+                    pass
 
                 print("4. Collect bets from all hands without side bets or Blackjack left-to-right, discard them")
                 # Todo AB: ITERATE OVER ALL PLAYERS' NON-BLACKJACK HANDS AND DISCARD THEM
