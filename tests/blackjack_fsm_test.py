@@ -547,6 +547,31 @@ class TestScoringState:
         assert test_machine.dealer.current_hands == []
         assert test_machine.dealer.current_hand_scores == []
 
+
+    def test_first_player_with_blackjack_regular_blackjack_is_handled_correctly_against_dealer_blackjack(self):
+        pass
+
+
+    def test_first_player_with_regular_hand_loses_correctly_against_dealer_blackjack(self):
+        pass
+
+
+    def test_first_player_with_two_regular_hands_loses_correctly_against_dealer_blackjack(self):
+        pass
+
+
+    def test_first_player_with_regular_hand_keeps_playing_after_checking_dealer_has_no_blackjack(self):
+        pass
+
+
+    def test_first_player_with_blackjack_wins_after_checking_dealer_has_no_blackjack(self):
+        pass
+
+    
+    def test_first_player_with_regular_blackjack_hands_wins_just_second_after_checking_dealer_has_no_blackjack(self):
+        pass
+
+
     def test_card_count_is_correct_for_single_deck_shoe_after_checking_for_dealer_blackjack_with_two_blackjacks(self):
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
@@ -586,4 +611,6 @@ class TestScoringState:
         assert (len(test_machine.shoe) + len(test_machine.discard)) == 54
 
 
-        
+    def test_card_count_is_correct_for_single_deck_shoe_after_SCORING(self):
+        pass
+

@@ -260,6 +260,36 @@ class BlackjackStateMachine:
         self.dealer.current_hand_scores.append(dealer_hand_score)
         """
 
+    def reveal_dealer_hand(self):
+        print("Dealer hand is: ", self.dealer.current_hands[0])
+
+    def handle_blackjack_pushes_after_dealing(self):
+        for player in self.current_round_natural_blackjacks.keys():
+            for hand_count in range(0, len(self.current_round_natural_blackjacks[player])):
+                hand = self.current_round_natural_blackjacks[player][0]
+                print("Natural Blackjack push against player", player.name, "with hand of", hand)
+                # Remove player's leftmost blackjack hand from dictionary of blackjacks
+                self.current_round_natural_blackjacks[player].remove(hand)
+                # Put player's leftmost blackjack hand into discard from hand
+                self.discard.extend(player.current_hands.pop(player.current_hands.index(hand)))
+                # Remove player's leftmost discarded blackjack hand score
+                player.current_hand_scores.remove(21)
+
+    def handle_remaining_player_hands_losing_to_dealer_blackjack(self):
+        for player in self.joined_players:
+            for hand_count in range(0, len(player.current_hands)):
+                hand = player.current_hands[0]
+                dealer_blackjack = self.dealer.current_hands[0]
+                print(player.name, "loses with hand of", hand, "to Dealer's Blackjack of", dealer_blackjack)
+                # Put player's leftmost hand into discard from hand
+                self.discard.extend(player.current_hands.pop(0))
+                # Remove player's leftmost hand score
+                player.current_hand_scores.pop(0)
+
+    def discard_dealer_hand_and_reset_score(self):
+        self.discard.extend(self.dealer.current_hands.pop(0))
+        self.dealer.current_hand_scores.clear()
+
 
     def check_for_and_handle_dealer_blackjack(self):
         dealer_face_up_card = self.dealer.current_hands[0][0]
@@ -270,27 +300,17 @@ class BlackjackStateMachine:
             print("Offering 'insurance' and 'even money' side bets")
             if (dealer_hole_card_value == 10):
                 print("1. Reveal dealer hole card")
-                print("Dealer hand is: ", self.dealer.current_hands[0])
+                self.reveal_dealer_hand()
                 print("2. Pay out side bets to participating hands left-to-right, discard them and remove scores")
                 # Todo AB: PAY OUT ALL SIDE BETS TO PARTICIPATING HANDS LEFT-TO-RIGHT, DISCARD THEM AND RESET SCORES
                 
                 print("3. Push against all hands with Blackjack left-to-right, discard them and remove scores")
-                for player in self.current_round_natural_blackjacks.keys():
-                    for hand_count in range(0, len(self.current_round_natural_blackjacks[player])):
-                        hand = self.current_round_natural_blackjacks[player][0]
-                        print("Push against player", player.name, "with hand of", hand)
-                        # Remove player's leftmost blackjack hand from dictionary of blackjacks
-                        self.current_round_natural_blackjacks[player].remove(hand)
-                        # Put player's leftmost blackjack hand into discard from hand
-                        self.discard.extend(player.current_hands.pop(player.current_hands.index(hand)))
-                        # Remove player's leftmost discarded blackjack hand score
-                        player.current_hand_scores.remove(21)
+                self.handle_blackjack_pushes_after_dealing()
                 print("4. Collect bets from all hands without side bets or Blackjack left-to-right, discard them and remove scores")
                 # Todo AB: ITERATE OVER ALL PLAYERS' NON-BLACKJACK HANDS, DISCARD THEM AND RESET SCORES
-
+                self.handle_remaining_player_hands_losing_to_dealer_blackjack()
                 print("5. Discard dealer hand and reset score")
-                self.discard.extend(self.dealer.current_hands.pop(0))
-                self.dealer.current_hand_scores.clear()
+                self.discard_dealer_hand_and_reset_score()
                 print("ROUND END")
                 self.transition(GameState.DEALING)
             else:
@@ -302,9 +322,13 @@ class BlackjackStateMachine:
         elif (dealer_face_up_card_value == 10):
             if (dealer_hole_card in ['AH', 'AC', 'AD', 'AS']):
                 print("1. Reveal dealer hole card")
+                self.reveal_dealer_hand()
                 print("2. Push against all hands with Blackjack left-to-right, discard them and remove scores")
-                print("3. Collect bets from all players without side bets or Blackjack left-to-right, discard them and remove scores")
-                print("4. Discard dealer hand")
+                self.handle_blackjack_pushes_after_dealing()
+                print("3. Collect bets from all players without Blackjack left-to-right, discard them and remove scores")
+                self.handle_remaining_player_hands_losing_to_dealer_blackjack()
+                print("4. Discard dealer hand and reset score")
+                self.discard_dealer_hand_and_reset_score()
                 print("ROUND END")
                 self.transition(GameState.DEALING)
             else:
@@ -317,10 +341,11 @@ class BlackjackStateMachine:
 
     def check_for_and_handle_players_blackjacks(self):
         if (len(self.current_round_natural_blackjacks.keys()) == 0):
-            pass
+            print("No players have natural Blackjack.")
         else:
-            # Pay Blackjack to each natural hand
-            pass
+            for player in self.current_round_natural_blackjacks.keys():
+                # Pay Blackjack to each natural hand
+                print("Paying Blackjack 3:2 to player", player.name)
 
         """
         # Check if a player has only one hand and one score; process accordingly
@@ -358,10 +383,10 @@ class BlackjackStateMachine:
                 self.dealer.current_hands.append([])
             self.dealer.current_hands[0].extend([self.shoe.pop(0)])
         # Print debug info on players hands and % of shoe dealt
-        self.print_all_hands()
         self.dealer.print_player_stats()
         for player in self.joined_players:
             player.print_player_stats()
+        self.print_all_hands()
         print(str(int(round(100-(100*(len(self.shoe)/(2+self.num_of_decks*52))), 0)))+"%"+" of the shoe dealt "
             +"(reshuffling at round end past "+str(self.pen)+"%"+")")
         self.transition(GameState.SCORING)
