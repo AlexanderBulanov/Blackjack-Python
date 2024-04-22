@@ -17,14 +17,13 @@ from . import cut_helper as cut
 
 ### Blackjack State Machine ###
 class GameState(Enum):
-    WAITING = 0
-    STARTING = 1
-    SHUFFLING = 2
-    DEALING = 3
-    SCORING = 4
-    PLAYER_PLAYING = 5
-    DEALER_PLAYING = 6
-    ROUND_ENDING = 7
+    STARTING = 0
+    SHUFFLING = 1
+    DEALING = 2
+    SCORING = 3
+    PLAYER_PLAYING = 4
+    DEALER_PLAYING = 5
+    ROUND_ENDING = 6
 
 
 class BlackjackStateMachine:
@@ -416,8 +415,6 @@ class BlackjackStateMachine:
     def step(self):
         print(f"Current state: {self.state}")
         match self.state:
-            case GameState.WAITING:
-                self.wait_for_players()
             case GameState.STARTING:
                 self.start_game()
             case GameState.SHUFFLING:
