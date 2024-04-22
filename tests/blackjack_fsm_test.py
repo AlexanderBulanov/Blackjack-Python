@@ -520,4 +520,7 @@ class TestPlayerSetup:
         first_player_second_logged_blackjack_hand = test_machine.current_round_natural_blackjacks[first_player][1]
         assert first_player_first_logged_blackjack_hand == first_hand
         assert first_player_second_logged_blackjack_hand == third_hand
+
+    def test_dealer_face_up_card_is_ace_has_blackjack_first_player_with_blackjack_hand_pushes_correctly(self):
+        pass
         

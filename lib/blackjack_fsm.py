@@ -231,17 +231,18 @@ class BlackjackStateMachine:
 
 
     def score_all_joined_players_hands(self):
-        # Score each player's hands
         for player in self.joined_players:
             for hand in player.current_hands:
+                # Score each player's hands
                 player_hand_score = bjl.highest_hand_score(hand)
                 player.current_hand_scores.append(player_hand_score)
+                # Track natural blackjack hands for each player, as they're encountered
                 if (player_hand_score == 21):
                     if (player not in self.current_round_natural_blackjacks.keys()):
                         self.current_round_natural_blackjacks[player] = [hand]
                     else:
                         self.current_round_natural_blackjacks[player].append(hand)
-        self.print_all_players_with_natural_blackjack_hands()
+        #self.print_all_players_with_natural_blackjack_hands()
 
 
         """
@@ -270,16 +271,22 @@ class BlackjackStateMachine:
             if (dealer_hole_card_value == 10):
                 print("1. Reveal dealer hole card")
                 print("Dealer hand is: ", self.dealer.current_hands[0])
-                print("2. Pay out side bets to participating hands left-to-right, discard them")
-                # Todo AB: PAY OUT ALL SIDE BETS TO PARTICIPATING HANDS LEFT-TO-RIGHT AND DISCARD THEM
-                # YOUR CODE HERE #
-                print("3. Push against all hands with Blackjack left-to-right, discard them")
-                # Todo AB: ITERATE OVER ALL PLAYERS' BLACKJACK HANDS AND DISCARD THEM
-                for blackjack_hand in self.current_round_natural_blackjacks:
-                    pass
-
-                print("4. Collect bets from all hands without side bets or Blackjack left-to-right, discard them")
-                # Todo AB: ITERATE OVER ALL PLAYERS' NON-BLACKJACK HANDS AND DISCARD THEM
+                print("2. Pay out side bets to participating hands left-to-right, discard them and remove scores")
+                # Todo AB: PAY OUT ALL SIDE BETS TO PARTICIPATING HANDS LEFT-TO-RIGHT, DISCARD THEM AND RESET SCORES
+                
+                print("3. Push against all hands with Blackjack left-to-right, discard them and remove scores")
+                for player in self.current_round_natural_blackjacks.keys():
+                    for hand_count in range(0, len(self.current_round_natural_blackjacks[player])):
+                        hand = self.current_round_natural_blackjacks[player][0]
+                        print("Push against player", player.name, "with hand of", hand)
+                        # Remove player's leftmost blackjack hand from dictionary of blackjacks
+                        self.current_round_natural_blackjacks[player].remove(hand)
+                        # Put player's leftmost blackjack hand into discard from hand
+                        self.discard.extend(player.current_hands.pop(player.current_hands.index(hand)))
+                        # Remove player's leftmost discarded blackjack hand score
+                        player.current_hand_scores.remove(21)
+                print("4. Collect bets from all hands without side bets or Blackjack left-to-right, discard them and remove scores")
+                # Todo AB: ITERATE OVER ALL PLAYERS' NON-BLACKJACK HANDS, DISCARD THEM AND RESET SCORES
 
                 print("5. Discard dealer hand and reset score")
                 self.discard.extend(self.dealer.current_hands.pop(0))
@@ -290,13 +297,13 @@ class BlackjackStateMachine:
                 print("Dealer doesn't have Blackjack!")
                 print("Collecting side bets from all participating hands left-to-right")
                 # Todo AB: COLLECT ALL SIDE BETS FROM PARTICIPATING HANDS LEFT-TO-RIGHT
-                # YOUR CODE HERE #
+                
                 self.transition(GameState.PLAYER_PLAYING)
         elif (dealer_face_up_card_value == 10):
             if (dealer_hole_card in ['AH', 'AC', 'AD', 'AS']):
                 print("1. Reveal dealer hole card")
-                print("2. Push against all hands with Blackjack left-to-right, discard them")
-                print("3. Collect bets from all players without side bets or Blackjack left-to-right, discard them")
+                print("2. Push against all hands with Blackjack left-to-right, discard them and remove scores")
+                print("3. Collect bets from all players without side bets or Blackjack left-to-right, discard them and remove scores")
                 print("4. Discard dealer hand")
                 print("ROUND END")
                 self.transition(GameState.DEALING)
