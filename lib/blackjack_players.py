@@ -94,19 +94,18 @@ class Player:
             if key == 'current_balance':
                 print(str(key)+": $"+str(value))
             elif (key == 'current_hands') and (self.hole_card_face_down == True):
-                if self.hole_card_face_down == True:
-                    hands = "["
-                    if (len(self.current_hands) == 0):
-                        hands = hands+"]"
-                    else:
-                        for hand in self.current_hands:
-                            face_up_card = hand[0]
-                            if (self.current_hands.index(hand) == (len(self.current_hands) - 1)):
-                                hands = hands+"["+str(face_up_card)+", '**']]"
-                            else:
-                                hands = hands+"["+str(face_up_card)+", '**'], "
-                    # Print hole card as '**'
-                    print(str(key)+": "+hands)
+                hands = "["
+                if (len(self.current_hands) == 0):
+                    hands = hands+"]"
+                else:
+                    for hand in self.current_hands:
+                        face_up_card = hand[0]
+                        if (self.current_hands.index(hand) == (len(self.current_hands) - 1)):
+                            hands = hands+"["+str(face_up_card)+", '**']]"
+                        else:
+                            hands = hands+"["+str(face_up_card)+", '**'], "
+                # Print hole card as '**'
+                print(str(key)+": "+hands)
             else:
                 print(str(key)+": "+str(value))
         print("*  *  *  *  *")
