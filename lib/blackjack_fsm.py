@@ -195,9 +195,12 @@ class BlackjackStateMachine:
         self.active_player = self.joined_players[0]
         # Add all joined players to known
         # YOUR CODE HERE #
+        """
+        # DEBUG
         self.dealer.print_player_stats()
         for player in self.joined_players:
             player.print_player_stats()
+        """
         self.transition(GameState.SHUFFLING)
 
 
@@ -243,6 +246,11 @@ class BlackjackStateMachine:
                     else:
                         self.current_round_natural_blackjacks[player].append(hand)
         #self.print_all_players_with_natural_blackjack_hands()
+
+    
+    def score_dealer_hand(self):
+        dealer_hand_score = bjl.highest_hand_score(self.dealer.current_hands[0])
+        self.dealer.current_hand_scores.append(dealer_hand_score)
 
 
         """
@@ -342,10 +350,21 @@ class BlackjackStateMachine:
     def check_for_and_handle_players_blackjacks(self):
         if (len(self.current_round_natural_blackjacks.keys()) == 0):
             print("No players have natural Blackjack.")
+            self.transition(GameState.PLAYER_PLAYING)
         else:
             for player in self.current_round_natural_blackjacks.keys():
                 # Pay Blackjack to each natural hand
                 print("Paying Blackjack 3:2 to player", player.name)
+                """
+                self.discard.extend(player.current_hands.pop(player.current_hands.index(hand)))
+                # Remove player's leftmost discarded blackjack hand score
+                player.current_hand_scores.remove(21)
+                """
+
+                # Todo AB: DISCARD DEALER'S HAND IF ALL self.joined_players HAD BLACKJACKS
+                self.transition(GameState.DEALING)
+
+
 
         """
         # Check if a player has only one hand and one score; process accordingly
@@ -383,9 +402,12 @@ class BlackjackStateMachine:
                 self.dealer.current_hands.append([])
             self.dealer.current_hands[0].extend([self.shoe.pop(0)])
         # Print debug info on players hands and % of shoe dealt
+        """
+        # DEBUG
         self.dealer.print_player_stats()
         for player in self.joined_players:
             player.print_player_stats()
+        """
         self.print_all_hands()
         print(str(int(round(100-(100*(len(self.shoe)/(2+self.num_of_decks*52))), 0)))+"%"+" of the shoe dealt "
             +"(reshuffling at round end past "+str(self.pen)+"%"+")")
@@ -408,15 +430,34 @@ class BlackjackStateMachine:
 
 
     def dealer_plays(self):
+        print("Hitting Dealer's hand of", self.dealer.current_hands[0])
         if self.seventeen_rule == 'S17':
-            while self.dealer.current_hand_scores[0] < 17:
+            while (self.dealer.current_hand_scores[0] < 17) and (self.dealer.current_hand_scores[0] > 0):
                 # Execute 'hit'
                 self.hit(self.dealer)
+                # Score the updated hand
+                new_dealer_hand_score = bjl.highest_hand_score(self.dealer.current_hands[0])
+                # Overwrite old score value with new one
+                self.dealer.current_hand_scores.clear()
+                self.dealer.current_hand_scores.append(new_dealer_hand_score)
+                print("Dealer's hand is now", self.dealer.current_hands[0],
+                      "and has a score of", self.dealer.current_hand_scores[0])
+            if (self.dealer.current_hand_scores[0] < 0):
+                print("Dealer busts!")
+            else:
+                print("Dealer has a final score of", self.dealer.current_hand_scores[0])
             self.transition(GameState.ROUND_ENDING)
         elif self.seventeen_rule == 'H17':
-            while self.dealer.current_hand_scores[0] <= 17:
+            while (self.dealer.current_hand_scores[0] <= 17) and (self.dealer.current_hand_scores[0] > 0):
                 # Execute 'hit'
                 self.hit(self.dealer)
+                # Score the updated hand
+                new_dealer_hand_score = bjl.highest_hand_score(self.dealer.current_hands[0])
+                # Overwrite old score value with new one
+                self.dealer.current_hand_scores.clear()
+                self.dealer.current_hand_scores.append(new_dealer_hand_score)
+                print("Dealer's hand is now", self.dealer.current_hands[0],
+                      "and has a score of", self.dealer.current_hand_scores[0])
             self.transition(GameState.ROUND_ENDING)
         # debug log and assert
 
@@ -455,6 +496,7 @@ class BlackjackStateMachine:
                 self.deal()
             case GameState.SCORING:
                 self.score_all_joined_players_hands()
+                self.score_dealer_hand()
                 self.check_for_and_handle_dealer_blackjack()
                 self.check_for_and_handle_players_blackjacks()
             case GameState.PLAYER_PLAYING:
