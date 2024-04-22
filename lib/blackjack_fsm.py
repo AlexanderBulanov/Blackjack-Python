@@ -164,6 +164,11 @@ class BlackjackStateMachine:
                 print(player.name, "has the following hands:", player.current_hands)
         print("*  *  *  *  *")
 
+    def print_all_players_with_natural_blackjack_hands(self):
+        for player in self.current_round_natural_blackjacks.keys():
+            for hand in self.current_round_natural_blackjacks[player]:
+                print(player.name,"has natural blackjack of", hand)
+
 
 
     # State Machine Actions #
@@ -235,13 +240,8 @@ class BlackjackStateMachine:
                     if (player not in self.current_round_natural_blackjacks.keys()):
                         self.current_round_natural_blackjacks[player] = [hand]
                     else:
-                        self.current_round_natural_blackjacks[player].extend(hand)
-
-        
-        for player in self.current_round_natural_blackjacks.keys():
-            for hand in self.current_round_natural_blackjacks[player]:
-                print(player.name,"has natural blackjack of", hand)
-        #print(self.current_round_natural_blackjacks)
+                        self.current_round_natural_blackjacks[player].append(hand)
+        self.print_all_players_with_natural_blackjack_hands()
 
 
         """

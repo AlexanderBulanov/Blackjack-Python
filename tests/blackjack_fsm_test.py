@@ -11,6 +11,7 @@ import pytest
 import lib.blackjack_fsm as bjfsm
 import lib.blackjack_game_settings as bjs
 import lib.blackjack_game_objects as bjo
+import lib.blackjack_game_logic as bjl
 import lib.cut_helper as cuthlpr
 
 
@@ -451,23 +452,72 @@ class TestPlayerSetup:
     def test_first_player_set_to_active_in_STARTING(self):
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step()
+        test_machine.step() # executes start_game() in STARTING
         assert test_machine.active_player == test_machine.joined_players[0]
 
     def test_first_player_has_one_hand_dealt_in_DEALING(self):
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step()
-        test_machine.step()
-        test_machine.step()
+        test_machine.step() # executes start_game() in STARTING
+        test_machine.step() # executes shuffle_cut_and_burn(None) in SHUFFLING
+        test_machine.step() # executes deal() in DEALING
         assert len(test_machine.joined_players[0].current_hands) == 1
 
     def test_dealer_has_one_hand_dealt_in_DEALING(self):
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step()
-        test_machine.step()
-        test_machine.step()
+        test_machine.step() # executes start_game() in STARTING
+        test_machine.step() # executes shuffle_cut_and_burn(None) in SHUFFLING
+        test_machine.step() # executes deal() in DEALING
         assert len(test_machine.dealer.current_hands) == 1
 
-    
+    def test_first_player_with_one_blackjack_hand_has_it_tracked_correctly(self):
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        # Deal a blackjack hand to first player
+        blackjack_hand = ['AH', 'QD']
+        first_player = test_machine.joined_players[0]
+        first_player.current_hands.append(blackjack_hand)
+        # Add each player and their respective blackjack hands to a dictionary within score method
+        test_machine.score_all_joined_players_hands()
+        first_player_tracked_blackjack_hand = test_machine.current_round_natural_blackjacks[first_player][0]
+        assert first_player_tracked_blackjack_hand == blackjack_hand
+
+    def test_first_player_with_two_blackjack_hands_has_them_tracked_correctly(self):
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        # Deal a blackjack hand to first player
+        first_blackjack_hand = ['AH', 'QD']
+        second_blackjack_hand = ['KC', 'AS']
+        first_player = test_machine.joined_players[0]
+        first_player.current_hands.append(first_blackjack_hand)
+        first_player.current_hands.append(second_blackjack_hand)
+        # Add each player and their respective blackjack hands to a dictionary within score method
+        test_machine.score_all_joined_players_hands()
+        #print(first_player.current_hands)
+        #print(test_machine.current_round_natural_blackjacks)
+        first_player_first_logged_blackjack_hand = test_machine.current_round_natural_blackjacks[first_player][0]
+        first_player_second_logged_blackjack_hand = test_machine.current_round_natural_blackjacks[first_player][1]
+        assert first_player_first_logged_blackjack_hand == first_blackjack_hand
+        assert first_player_second_logged_blackjack_hand == second_blackjack_hand
+
+    def test_first_player_with_blackjack_regular_blackjack_hands_has_blackjacks_tracked_correctly(self):
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        # Deal a blackjack hand to first player
+        first_hand = ['AH', 'QD']
+        second_hand = ['8D', '4C']
+        third_hand = ['KC', 'AS']
+        first_player = test_machine.joined_players[0]
+        first_player.current_hands.append(first_hand)
+        first_player.current_hands.append(second_hand)
+        first_player.current_hands.append(third_hand)
+        # Add each player and their respective blackjack hands to a dictionary within score method
+        test_machine.score_all_joined_players_hands()
+        #print(first_player.current_hands)
+        #print(test_machine.current_round_natural_blackjacks)
+        first_player_first_logged_blackjack_hand = test_machine.current_round_natural_blackjacks[first_player][0]
+        first_player_second_logged_blackjack_hand = test_machine.current_round_natural_blackjacks[first_player][1]
+        assert first_player_first_logged_blackjack_hand == first_hand
+        assert first_player_second_logged_blackjack_hand == third_hand
+        
