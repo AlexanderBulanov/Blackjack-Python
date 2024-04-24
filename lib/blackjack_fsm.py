@@ -35,8 +35,6 @@ class BlackjackStateMachine:
         self.discard = []
         self.dealer = bjp.Player.create_casino_dealer()
         self.seventeen_rule = 'S17'
-        self.wait_timer_duration = 30
-        self.current_wait_timer = self.wait_timer_duration
         self.waiting_players = []
         self.joined_players = [bjp.Player.create_new_player_from_template('Alex')]
         self.known_players = [] # list of all players who have played a shoe, now or in the past
@@ -74,6 +72,7 @@ class BlackjackStateMachine:
             self.transition(GameState.DEALER_PLAYING)
 
     def hit(self, player):
+        # Todo AB: Add hand_index as a variable to account for a single player playing multiple hands at a table
         self.handle_front_cut_card()
         player.current_hands[0].extend([self.shoe.pop(0)])
         self.transition(GameState.SCORING)
