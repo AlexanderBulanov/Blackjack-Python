@@ -429,35 +429,53 @@ class BlackjackStateMachine:
 
 
     def dealer_plays(self):
-        print("Hitting Dealer's hand of", self.dealer.current_hands[0])
+        initial_dealer_hand_score = self.dealer.current_hand_scores[0]
         if self.seventeen_rule == 'S17':
-            while (self.dealer.current_hand_scores[0] < 17) and (self.dealer.current_hand_scores[0] > 0):
-                # Execute 'hit'
-                self.hit(self.dealer)
-                # Score the updated hand
-                new_dealer_hand_score = bjl.highest_hand_score(self.dealer.current_hands[0])
-                # Overwrite old score value with new one
-                self.dealer.current_hand_scores.clear()
-                self.dealer.current_hand_scores.append(new_dealer_hand_score)
-                print("Dealer's hand is now", self.dealer.current_hands[0],
-                      "and has a score of", self.dealer.current_hand_scores[0])
-            if (self.dealer.current_hand_scores[0] < 0):
-                print("Dealer busts!")
+            print(self.seventeen_rule, "is in play")
+            if (initial_dealer_hand_score >= 17):
+                print("Dealer stands with a score of", initial_dealer_hand_score)
+                self.transition(GameState.ROUND_ENDING)
             else:
-                print("Dealer has a final score of", self.dealer.current_hand_scores[0])
+                while (self.dealer.current_hand_scores[0] < 17) and (self.dealer.current_hand_scores[0] > 0):
+                    # Execute 'hit'
+                    print("Hitting Dealer's hand of", self.dealer.current_hands[0])
+                    self.hit(self.dealer)
+                    # Score the updated hand
+                    new_dealer_hand_score = bjl.highest_hand_score(self.dealer.current_hands[0])
+                    # Overwrite old score value with new one
+                    self.dealer.current_hand_scores.clear()
+                    self.dealer.current_hand_scores.append(new_dealer_hand_score)
+                    print("Dealer's hand is now", self.dealer.current_hands[0],
+                        "and has a score of", self.dealer.current_hand_scores[0])
+                if (self.dealer.current_hand_scores[0] < 0):
+                    print("Dealer busts!")
+                    print("Remaining players win!")
+                else:
+                    print("Dealer stands with a final score of", self.dealer.current_hand_scores[0])
             self.transition(GameState.ROUND_ENDING)
         elif self.seventeen_rule == 'H17':
-            while (self.dealer.current_hand_scores[0] <= 17) and (self.dealer.current_hand_scores[0] > 0):
-                # Execute 'hit'
-                self.hit(self.dealer)
-                # Score the updated hand
-                new_dealer_hand_score = bjl.highest_hand_score(self.dealer.current_hands[0])
-                # Overwrite old score value with new one
-                self.dealer.current_hand_scores.clear()
-                self.dealer.current_hand_scores.append(new_dealer_hand_score)
-                print("Dealer's hand is now", self.dealer.current_hands[0],
-                      "and has a score of", self.dealer.current_hand_scores[0])
-            self.transition(GameState.ROUND_ENDING)
+            print(self.seventeen_rule, "is in play")
+            if (initial_dealer_hand_score > 17):
+                print("Dealer stands with a score of", initial_dealer_hand_score)
+                self.transition(GameState.ROUND_ENDING)
+            else:
+                while (self.dealer.current_hand_scores[0] <= 17) and (self.dealer.current_hand_scores[0] > 0):
+                    # Execute 'hit'
+                    print("Hitting Dealer's hand of", self.dealer.current_hands[0])
+                    self.hit(self.dealer)
+                    # Score the updated hand
+                    new_dealer_hand_score = bjl.highest_hand_score(self.dealer.current_hands[0])
+                    # Overwrite old score value with new one
+                    self.dealer.current_hand_scores.clear()
+                    self.dealer.current_hand_scores.append(new_dealer_hand_score)
+                    print("Dealer's hand is now", self.dealer.current_hands[0],
+                        "and has a score of", self.dealer.current_hand_scores[0])
+                if (self.dealer.current_hand_scores[0] < 0):
+                    print("Dealer busts!")
+                    print("Remaining players win!")
+                else:
+                    print("Dealer stands with a final score of", self.dealer.current_hand_scores[0])
+                self.transition(GameState.ROUND_ENDING)
         # debug log and assert
 
         else:
@@ -465,6 +483,11 @@ class BlackjackStateMachine:
 
 
     def round_end_cleanup(self):
+        print("Paying all players who beat the dealer")
+        print("Pushing against all players who match the dealer")
+        print("Collecting bets from all players who lose to dealer")
+
+
         print("ROUND END")
         # Empty all players' hands by putting them in discard
         for player in self.joined_players:
@@ -497,7 +520,8 @@ class BlackjackStateMachine:
                 self.score_all_joined_players_hands()
                 self.score_dealer_hand()
                 self.check_for_and_handle_dealer_blackjack()
-                self.check_for_and_handle_players_blackjacks()
+                if self.dealer.current_hand_scores[0] != 21:
+                    self.check_for_and_handle_players_blackjacks()
             case GameState.PLAYER_PLAYING:
                 self.player_plays()
             case GameState.DEALER_PLAYING:
