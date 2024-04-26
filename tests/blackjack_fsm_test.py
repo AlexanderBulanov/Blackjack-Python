@@ -617,3 +617,6 @@ class TestScoringState:
     def test_card_count_is_correct_for_single_deck_shoe_after_SCORING(self):
         pass
 
+
+    def test_natural_blackjacks_are_cleared_after_rounde_end(self):
+        pass

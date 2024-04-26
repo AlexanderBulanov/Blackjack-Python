@@ -364,16 +364,22 @@ class BlackjackStateMachine:
             self.transition(GameState.PLAYER_PLAYING)
         else:
             print("Paying Blackjacks to each eligible player hand")
-            for player in self.current_round_natural_blackjacks.keys():
+            eligible_players = [player for player in self.current_round_natural_blackjacks.keys()]
+            #print("Players /w Blackjack hands are:", eligible_players[0].name)
+            for player in eligible_players:
                 # Iterate over all Blackjack hands
                 for hand_count in range(0, len(self.current_round_natural_blackjacks[player])):
                     hand = self.current_round_natural_blackjacks[player][0]
                     # Pay Blackjack to player
                     print("Paying Blackjack 3:2 to player", player.name, "with hand of", hand)
                     # Remove player's Blackjack hand from list of natural blackjacks for that player
-                    self.current_round_natural_blackjacks[player].remove(hand)
+                    if len(self.current_round_natural_blackjacks[player]) <= 1:
+                        del self.current_round_natural_blackjacks[player]
+                    else:
+                        self.current_round_natural_blackjacks[player].remove(hand)
                     # Discard player's Blackjack hand
                     self.discard.extend(player.current_hands.pop(player.current_hands.index(hand)))
+            # Check if dealer's hand needs to be discarded due to all player hands being Blackjacks
             remaining_hands = 0
             for player in self.joined_players:
                 remaining_hands += len(player.current_hands)
@@ -382,6 +388,12 @@ class BlackjackStateMachine:
                 self.discard.extend(self.dealer.current_hands.pop(0))
                 # Reset Dealer's hand score
                 self.dealer.current_hand_scores.clear()
+            """
+            DEBUG:
+            print("Current natural blackjacks:")
+            print(self.current_round_natural_blackjacks)
+            """
+            print("ROUND END")
             self.transition(GameState.DEALING)
 
 
