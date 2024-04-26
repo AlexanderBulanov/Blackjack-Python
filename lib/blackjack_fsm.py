@@ -232,11 +232,11 @@ class BlackjackStateMachine:
         self.transition(GameState.DEALING)
 
     
-    def get_player_bets(self):
+    def get_player_bets(self): # Todo AB: Use threading package provided by Python
         player_responses = {player: None for player in self.joined_players}
         #Poll players continously until you receive a response from each
         while None in player_responses.values():
-            # Valid responses - bets using any combination of chips except for odd number of Pink ones
+            # Valid chip bet responses - bets using any combination of chips except for odd number of Pink ones
             # Other valid responses - bet using cash (???)
             # Other valid responses - skip, leave
             pass

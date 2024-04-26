@@ -11,8 +11,6 @@ import pytest
 import lib.blackjack_fsm as bjfsm
 import lib.blackjack_game_settings as bjs
 import lib.blackjack_game_objects as bjo
-import lib.blackjack_game_logic as bjl
-import lib.cut_helper as cuthlpr
 
 
 
@@ -56,42 +54,329 @@ class Test_SHUFFLING:
         test_machine.step() # execute shuffle_cut_and_burn() in SHUFFLING
         assert test_machine.state == bjfsm.GameState.DEALING
 
-
-    def test_starting_single_deck_shoe_is_shuffle_cut_and_burned_correctly_at_min_cut_percentage_in_SHUFFLING(self):
-        ### Setup ###
+    def test_starting_single_deck_shoe_is_shuffle_cut_and_burned_correctly_at_randomly_chosen_pen_in_SHUFFLING(self):
+        ## Setup ##
         num_of_decks = 1
-        min_cut_percentage_single_deck_shoe = 50
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.transition(bjfsm.GameState.SHUFFLING)
-        test_machine.step() # execute shuffle_cut_and_burn()
-
-        ### Checking Shoe Integrity ###
+        test_machine.step() # executes start_game() in STARTING
+        test_machine.step() # execute shuffle_cut_and_burn() in SHUFFLING
+        ## Checking Shoe Integrity ##
         # Verify deck size and pen percentage is in-bounds for a single deck shoe
         assert len(test_machine.shoe) == 1+52*1
-        assert test_machine.pen in range(50, 70)
+        assert test_machine.pen in range(50, 71)
         # Verify cut cards are present and are placed correctly in-bounds for a single deck shoe
         assert 'front_cut_card' in test_machine.shoe[26:37]
         assert test_machine.shoe[-1] == 'back_cut_card'
         # Verify there's 1 copy of each non-cut card across shoe and discard, for a single deck shoe
         card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
+        card_occurrence_counts[test_machine.discard[0]] += 1
         for card in test_machine.shoe:
             if (card != 'front_cut_card') and (card != 'back_cut_card'):
                 card_occurrence_counts[card] += 1
-        if (len(test_machine.discard) == 1):
-            card_occurrence_counts[test_machine.discard[0]] += 1
         for card in card_occurrence_counts:
+            #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
+            assert card_occurrence_counts[card] == 1
+
+    def test_starting_eight_deck_shoe_is_shuffle_cut_and_burned_correctly_at_randomly_chosen_pen_in_SHUFFLING(self):
+        ## Setup ##
+        num_of_decks = 8
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step() # executes start_game() in STARTING
+        test_machine.step() # execute shuffle_cut_and_burn() in SHUFFLING
+        ## Checking Shoe Integrity ##
+        # Verify deck size and pen percentage is in-bounds for an eight-deck shoe
+        assert len(test_machine.shoe) == 1+52*8
+        assert test_machine.pen in range(70, 91)
+        # Verify cut cards are present and are placed correctly in-bounds for an eight-deck shoe
+        assert 'front_cut_card' in test_machine.shoe[291:375]
+        assert test_machine.shoe[-1] == 'back_cut_card'
+        # Verify there's 8 copies of each non-cut card across shoe and discard, for an eight-deck shoe
+        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
+        card_occurrence_counts[test_machine.discard[0]] += 1
+        for card in test_machine.shoe:
             if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
-                assert card_occurrence_counts[card] == 1
+                card_occurrence_counts[card] += 1
+        for card in card_occurrence_counts:
+            #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
+            assert card_occurrence_counts[card] == 8
 
+    def test_one_deck_shoe_is_shuffle_cut_and_burned_correctly_at_min_pen_of_50_percent_in_SHUFFLING(self):
+        ## Setup ##
+        num_of_decks = 1
+        min_cut_percentage_one_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][0]
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step() # executes start_game() in STARTING
+        test_machine.shuffle_cut_and_burn(min_cut_percentage_one_deck_shoe) # manually execute SHUFFLING /w 50% pen
+        ## Checking Shoe Integrity ##
+        # Verify deck size and minimum (50%) pen percentage for a one-deck shoe
+        assert len(test_machine.shoe) == 1+52*1
+        assert test_machine.pen == 50
+        # Verify cut cards are present and are placed correctly at minimum (50%) pen for a one-deck shoe
+        assert test_machine.shoe[26] == 'front_cut_card'
+        assert test_machine.shoe[-1] == 'back_cut_card'
+        # Verify there's 1 copy of each non-cut card across shoe and discard, for a one-deck shoe
+        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
+        card_occurrence_counts[test_machine.discard[0]] += 1
+        for card in test_machine.shoe:
+            if (card != 'front_cut_card') and (card != 'back_cut_card'):
+                card_occurrence_counts[card] += 1
+        for card in card_occurrence_counts:
+            #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
+            assert card_occurrence_counts[card] == 1
 
+    def test_one_deck_shoe_is_shuffle_cut_and_burned_correctly_at_max_pen_of_70_percent_in_SHUFFLING(self):
+        ## Setup ##
+        num_of_decks = 1
+        min_cut_percentage_one_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][1]
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step() # executes start_game() in STARTING
+        test_machine.shuffle_cut_and_burn(min_cut_percentage_one_deck_shoe) # manually execute SHUFFLING /w 70% pen
+        ## Checking Shoe Integrity ##
+        # Verify deck size and maximum (70%) pen percentage for a one-deck shoe
+        assert len(test_machine.shoe) == 1+52*1
+        assert test_machine.pen == 70
+        # Verify cut cards are present and are placed correctly at maximum (70%) pen for a one-deck shoe
+        assert test_machine.shoe[36] == 'front_cut_card'
+        assert test_machine.shoe[-1] == 'back_cut_card'
+        # Verify there's 1 copy of each non-cut card across shoe and discard, for a one-deck shoe
+        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
+        card_occurrence_counts[test_machine.discard[0]] += 1
+        for card in test_machine.shoe:
+            if (card != 'front_cut_card') and (card != 'back_cut_card'):
+                card_occurrence_counts[card] += 1
+        for card in card_occurrence_counts:
+            #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
+            assert card_occurrence_counts[card] == 1
 
-class TestMachine:
-    def test_beginning_state_is_STARTING(self):
+    def test_two_deck_shoe_is_shuffle_cut_and_burned_correctly_at_min_pen_of_55_percent_in_SHUFFLING(self):
+        ## Setup ##
+        num_of_decks = 2
+        min_cut_percentage_two_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][0]
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step() # executes start_game() in STARTING
+        test_machine.shuffle_cut_and_burn(min_cut_percentage_two_deck_shoe) # manually execute SHUFFLING /w 55% pen
+        ## Checking Shoe Integrity ##
+        # Verify deck size and minimum (55%) pen percentage for a two-deck shoe
+        assert len(test_machine.shoe) == 1+52*2
+        assert test_machine.pen == 55
+        # Verify cut cards are present and are placed correctly at minimum (55%) pen for a two-deck shoe
+        assert test_machine.shoe[57] == 'front_cut_card'
+        assert test_machine.shoe[-1] == 'back_cut_card'
+        # Verify there's 2 copies of each non-cut card across shoe and discard, for a two-deck shoe
+        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
+        card_occurrence_counts[test_machine.discard[0]] += 1
+        for card in test_machine.shoe:
+            if (card != 'front_cut_card') and (card != 'back_cut_card'):
+                card_occurrence_counts[card] += 1   
+        for card in card_occurrence_counts:
+            #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
+            assert card_occurrence_counts[card] == 2
+
+    def test_two_deck_shoe_is_shuffle_cut_and_burned_correctly_at_max_pen_of_75_percent_in_SHUFFLING(self):
+        ## Setup ##
+        num_of_decks = 2
+        min_cut_percentage_two_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][1]
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step() # executes start_game() in STARTING
+        test_machine.shuffle_cut_and_burn(min_cut_percentage_two_deck_shoe) # manually execute SHUFFLING /w 75% pen
+        ## Checking Shoe Integrity ##
+        # Verify deck size and maximum (75%) pen percentage for a two-deck shoe
+        assert len(test_machine.shoe) == 1+52*2
+        assert test_machine.pen == 75
+        # Verify cut cards are present and are placed correctly at maximum (75%) pen for a two-deck shoe
+        assert test_machine.shoe[78] == 'front_cut_card'
+        assert test_machine.shoe[-1] == 'back_cut_card'
+        # Verify there's 2 copies of each non-cut card across shoe and discard, for a two-deck shoe
+        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
+        card_occurrence_counts[test_machine.discard[0]] += 1
+        for card in test_machine.shoe:
+            if (card != 'front_cut_card') and (card != 'back_cut_card'):
+                card_occurrence_counts[card] += 1
+        for card in card_occurrence_counts:
+            #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
+            assert card_occurrence_counts[card] == 2
+
+    def test_four_deck_shoe_is_shuffle_cut_and_burned_correctly_at_min_pen_of_60_percent_in_SHUFFLING(self):
+        ## Setup ##
+        num_of_decks = 4
+        min_cut_percentage_four_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][0]
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step() # executes start_game() in STARTING
+        test_machine.shuffle_cut_and_burn(min_cut_percentage_four_deck_shoe) # manually execute SHUFFLING /w 60% pen
+        ## Checking Shoe Integrity ##
+        # Verify deck size and minimum (60%) pen percentage for a four-deck shoe
+        assert len(test_machine.shoe) == 1+52*4
+        assert test_machine.pen == 60
+        # Verify cut cards are present and are placed correctly at minimum (60%) pen for a four-deck shoe
+        assert test_machine.shoe[124] == 'front_cut_card'
+        assert test_machine.shoe[-1] == 'back_cut_card'
+        # Verify there's 4 copies of each non-cut card across shoe and discard, for a four-deck shoe
+        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
+        card_occurrence_counts[test_machine.discard[0]] += 1
+        for card in test_machine.shoe:
+            if (card != 'front_cut_card') and (card != 'back_cut_card'):
+                card_occurrence_counts[card] += 1
+        for card in card_occurrence_counts:
+            #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
+            assert card_occurrence_counts[card] == 4
+
+    def test_four_deck_shoe_is_shuffle_cut_and_burned_correctly_at_max_pen_of_80_percent_in_SHUFFLING(self):
+        ## Setup ##
+        num_of_decks = 4
+        min_cut_percentage_four_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][1]
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step() # executes start_game() in STARTING
+        test_machine.shuffle_cut_and_burn(min_cut_percentage_four_deck_shoe) # manually execute SHUFFLING /w 80% pen
+        ## Checking Shoe Integrity ##
+        # Verify deck size and maximum (80%) pen percentage for a four-deck shoe
+        assert len(test_machine.shoe) == 1+52*4
+        assert test_machine.pen == 80
+        # Verify cut cards are present and are placed correctly at maximum (80%) pen for a four-deck shoe
+        assert test_machine.shoe[166] == 'front_cut_card'
+        assert test_machine.shoe[-1] == 'back_cut_card'
+        # Verify there's 4 copies of each non-cut card across shoe and discard, for a four-deck shoe
+        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
+        card_occurrence_counts[test_machine.discard[0]] += 1
+        for card in test_machine.shoe:
+            if (card != 'front_cut_card') and (card != 'back_cut_card'):
+                card_occurrence_counts[card] += 1
+        for card in card_occurrence_counts:
+            #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
+            assert card_occurrence_counts[card] == 4
+
+    def test_six_deck_shoe_is_shuffle_cut_and_burned_correctly_at_min_pen_of_65_percent_in_SHUFFLING(self):
+        ## Setup ##
+        num_of_decks = 6
+        min_cut_percentage_six_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][0]
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step() # executes start_game() in STARTING
+        test_machine.shuffle_cut_and_burn(min_cut_percentage_six_deck_shoe) # manually execute SHUFFLING /w 65% pen
+        ## Checking Shoe Integrity ##
+        # Verify deck size and minimum (65%) pen percentage for a six-deck shoe
+        assert len(test_machine.shoe) == 1+52*6
+        assert test_machine.pen == 65
+        # Verify cut cards are present and are placed correctly at minimum (65%) pen for a six-deck shoe
+        assert test_machine.shoe[202] == 'front_cut_card'
+        assert test_machine.shoe[-1] == 'back_cut_card'
+        # Verify there's 6 copies of each non-cut card across shoe and discard, for a six-deck shoe
+        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
+        card_occurrence_counts[test_machine.discard[0]] += 1
+        for card in test_machine.shoe:
+            if (card != 'front_cut_card') and (card != 'back_cut_card'):
+                card_occurrence_counts[card] += 1
+        for card in card_occurrence_counts:
+            #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
+            assert card_occurrence_counts[card] == 6
+
+    def test_six_deck_shoe_is_shuffle_cut_and_burned_correctly_at_max_pen_of_85_percent_in_SHUFFLING(self):
+        ## Setup ##
+        num_of_decks = 6
+        min_cut_percentage_six_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][1]
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step() # executes start_game() in STARTING
+        test_machine.shuffle_cut_and_burn(min_cut_percentage_six_deck_shoe) # manually execute SHUFFLING /w 85% pen
+        ## Checking Shoe Integrity ##
+        # Verify deck size and maximum (85%) pen percentage for a six-deck shoe
+        assert len(test_machine.shoe) == 1+52*6
+        assert test_machine.pen == 85
+        # Verify cut cards are present and are placed correctly at maximum (85%) pen for a six-deck shoe
+        assert test_machine.shoe[265] == 'front_cut_card'
+        assert test_machine.shoe[-1] == 'back_cut_card'
+        # Verify there's 6 copies of each non-cut card across shoe and discard, for a six-deck shoe
+        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
+        card_occurrence_counts[test_machine.discard[0]] += 1
+        for card in test_machine.shoe:
+            if (card != 'front_cut_card') and (card != 'back_cut_card'):
+                card_occurrence_counts[card] += 1
+        for card in card_occurrence_counts:
+            #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
+            assert card_occurrence_counts[card] == 6
+
+    def test_eight_deck_shoe_is_shuffle_cut_and_burned_correctly_at_min_pen_of_70_percent_in_SHUFFLING(self):
+        ## Setup ##
+        num_of_decks = 8
+        min_cut_percentage_eight_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][0]
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step() # executes start_game() in STARTING
+        test_machine.shuffle_cut_and_burn(min_cut_percentage_eight_deck_shoe) # manually execute SHUFFLING /w 70% pen
+        ## Checking Shoe Integrity ##
+        # Verify deck size and minimum (70%) pen percentage for an eight-deck shoe
+        assert len(test_machine.shoe) == 1+52*8
+        assert test_machine.pen == 70
+        # Verify cut cards are present and are placed correctly at minimum (70%) pen for an eight-deck shoe
+        assert test_machine.shoe[291] == 'front_cut_card'
+        assert test_machine.shoe[-1] == 'back_cut_card'
+        # Verify there's 8 copies of each non-cut card across shoe and discard, for an eight-deck shoe
+        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
+        card_occurrence_counts[test_machine.discard[0]] += 1
+        for card in test_machine.shoe:
+            if (card != 'front_cut_card') and (card != 'back_cut_card'):
+                card_occurrence_counts[card] += 1
+        for card in card_occurrence_counts:
+            #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
+            assert card_occurrence_counts[card] == 8
+
+    def test_eight_deck_shoe_is_shuffle_cut_and_burned_correctly_at_max_pen_of_90_percent_in_SHUFFLING(self):
+        ## Setup ##
+        num_of_decks = 8
+        min_cut_percentage_eight_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][1]
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step() # executes start_game() in STARTING
+        test_machine.shuffle_cut_and_burn(min_cut_percentage_eight_deck_shoe) # manually execute SHUFFLING /w 90% pen
+        ## Checking Shoe Integrity ##
+        # Verify deck size and maximum (90%) pen percentage for an eight-deck shoe
+        assert len(test_machine.shoe) == 1+52*8
+        assert test_machine.pen == 90
+        # Verify cut cards are present and are placed correctly at maximum (90%) pen for an eight-deck shoe
+        assert test_machine.shoe[374] == 'front_cut_card'
+        assert test_machine.shoe[-1] == 'back_cut_card'
+        # Verify there's 8 copies of each non-cut card across shoe and discard, for an eight-deck shoe
+        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
+        card_occurrence_counts[test_machine.discard[0]] += 1
+        for card in test_machine.shoe:
+            if (card != 'front_cut_card') and (card != 'back_cut_card'):
+                card_occurrence_counts[card] += 1
+        for card in card_occurrence_counts:
+            #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
+            assert card_occurrence_counts[card] == 8
+
+    
+class Test_DEALING:
+    def test_blackjack_state_machine_transitions_to_SCORING_from_DEALING(self):
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        assert test_machine.state == bjfsm.GameState.STARTING
+        test_machine.step() # executes start_game() in STARTING
+        test_machine.step() # execute shuffle_cut_and_burn() in SHUFFLING
+        test_machine.step() # executes deal() in DEALING
+        assert test_machine.state == bjfsm.GameState.SCORING
 
+    def test_first_player_has_one_hand_dealt_in_DEALING(self):
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step() # executes start_game() in STARTING
+        test_machine.step() # executes shuffle_cut_and_burn(None) in SHUFFLING
+        test_machine.step() # executes deal() in DEALING
+        assert len(test_machine.joined_players[0].current_hands) == 1
+
+    def test_dealer_has_one_hand_dealt_in_DEALING(self):
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step() # executes start_game() in STARTING
+        test_machine.step() # executes shuffle_cut_and_burn(None) in SHUFFLING
+        test_machine.step() # executes deal() in DEALING
+        assert len(test_machine.dealer.current_hands) == 1
+
+    def test_one_deck_shoe_has_49_cards_left_after_one_player_and_one_dealer_are_dealt_hands_in_DEALING(self):
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step() # executes start_game() in STARTING
+        test_machine.step() # executes shuffle_cut_and_burn(None) in SHUFFLING
+        test_machine.step() # executes deal() in DEALING
+        assert len(test_machine.shoe) == 49
+
+
+
+class TestMiscellaneous:
     def test_invalid_state_transition_handled(self):
         BadState = Enum('BadState', ['InvalidState'])
         num_of_decks = 1
@@ -118,370 +403,7 @@ class TestMachine:
     """
 
 
-class TestShoeSetup:
-    def test_single_deck_shoe_set_up_correctly_at_min_hardcoded_pen_bound_of_fifty_percent(self):
-        ### Setup ###
-        num_of_decks = 1
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        # First Cut
-        cuthlpr.first_cut(test_machine.shoe)
-        # Second Cut at minimum pen (50%) for a single deck shoe
-        test_machine.pen = cuthlpr.second_cut(
-            test_machine.shoe, bjs.casino_deck_pen_percentage_bounds[num_of_decks][0])
-        # Burn the first card in shoe
-        test_machine.discard.extend([test_machine.shoe.pop(0)])
-
-        ### Checking Shoe Integrity ###
-        # Verify deck size and minimum (50%) pen percentage for a single deck shoe
-        assert len(test_machine.shoe) == 1+52*1
-        assert test_machine.pen == 50
-        # Verify cut cards are present and are placed correctly at minimum (50%) pen for a single deck shoe
-        assert test_machine.shoe[26] == 'front_cut_card'
-        assert test_machine.shoe[-1] == 'back_cut_card'
-        # Verify there's 1 copy of each non-cut card across shoe and discard, for a single deck shoe
-        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
-        for card in test_machine.shoe:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                card_occurrence_counts[card] += 1
-        if (len(test_machine.discard) == 1):
-            card_occurrence_counts[test_machine.discard[0]] += 1
-        for card in card_occurrence_counts:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
-                assert card_occurrence_counts[card] == 1
-
-    def test_single_deck_shoe_set_up_correctly_at_max_hardcoded_pen_bound_of_seventy_percent(self):
-        ### Setup ###
-        num_of_decks = 1
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        # First Cut
-        cuthlpr.first_cut(test_machine.shoe)
-        # Second Cut at maximum pen (70%) for a single deck shoe
-        test_machine.pen = cuthlpr.second_cut(
-            test_machine.shoe, bjs.casino_deck_pen_percentage_bounds[num_of_decks][1])
-        # Burn the first card in shoe
-        test_machine.discard.extend([test_machine.shoe.pop(0)])
-
-        ### Checking Shoe Integrity ###
-        # Verify deck size and maximum (70%) pen percentage for a single deck shoe
-        assert len(test_machine.shoe) == 1+52*1
-        assert test_machine.pen == 70
-        # Verify cut cards are present and are placed correctly at maximum (70%) pen for a single deck shoe
-        assert test_machine.shoe[36] == 'front_cut_card'
-        assert test_machine.shoe[-1] == 'back_cut_card'
-        # Verify there's 1 copy of each non-cut card across shoe and discard, for a single deck shoe
-        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
-        for card in test_machine.shoe:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                card_occurrence_counts[card] += 1
-        if (len(test_machine.discard) == 1):
-            card_occurrence_counts[test_machine.discard[0]] += 1
-        for card in card_occurrence_counts:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
-                assert card_occurrence_counts[card] == 1
-
-    def test_double_deck_shoe_set_up_correctly_at_min_hardcoded_pen_bound_of_fifty_five_percent(self):
-        ### Setup ###
-        num_of_decks = 2
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        # First Cut
-        cuthlpr.first_cut(test_machine.shoe)
-        # Second Cut at minimum pen (55%) for a double deck shoe
-        test_machine.pen = cuthlpr.second_cut(
-            test_machine.shoe, bjs.casino_deck_pen_percentage_bounds[num_of_decks][0])
-        # Burn the first card in shoe
-        test_machine.discard.extend([test_machine.shoe.pop(0)])
-
-        ### Checking Shoe Integrity ###
-        # Verify deck size and minimum (55%) pen percentage for a double deck shoe
-        assert len(test_machine.shoe) == 1+52*2
-        assert test_machine.pen == 55
-        # Verify cut cards are present and are placed correctly at minimum (55%) pen for a double deck shoe
-        assert test_machine.shoe[57] == 'front_cut_card'
-        assert test_machine.shoe[-1] == 'back_cut_card'
-        # Verify there's 2 copies of each non-cut card across shoe and discard, for a double deck shoe
-        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
-        for card in test_machine.shoe:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                card_occurrence_counts[card] += 1
-        if (len(test_machine.discard) == 1):
-            card_occurrence_counts[test_machine.discard[0]] += 1
-        for card in card_occurrence_counts:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
-                assert card_occurrence_counts[card] == 2
-
-    def test_double_deck_shoe_set_up_correctly_at_max_hardcoded_pen_bound_of_seventy_five_percent(self):
-        ### Setup ###
-        num_of_decks = 2
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        # First Cut
-        cuthlpr.first_cut(test_machine.shoe)
-        # Second Cut at maximum pen (75%) for a double deck shoe
-        test_machine.pen = cuthlpr.second_cut(
-            test_machine.shoe, bjs.casino_deck_pen_percentage_bounds[num_of_decks][1])
-        # Burn the first card in shoe
-        test_machine.discard.extend([test_machine.shoe.pop(0)])
-
-        ### Checking Shoe Integrity ###
-        # Verify deck size and maximum (75%) pen percentage for a double deck shoe
-        assert len(test_machine.shoe) == 1+52*2
-        assert test_machine.pen == 75
-        # Verify cut cards are present and are placed correctly at maximum (75%) pen for a double deck shoe
-        assert test_machine.shoe[78] == 'front_cut_card'
-        assert test_machine.shoe[-1] == 'back_cut_card'
-        # Verify there's 2 copies of each non-cut card across shoe and discard, for a double deck shoe
-        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
-        for card in test_machine.shoe:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                card_occurrence_counts[card] += 1
-        if (len(test_machine.discard) == 1):
-            card_occurrence_counts[test_machine.discard[0]] += 1
-        for card in card_occurrence_counts:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
-                assert card_occurrence_counts[card] == 2
-
-    def test_four_deck_shoe_set_up_correctly_at_min_hardcoded_pen_bound_of_sixty_percent(self):
-        ### Setup ###
-        num_of_decks = 4
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        # First Cut
-        cuthlpr.first_cut(test_machine.shoe)
-        # Second Cut at minimum pen (60%) for a four-deck shoe
-        test_machine.pen = cuthlpr.second_cut(
-            test_machine.shoe, bjs.casino_deck_pen_percentage_bounds[num_of_decks][0])
-        # Burn the first card in shoe
-        test_machine.discard.extend([test_machine.shoe.pop(0)])
-
-        ### Checking Shoe Integrity ###
-        # Verify deck size and minimum (60%) pen percentage for a four-deck shoe
-        assert len(test_machine.shoe) == 1+52*4
-        assert test_machine.pen == 60
-        # Verify cut cards are present and are placed correctly at minimum (60%) pen for a four-deck shoe
-        assert test_machine.shoe[124] == 'front_cut_card'
-        assert test_machine.shoe[-1] == 'back_cut_card'
-        # Verify there's 4 copies of each non-cut card across shoe and discard, for a four-deck shoe
-        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
-        for card in test_machine.shoe:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                card_occurrence_counts[card] += 1
-        if (len(test_machine.discard) == 1):
-            card_occurrence_counts[test_machine.discard[0]] += 1
-        for card in card_occurrence_counts:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
-                assert card_occurrence_counts[card] == 4
-
-    def test_four_deck_shoe_set_up_correctly_at_max_hardcoded_pen_bound_of_eighty_percent(self):
-        ### Setup ###
-        num_of_decks = 4
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        # First Cut
-        cuthlpr.first_cut(test_machine.shoe)
-        # Second Cut at maximum pen (80%) for a four-deck shoe
-        test_machine.pen = cuthlpr.second_cut(
-            test_machine.shoe, bjs.casino_deck_pen_percentage_bounds[num_of_decks][1])
-        # Burn the first card in shoe
-        test_machine.discard.extend([test_machine.shoe.pop(0)])
-
-        ### Checking Shoe Integrity ###
-        # Verify deck size and maximum (80%) pen percentage for a four-deck shoe
-        assert len(test_machine.shoe) == 1+52*4
-        assert test_machine.pen == 80
-        # Verify cut cards are present and are placed correctly at maximum (80%) pen for a four-deck
-        assert test_machine.shoe[166] == 'front_cut_card'
-        assert test_machine.shoe[-1] == 'back_cut_card'
-        # Verify there's 4 copies of each non-cut card across shoe and discard, for a four-deck shoe
-        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
-        for card in test_machine.shoe:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                card_occurrence_counts[card] += 1
-        if (len(test_machine.discard) == 1):
-            card_occurrence_counts[test_machine.discard[0]] += 1
-        for card in card_occurrence_counts:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
-                assert card_occurrence_counts[card] == 4
-
-    def test_six_deck_shoe_set_up_correctly_at_min_hardcoded_pen_bound_of_sixty_five_percent(self):
-        ### Setup ###
-        num_of_decks = 6
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        # First Cut
-        cuthlpr.first_cut(test_machine.shoe)
-        # Second Cut at minimum pen (65%) for a six-deck shoe
-        test_machine.pen = cuthlpr.second_cut(
-            test_machine.shoe, bjs.casino_deck_pen_percentage_bounds[num_of_decks][0])
-        # Burn the first card in shoe
-        test_machine.discard.extend([test_machine.shoe.pop(0)])
-
-        ### Checking Shoe Integrity ###
-        # Verify deck size and minimum (65%) pen percentage for a six-deck shoe
-        assert len(test_machine.shoe) == 1+52*6
-        assert test_machine.pen == 65
-        # Verify cut cards are present and are placed correctly at minimum (65%) pen for a six-deck shoe
-        assert test_machine.shoe[202] == 'front_cut_card'
-        assert test_machine.shoe[-1] == 'back_cut_card'
-        # Verify there's 6 copies of each non-cut card across shoe and discard, for a six-deck shoe
-        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
-        for card in test_machine.shoe:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                card_occurrence_counts[card] += 1
-        if (len(test_machine.discard) == 1):
-            card_occurrence_counts[test_machine.discard[0]] += 1
-        for card in card_occurrence_counts:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
-                assert card_occurrence_counts[card] == 6
-
-    def test_six_deck_shoe_set_up_correctly_at_max_hardcoded_pen_bound_of_eighty_five_percent(self):
-        ### Setup ###
-        num_of_decks = 6
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        # First Cut
-        cuthlpr.first_cut(test_machine.shoe)
-        # Second Cut at maximum pen (85%) for a six-deck shoe
-        test_machine.pen = cuthlpr.second_cut(
-            test_machine.shoe, bjs.casino_deck_pen_percentage_bounds[num_of_decks][1])
-        # Burn the first card in shoe
-        test_machine.discard.extend([test_machine.shoe.pop(0)])
-
-        ### Checking Shoe Integrity ###
-        # Verify deck size and maximum (85%) pen percentage for a six-deck shoe
-        assert len(test_machine.shoe) == 1+52*6
-        assert test_machine.pen == 85
-        # Verify cut cards are present and are placed correctly at maximum (85%) pen for a six-deck shoe
-        assert test_machine.shoe[265] == 'front_cut_card'
-        assert test_machine.shoe[-1] == 'back_cut_card'
-        # Verify there's 6 copies of each non-cut card across shoe and discard, for a six-deck shoe
-        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
-        for card in test_machine.shoe:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                card_occurrence_counts[card] += 1
-        if (len(test_machine.discard) == 1):
-            card_occurrence_counts[test_machine.discard[0]] += 1
-        for card in card_occurrence_counts:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
-                assert card_occurrence_counts[card] == 6
-
-    def test_eight_deck_shoe_set_up_correctly_at_min_hardcoded_pen_bound_of_seventy_percent(self):
-        ### Setup ###
-        num_of_decks = 8
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        # First Cut
-        cuthlpr.first_cut(test_machine.shoe)
-        # Second Cut at minimum pen (70%) for an eight-deck shoe
-        test_machine.pen = cuthlpr.second_cut(
-            test_machine.shoe, bjs.casino_deck_pen_percentage_bounds[num_of_decks][0])
-        # Burn the first card in shoe
-        test_machine.discard.extend([test_machine.shoe.pop(0)])
-
-        ### Checking Shoe Integrity ###
-        # Verify deck size and minimum (70%) pen percentage for an eight-deck shoe
-        assert len(test_machine.shoe) == 1+52*8
-        assert test_machine.pen == 70
-        # Verify cut cards are present and are placed correctly at minimum (70%) pen for an eight-deck shoe
-        assert test_machine.shoe[291] == 'front_cut_card'
-        assert test_machine.shoe[-1] == 'back_cut_card'
-        # Verify there's 8 copies of each non-cut card across shoe and discard, for an eight-deck shoe
-        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
-        for card in test_machine.shoe:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                card_occurrence_counts[card] += 1
-        if (len(test_machine.discard) == 1):
-            card_occurrence_counts[test_machine.discard[0]] += 1
-        for card in card_occurrence_counts:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
-                assert card_occurrence_counts[card] == 8
-
-    def test_eight_deck_shoe_set_up_correctly_at_max_hardcoded_pen_bound_of_ninety_percent(self):
-        ### Setup ###
-        num_of_decks = 8
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        # First Cut
-        cuthlpr.first_cut(test_machine.shoe)
-        # Second Cut at maximum pen (90%) for an eight-deck shoe
-        test_machine.pen = cuthlpr.second_cut(
-            test_machine.shoe, bjs.casino_deck_pen_percentage_bounds[num_of_decks][1])
-        # Burn the first card in shoe
-        test_machine.discard.extend([test_machine.shoe.pop(0)])
-
-        ### Checking Shoe Integrity ###
-        # Verify deck size and maximum (90%) pen percentage for an eight-deck shoe
-        assert len(test_machine.shoe) == 1+52*8
-        assert test_machine.pen == 90
-        # Verify cut cards are present and are placed correctly at maximum (90%) pen for an eight-deck shoe
-        assert test_machine.shoe[374] == 'front_cut_card'
-        assert test_machine.shoe[-1] == 'back_cut_card'
-        # Verify there's 8 copies of each non-cut card across shoe and discard, for an eight-deck shoe
-        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
-        for card in test_machine.shoe:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                card_occurrence_counts[card] += 1
-        if (len(test_machine.discard) == 1):
-            card_occurrence_counts[test_machine.discard[0]] += 1
-        for card in card_occurrence_counts:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
-                assert card_occurrence_counts[card] == 8
-
-
-class TestShuffling:
-    def test_starting_single_deck_shoe_is_shuffle_cut_and_burned_correctly_in_SHUFFLING(self):
-        ### Setup ###
-        num_of_decks = 1
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.transition(bjfsm.GameState.SHUFFLING)
-        test_machine.step() # execute shuffle_cut_and_burn()
-
-        ### Checking Shoe Integrity ###
-        # Verify deck size and pen percentage is in-bounds for a single deck shoe
-        assert len(test_machine.shoe) == 1+52*1
-        assert test_machine.pen in range(50, 70)
-        # Verify cut cards are present and are placed correctly in-bounds for a single deck shoe
-        assert 'front_cut_card' in test_machine.shoe[26:37]
-        assert test_machine.shoe[-1] == 'back_cut_card'
-        # Verify there's 1 copy of each non-cut card across shoe and discard, for a single deck shoe
-        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
-        for card in test_machine.shoe:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                card_occurrence_counts[card] += 1
-        if (len(test_machine.discard) == 1):
-            card_occurrence_counts[test_machine.discard[0]] += 1
-        for card in card_occurrence_counts:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
-                assert card_occurrence_counts[card] == 1
-
-    def test_starting_eight_deck_shoe_is_shuffle_cut_and_burned_correctly_in_SHUFFLING(self):
-        ### Setup ###
-        num_of_decks = 8
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.transition(bjfsm.GameState.SHUFFLING)
-        test_machine.step() # executes shuffle_cut_and_burn()
-        ### Checking Shoe Integrity ###
-        # Verify deck size and pen percentage is in-bounds for an eight-deck shoe
-        assert len(test_machine.shoe) == 1+52*8
-        assert test_machine.pen in range(70, 90)
-        # Verify cut cards are present and are placed correctly in-bounds for an eight-deck shoe
-        assert 'front_cut_card' in test_machine.shoe[291:375]
-        assert test_machine.shoe[-1] == 'back_cut_card'
-        # Verify there's 8 copies of each non-cut card across shoe and discard, for an eight-deck shoe
-        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
-        for card in test_machine.shoe:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                card_occurrence_counts[card] += 1
-        if (len(test_machine.discard) == 1):
-            card_occurrence_counts[test_machine.discard[0]] += 1
-        for card in card_occurrence_counts:
-            if (card != 'front_cut_card') and (card != 'back_cut_card'):
-                #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
-                assert card_occurrence_counts[card] == 8
-
+class TestReshuffling:
     def test_single_deck_shoe_not_reshuffled_at_or_before_min_pen_bound_of_fifty_percent(self, monkeypatch):
         # Shuffle single-deck shoe at 50% pen ('front_cut_card' is at index 26)
         num_of_decks = 1
@@ -520,24 +442,6 @@ class TestShuffling:
                 test_machine.step() # executes play() in GameState.PLAYING /w supplied user input of 'stand'
         # Verify state machine is reshuffling at round end after dealing 28 cards
         assert test_machine.state == bjfsm.GameState.SHUFFLING
-
-
-class TestPlayerSetup:
-    def test_first_player_has_one_hand_dealt_in_DEALING(self):
-        num_of_decks = 1
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes start_game() in STARTING
-        test_machine.step() # executes shuffle_cut_and_burn(None) in SHUFFLING
-        test_machine.step() # executes deal() in DEALING
-        assert len(test_machine.joined_players[0].current_hands) == 1
-
-    def test_dealer_has_one_hand_dealt_in_DEALING(self):
-        num_of_decks = 1
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes start_game() in STARTING
-        test_machine.step() # executes shuffle_cut_and_burn(None) in SHUFFLING
-        test_machine.step() # executes deal() in DEALING
-        assert len(test_machine.dealer.current_hands) == 1
 
 
 class TestScoringNaturalBlackjacks:
