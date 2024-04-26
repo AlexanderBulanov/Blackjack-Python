@@ -431,7 +431,7 @@ class BlackjackStateMachine:
     def dealer_plays(self):
         initial_dealer_hand_score = self.dealer.current_hand_scores[0]
         if self.seventeen_rule == 'S17':
-            print(self.seventeen_rule, "is in play")
+            print(self.seventeen_rule, "rule is in play")
             if (initial_dealer_hand_score >= 17):
                 print("Dealer stands with a score of", initial_dealer_hand_score)
                 self.transition(GameState.ROUND_ENDING)
@@ -447,14 +447,18 @@ class BlackjackStateMachine:
                     self.dealer.current_hand_scores.append(new_dealer_hand_score)
                     print("Dealer's hand is now", self.dealer.current_hands[0],
                         "and has a score of", self.dealer.current_hand_scores[0])
-                if (self.dealer.current_hand_scores[0] < 0):
+                if (self.dealer.current_hand_scores[0] == 21):
+                    print("Dealer hits Blackjack!")
+                    print("Pushing against all players who match the dealer")
+                    print("Collecting bets from all players who lose to dealer")
+                elif (self.dealer.current_hand_scores[0] < 0):
                     print("Dealer busts!")
-                    print("Remaining players win!")
+                    print("Paying all remaining players")
                 else:
                     print("Dealer stands with a final score of", self.dealer.current_hand_scores[0])
             self.transition(GameState.ROUND_ENDING)
         elif self.seventeen_rule == 'H17':
-            print(self.seventeen_rule, "is in play")
+            print(self.seventeen_rule, "rule is in play")
             if (initial_dealer_hand_score > 17):
                 print("Dealer stands with a score of", initial_dealer_hand_score)
                 self.transition(GameState.ROUND_ENDING)
@@ -477,7 +481,6 @@ class BlackjackStateMachine:
                     print("Dealer stands with a final score of", self.dealer.current_hand_scores[0])
                 self.transition(GameState.ROUND_ENDING)
         # debug log and assert
-
         else:
             print("[ERR] Seventeen rule syntax not recognized")
 
@@ -520,7 +523,7 @@ class BlackjackStateMachine:
                 self.score_all_joined_players_hands()
                 self.score_dealer_hand()
                 self.check_for_and_handle_dealer_blackjack()
-                if self.dealer.current_hand_scores[0] != 21:
+                if ((len(self.dealer.current_hand_scores) != 0) and (len(self.dealer.current_hands) != 0)):
                     self.check_for_and_handle_players_blackjacks()
             case GameState.PLAYER_PLAYING:
                 self.player_plays()

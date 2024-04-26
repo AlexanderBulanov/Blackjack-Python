@@ -25,6 +25,8 @@ class Player:
         self.Yellow = 0
         self.Brown = 0
         self.hole_card_face_down = False
+        self.current_bet = []
+        self.current_bet_value = None
         self.current_hands = []
         self.current_hand_scores = []
         self.action = None
@@ -59,6 +61,8 @@ class Player:
         Dealer.Yellow = 1000
         Dealer.Brown = 1000
         Dealer.hole_card_face_down = True
+        Dealer.current_bet = []
+        Dealer.current_bet_value = None
         Dealer.current_hands = []
         Dealer.current_hand_scores = []
         Dealer.action = None
@@ -79,6 +83,8 @@ class Player:
         NewPlayer.Yellow = 0
         NewPlayer.Brown = 0
         NewPlayer.hole_card_face_down = False
+        NewPlayer.current_bet = []
+        NewPlayer.current_bet_value = None
         NewPlayer.current_hands = []
         NewPlayer.current_hand_scores = []
         NewPlayer.action = None
@@ -91,7 +97,7 @@ class Player:
         else:
             print("Printing Statistics for Player '"+self.name+"'")
         for key, value in self.__dict__.items():
-            if key == 'current_balance':
+            if ((key == 'current_balance') or (key == 'current_bet_value')):
                 print(str(key)+": $"+str(value))
             elif (key == 'current_hands') and (self.hole_card_face_down == True):
                 hands = "["
