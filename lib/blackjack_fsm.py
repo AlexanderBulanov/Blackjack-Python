@@ -19,11 +19,12 @@ from . import cut_helper as cut
 class GameState(Enum):
     STARTING = 0
     SHUFFLING = 1
-    DEALING = 2
-    SCORING = 3
-    PLAYER_PLAYING = 4
-    DEALER_PLAYING = 5
-    ROUND_ENDING = 6
+    BETTING = 2
+    DEALING = 3
+    SCORING = 4
+    PLAYER_PLAYING = 5
+    DEALER_PLAYING = 6
+    ROUND_ENDING = 7
 
 
 class BlackjackStateMachine:
@@ -227,6 +228,17 @@ class BlackjackStateMachine:
         self.transition(GameState.DEALING)
 
     
+    def get_player_bets(self):
+        player_responses = {player: None for player in self.joined_players}
+        #Poll players continously until you receive a response from each
+        while None in player_responses.values():
+            # Valid responses - bets using any combination of chips except for odd number of Pink ones
+            # Other valid responses - bet using cash (???)
+            # Other valid responses - skip, leave
+            pass
+
+
+
     def handle_front_cut_card(self):
         if ('front_cut_card' == self.shoe[0]):
             self.discard.extend([self.shoe.pop(0)])
@@ -351,39 +363,26 @@ class BlackjackStateMachine:
             print("No players have natural Blackjack.")
             self.transition(GameState.PLAYER_PLAYING)
         else:
+            print("Paying Blackjacks to each eligible player hand")
             for player in self.current_round_natural_blackjacks.keys():
-                # Pay Blackjack to each natural hand
-                print("Paying Blackjack 3:2 to player", player.name)
-                """
-                self.discard.extend(player.current_hands.pop(player.current_hands.index(hand)))
-                # Remove player's leftmost discarded blackjack hand score
-                player.current_hand_scores.remove(21)
-                """
-
-                # Todo AB: DISCARD DEALER'S HAND IF ALL self.joined_players HAD BLACKJACKS
-                self.transition(GameState.DEALING)
-
-
-
-        """
-        # Check if a player has only one hand and one score; process accordingly
-        #self.print_all_hands()
-        if (len(self.active_player.current_hands) == 1) and (len(self.active_player.current_hand_scores) == 1):
-            if (self.active_player.current_hand_scores[0] == 21):
-                # Payout Blackjack to all winning hands from left to right
-                print("Blackjack!")
-                self.transition(GameState.CLEANUP)
-            elif (self.active_player.current_hand_scores[0]  == -1):
-                print("Bust!")
-                # Take bet associated /w hand
-                # Put bust hand into discard
-                pass
-                #self.transition(GameState.CLEANUP)
-            else:
-                self.transition(GameState.PLAYER_PLAYING)
-            print("Player score is:", self.active_player.current_hand_scores[0])
-            return self.active_player.current_hand_scores[0]
-        """
+                # Iterate over all Blackjack hands
+                for hand_count in range(0, len(self.current_round_natural_blackjacks[player])):
+                    hand = self.current_round_natural_blackjacks[player][0]
+                    # Pay Blackjack to player
+                    print("Paying Blackjack 3:2 to player", player.name, "with hand of", hand)
+                    # Remove player's Blackjack hand from list of natural blackjacks for that player
+                    self.current_round_natural_blackjacks[player].remove(hand)
+                    # Discard player's Blackjack hand
+                    self.discard.extend(player.current_hands.pop(player.current_hands.index(hand)))
+            remaining_hands = 0
+            for player in self.joined_players:
+                remaining_hands += len(player.current_hands)
+            if remaining_hands == 0:
+                # Discard Dealer's non-Blackjack hand
+                self.discard.extend(self.dealer.current_hands.pop(0))
+                # Reset Dealer's hand score
+                self.dealer.current_hand_scores.clear()
+            self.transition(GameState.DEALING)
 
 
     def deal(self):
@@ -545,6 +544,10 @@ class BlackjackStateMachine:
                 #print("Running has been set to",running)
 
 
+"""
+case GameState.BETTING:
+    self.get_player_bets()
+"""
 
 
 
