@@ -15,6 +15,77 @@ import lib.blackjack_game_logic as bjl
 import lib.cut_helper as cuthlpr
 
 
+
+class Test_STARTING:
+    def test_blackjack_state_machine_beginning_state_is_STARTING(self):
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        assert test_machine.state == bjfsm.GameState.STARTING
+
+    def test_blackjack_state_machine_transitions_to_SHUFFLING_from_STARTING(self):
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step() # executes start_game() in STARTING
+        assert test_machine.state == bjfsm.GameState.SHUFFLING
+    
+    def test_only_joined_player_set_to_active_in_STARTING(self):
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step() # executes start_game() in STARTING
+        assert test_machine.active_player == test_machine.joined_players[0]
+
+    def test_only_new_joined_player_added_to_known_players_in_STARTING(self):
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step() # executes start_game() in STARTING
+        assert test_machine.known_players == test_machine.joined_players
+
+    def test_joined_known_player_not_readded_to_list_of_known_players_in_STARTING(self):
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.known_players.append(test_machine.joined_players[0]) # Manually add known player
+        test_machine.step() # executes start_game() in STARTING
+        assert test_machine.known_players == test_machine.joined_players
+
+
+class Test_SHUFFLING:
+    def test_blackjack_state_machine_transitions_to_DEALING_from_SHUFFLING(self):
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step() # executes start_game() in STARTING
+        test_machine.step() # execute shuffle_cut_and_burn() in SHUFFLING
+        assert test_machine.state == bjfsm.GameState.DEALING
+
+
+    def test_starting_single_deck_shoe_is_shuffle_cut_and_burned_correctly_at_min_cut_percentage_in_SHUFFLING(self):
+        ### Setup ###
+        num_of_decks = 1
+        min_cut_percentage_single_deck_shoe = 50
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.transition(bjfsm.GameState.SHUFFLING)
+        test_machine.step() # execute shuffle_cut_and_burn()
+
+        ### Checking Shoe Integrity ###
+        # Verify deck size and pen percentage is in-bounds for a single deck shoe
+        assert len(test_machine.shoe) == 1+52*1
+        assert test_machine.pen in range(50, 70)
+        # Verify cut cards are present and are placed correctly in-bounds for a single deck shoe
+        assert 'front_cut_card' in test_machine.shoe[26:37]
+        assert test_machine.shoe[-1] == 'back_cut_card'
+        # Verify there's 1 copy of each non-cut card across shoe and discard, for a single deck shoe
+        card_occurrence_counts = dict.fromkeys(bjo.base_deck, 0)
+        for card in test_machine.shoe:
+            if (card != 'front_cut_card') and (card != 'back_cut_card'):
+                card_occurrence_counts[card] += 1
+        if (len(test_machine.discard) == 1):
+            card_occurrence_counts[test_machine.discard[0]] += 1
+        for card in card_occurrence_counts:
+            if (card != 'front_cut_card') and (card != 'back_cut_card'):
+                #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
+                assert card_occurrence_counts[card] == 1
+
+
+
 class TestMachine:
     def test_beginning_state_is_STARTING(self):
         num_of_decks = 1
@@ -452,12 +523,6 @@ class TestShuffling:
 
 
 class TestPlayerSetup:
-    def test_first_player_set_to_active_in_STARTING(self):
-        num_of_decks = 1
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes start_game() in STARTING
-        assert test_machine.active_player == test_machine.joined_players[0]
-
     def test_first_player_has_one_hand_dealt_in_DEALING(self):
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
@@ -475,7 +540,7 @@ class TestPlayerSetup:
         assert len(test_machine.dealer.current_hands) == 1
 
 
-class TestScoringState:
+class TestScoringNaturalBlackjacks:
     def test_first_player_with_one_blackjack_hand_has_it_tracked_correctly(self):
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
@@ -618,5 +683,5 @@ class TestScoringState:
         pass
 
 
-    def test_natural_blackjacks_are_cleared_after_rounde_end(self):
+    def test_natural_blackjacks_are_cleared_after_round_end(self):
         pass

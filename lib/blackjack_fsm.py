@@ -190,11 +190,15 @@ class BlackjackStateMachine:
 
 
     def start_game(self):
-        print("STARTING GAME")
+        print("STARTING GAME WITH THE FOLLOWING PLAYERS:")
+        for player in self.joined_players:
+            print(player)
         # Initialize first player (sitting leftmost w.r.t. dealer) to be active
         self.active_player = self.joined_players[0]
-        # Add all joined players to known
-        # YOUR CODE HERE #
+        # Add all new joined players to known
+        for player in self.joined_players:
+            if player not in self.known_players:
+                self.known_players.append(player)
         """
         # DEBUG
         self.dealer.print_player_stats()
