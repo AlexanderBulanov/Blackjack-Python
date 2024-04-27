@@ -12,7 +12,7 @@ Author: Alexander Bulanov
 ### Defining Players for Tracking ###
 class Player:
     def __init__(self):
-        self.name = None # assign when new player is created
+        self.name = None
         self.is_dealer = False
         self.current_balance = None
         self.White = 0

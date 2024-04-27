@@ -375,38 +375,30 @@ class Test_DEALING:
         assert len(test_machine.shoe) == 49
 
 
-class Test_INITIAL_SCORING:
-    def test_blackjack_state_machine_transitions_to_INITIAL_SCORING_from_DEALING(self):
+class TestNaturalBlackjacks_INITIAL_SCORING:
+    def test_dealer_face_up_card_ace_has_blackjack_first_player_with_blackjack_hand_pushes_correctly_single_deck(self):
+        ## Setup ##
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
         test_machine.step() # executes start_game() in STARTING
         test_machine.step() # execute shuffle_cut_and_burn() in SHUFFLING
-        test_machine.step() # executes deal() in DEALING
-        assert test_machine.state == bjfsm.GameState.INITIAL_SCORING
-
-    def test_dealer_face_up_card_ace_has_blackjack_first_player_with_blackjack_hand_pushes_correctly_single_deck(self):
-        num_of_decks = 1
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        # Deal a blackjack hand to first player
-        player_hand = ['QD', 'AH']
+        # Manually assign a bet of 2W ($2) to first player
         first_player = test_machine.joined_players[0]
+        first_player.current_bet.append('2W')
+        first_player.White -= 2
+        first_player.current_bet_value = 2
+        # Manually deal a blackjack hand to first player
+        player_hand = ['QD', 'AH']
         first_player.current_hands.append(player_hand)
-        # Deal a blackjack hand to dealer
+        # Manually deal a blackjack hand to dealer
         dealer_hand = ['AS', 'KC']
         test_machine.dealer.current_hands.append(dealer_hand)
-        # Add each player and their respective blackjack hands to a dictionary within score method
-        test_machine.score_all_joined_players_hands()
-        # Verify player's blackjack hand is tracked correctly
-        assert test_machine.current_round_natural_blackjacks[first_player][0] == player_hand
-        # Verify player's blackjack hand is no longer tracked after checking for dealer blackjack
-        test_machine.check_for_and_handle_dealer_blackjack()
-        assert test_machine.current_round_natural_blackjacks[first_player] == []
-        # Verify player's blackjack hand is discarded and score is removed
-        assert first_player.current_hands == []
-        assert first_player.current_hand_scores == []
-        # Verify dealer's blackjack hand is discarded and score is removed
-        assert test_machine.dealer.current_hands == []
-        assert test_machine.dealer.current_hand_scores == []
+        # Transition to INITIAL_SCORING and execute all methods within
+        test_machine.transition(bjfsm.GameState.INITIAL_SCORING)
+        test_machine.step()
+        ## Test ##
+        assert test_machine.state == bjfsm.GameState.DEALING
+        assert first_player.White == 50
 
 
     def test_first_player_with_blackjack_regular_blackjack_is_handled_correctly_against_dealer_blackjack(self):
@@ -476,6 +468,15 @@ class Test_INITIAL_SCORING:
         pass
 
 
+class TestNoBlackjacks_INITIAL_SCORING:
+    def test_blackjack_state_machine_transitions_to_INITIAL_SCORING_from_DEALING(self):
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step() # executes start_game() in STARTING
+        test_machine.step() # execute shuffle_cut_and_burn() in SHUFFLING
+        test_machine.step() # executes deal() in DEALING
+        assert test_machine.state == bjfsm.GameState.INITIAL_SCORING
+
 
 
 class TestTrackingNaturalBlackjacks:
@@ -501,7 +502,6 @@ class TestTrackingNaturalBlackjacks:
         # Verify that tracked blackjack hand is the one that has been dealt
         first_player_tracked_blackjack_hand = test_machine.current_round_natural_blackjacks[first_player][0]
         assert first_player_tracked_blackjack_hand == blackjack_hand
-    
     
     def test_first_player_with_two_blackjack_hands_has_them_tracked_correctly_in_INITIAL_SCORING(self):
         ## Setup ##
