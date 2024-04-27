@@ -53,6 +53,7 @@ class BlackjackStateMachine:
         }
         self.player_special_actions = {
             'join': lambda: self.join(),
+            'color up': lambda: self.color_up(),
             'bet': lambda: self.bet(),
             'skip': lambda: self.skip_turn(),
             'leave': lambda: self.leave()
@@ -95,13 +96,16 @@ class BlackjackStateMachine:
         pass
 
     # Other Player Actions #
+    def join(self):
+        pass
+
+    def color_up(self):
+        pass
+
     def bet(self):
         pass
     
     def skip_turn(self):
-        pass
-
-    def join(self):
         pass
 
     def leave(self):
@@ -293,6 +297,9 @@ class BlackjackStateMachine:
                 hand = player.current_hands[0]
                 dealer_blackjack = self.dealer.current_hands[0]
                 print(player.name, "loses with hand of", hand, "to Dealer's Blackjack of", dealer_blackjack)
+                # Collect player's leftmost hand bet
+                
+
                 # Put player's leftmost hand into discard from hand
                 self.discard.extend(player.current_hands.pop(0))
                 # Remove player's leftmost hand score

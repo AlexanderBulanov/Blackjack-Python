@@ -3,7 +3,7 @@ File: blackjack_players.py
 Author: Alexander Bulanov
 """
 
-# Global Imports
+# Global Imports #
 
 
 # Local Imports #
@@ -14,7 +14,7 @@ class Player:
     def __init__(self):
         self.name = None
         self.is_dealer = False
-        self.current_balance = None
+        self.current_cash_balance = None
         self.White = 0
         self.Pink = 0
         self.Red = 0
@@ -50,7 +50,7 @@ class Player:
         Dealer = Player()
         Dealer.name = 'Dealer'
         Dealer.is_dealer = True
-        Dealer.current_balance = 10000
+        Dealer.current_cash_balance = 10000
         Dealer.White = 1000
         Dealer.Pink = 1000
         Dealer.Red = 1000
@@ -72,7 +72,7 @@ class Player:
         NewPlayer = Player()
         NewPlayer.name = player_name
         NewPlayer.is_dealer = False
-        NewPlayer.current_balance = 100
+        NewPlayer.current_cash_balance = 100
         NewPlayer.White = 50
         NewPlayer.Pink = 0
         NewPlayer.Red = 30
@@ -97,7 +97,7 @@ class Player:
         else:
             print("Printing Statistics for Player '"+self.name+"'")
         for key, value in self.__dict__.items():
-            if ((key == 'current_balance') or (key == 'current_bet_value')):
+            if ((key == 'current_cash_balance') or (key == 'current_bet_value')):
                 print(str(key)+": $"+str(value))
             elif (key == 'current_hands') and (self.hole_card_face_down == True):
                 hands = "["

@@ -381,7 +381,12 @@ class TestNaturalBlackjacks_INITIAL_SCORING:
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
         test_machine.step() # executes start_game() in STARTING
-        test_machine.step() # execute shuffle_cut_and_burn() in SHUFFLING
+        # Manually execute shuffle_cut_and_burn(), burning '8H'
+        test_machine.shuffle_cut_and_burn(None)
+        test_machine.shoe.extend(test_machine.discard)
+        test_machine.discard.clear()
+        test_machine.discard.extend([test_machine.shoe.pop(test_machine.shoe.index('8H'))])
+        assert ('8H' not in test_machine.shoe) and ('8H' in test_machine.discard)
         # Manually assign a bet of 2W ($2) to first player
         first_player = test_machine.joined_players[0]
         first_player.current_bet.append('2W')
@@ -389,9 +394,13 @@ class TestNaturalBlackjacks_INITIAL_SCORING:
         first_player.current_bet_value = 2
         # Manually deal a blackjack hand to first player
         player_hand = ['QD', 'AH']
+        test_machine.shoe.pop(test_machine.shoe.index('QD'))
+        test_machine.shoe.pop(test_machine.shoe.index('AH'))
         first_player.current_hands.append(player_hand)
         # Manually deal a blackjack hand to dealer
         dealer_hand = ['AS', 'KC']
+        test_machine.shoe.pop(test_machine.shoe.index('AS'))
+        test_machine.shoe.pop(test_machine.shoe.index('KC'))
         test_machine.dealer.current_hands.append(dealer_hand)
         # Transition to INITIAL_SCORING and execute all methods within
         test_machine.transition(bjfsm.GameState.INITIAL_SCORING)
@@ -399,6 +408,7 @@ class TestNaturalBlackjacks_INITIAL_SCORING:
         ## Test ##
         assert test_machine.state == bjfsm.GameState.DEALING
         assert first_player.White == 50
+        assert len(test_machine.shoe) == 49
 
 
     def test_first_player_with_blackjack_regular_blackjack_is_handled_correctly_against_dealer_blackjack(self):
