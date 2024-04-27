@@ -25,8 +25,10 @@ class Player:
         self.Yellow = 0
         self.Brown = 0
         self.hole_card_face_down = False
-        self.current_bet = []
-        self.current_bet_value = None
+        self.current_primary_bets = []
+        self.current_primary_bet_values = []
+        self.current_side_bets = []
+        self.current_side_bet_values = []
         self.current_hands = []
         self.current_hand_scores = []
         self.action = None
