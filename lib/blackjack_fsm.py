@@ -54,6 +54,7 @@ class BlackjackStateMachine:
         self.player_special_actions = {
             'join': lambda: self.join(),
             'color up': lambda: self.color_up(),
+            'break down': lambda: self.break_down(),
             'bet': lambda: self.bet(),
             'skip': lambda: self.skip_turn(),
             'leave': lambda: self.leave()
@@ -100,6 +101,9 @@ class BlackjackStateMachine:
         pass
 
     def color_up(self):
+        pass
+
+    def break_down(self):
         pass
 
     def bet(self):
