@@ -342,13 +342,13 @@ class Test_SHUFFLING:
 
     
 class Test_DEALING:
-    def test_blackjack_state_machine_transitions_to_SCORING_from_DEALING(self):
+    def test_blackjack_state_machine_transitions_to_INITIAL_SCORING_from_DEALING(self):
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
         test_machine.step() # executes start_game() in STARTING
         test_machine.step() # execute shuffle_cut_and_burn() in SHUFFLING
         test_machine.step() # executes deal() in DEALING
-        assert test_machine.state == bjfsm.GameState.SCORING
+        assert test_machine.state == bjfsm.GameState.INITIAL_SCORING
 
     def test_first_player_has_one_hand_dealt_in_DEALING(self):
         num_of_decks = 1
@@ -375,73 +375,16 @@ class Test_DEALING:
         assert len(test_machine.shoe) == 49
 
 
-
-class TestMiscellaneous:
-    def test_invalid_state_transition_handled(self):
-        BadState = Enum('BadState', ['InvalidState'])
+class Test_INITIAL_SCORING:
+    def test_blackjack_state_machine_transitions_to_INITIAL_SCORING_from_DEALING(self):
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.transition(BadState.InvalidState)
-        with pytest.raises(NameError):
-            test_machine.step()
-
-    """
-    def test_player_hand_is_dealt_in_DEALING(self):
-        num_of_decks = 1
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.transition(bjfsm.GameState.DEALING)
-        test_machine.step() # execute deal()
-        assert len(test_machine.hand) == 2
-
-    def test_starting_player_hand_is_scored_in_SCORING(self):
-        num_of_decks = 1
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.transition(bjfsm.GameState.DEALING)
-        test_machine.step() # execute deal() and transition to SCORING
-        test_machine.step() # execute score()
-        assert (test_machine.score >= 4) and (test_machine.score <= 21)
-    """
+        test_machine.step() # executes start_game() in STARTING
+        test_machine.step() # execute shuffle_cut_and_burn() in SHUFFLING
+        test_machine.step() # executes deal() in DEALING
+        assert test_machine.state == bjfsm.GameState.INITIAL_SCORING
 
 
-class TestReshuffling:
-    def test_single_deck_shoe_not_reshuffled_at_or_before_min_pen_bound_of_fifty_percent(self, monkeypatch):
-        # Shuffle single-deck shoe at 50% pen ('front_cut_card' is at index 26)
-        num_of_decks = 1
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes start_game() in STARTING, assigning active player
-        test_machine.shuffle_cut_and_burn(50)
-        test_machine.transition(bjfsm.GameState.DEALING)
-        # Step through the state machine enough times to deal 13 hands (26 cards)
-        for x in range (0, 13):
-            test_machine.step() # executes deal() in GameState.DEALING
-            test_machine.step() # executes score_hand() in GameState.SCORING
-            if test_machine.state == bjfsm.GameState.DEALING:
-                pass
-            elif test_machine.state == bjfsm.GameState.PLAYER_PLAYING:
-                monkeypatch.setattr('builtins.input', lambda _: 'stand')
-                test_machine.step() # executes play() in GameState.PLAYING /w supplied user input of 'stand'
-        # Check that next card to be dealt is 'front_cut_card' and we haven't reshuffled yet
-        assert test_machine.shoe[0] == 'front_cut_card'
-        assert len(test_machine.shoe) == 27
-        assert test_machine.state == bjfsm.GameState.DEALING
-    
-    def test_single_deck_shoe_is_reshuffled_only_after_min_pen_bound_of_fifty_percent(self, monkeypatch):
-        # Shuffle single-deck shoe at 50% pen ('front_cut_card' is at index 26)
-        num_of_decks = 1
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.shuffle_cut_and_burn(50)
-        test_machine.transition(bjfsm.GameState.DEALING)
-        # Step through the state machine enough times to deal 14 hands (28 cards)
-        for x in range (0, 14):
-            test_machine.step() # executes deal() in GameState.DEALING
-            test_machine.step() # executes score_hand() in GameState.SCORING
-            if test_machine.state == bjfsm.GameState.DEALING:
-                pass
-            elif test_machine.state == bjfsm.GameState.PLAYING:
-                monkeypatch.setattr('builtins.input', lambda _: 'stand')
-                test_machine.step() # executes play() in GameState.PLAYING /w supplied user input of 'stand'
-        # Verify state machine is reshuffling at round end after dealing 28 cards
-        assert test_machine.state == bjfsm.GameState.SHUFFLING
 
 
 class TestScoringNaturalBlackjacks:
@@ -589,3 +532,71 @@ class TestScoringNaturalBlackjacks:
 
     def test_natural_blackjacks_are_cleared_after_round_end(self):
         pass
+
+
+class TestMiscellaneous:
+    def test_invalid_state_transition_handled(self):
+        BadState = Enum('BadState', ['InvalidState'])
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.transition(BadState.InvalidState)
+        with pytest.raises(NameError):
+            test_machine.step()
+
+    """
+    def test_player_hand_is_dealt_in_DEALING(self):
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.transition(bjfsm.GameState.DEALING)
+        test_machine.step() # execute deal()
+        assert len(test_machine.hand) == 2
+
+    def test_starting_player_hand_is_scored_in_SCORING(self):
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.transition(bjfsm.GameState.DEALING)
+        test_machine.step() # execute deal() and transition to SCORING
+        test_machine.step() # execute score()
+        assert (test_machine.score >= 4) and (test_machine.score <= 21)
+    """
+
+
+class TestReshuffling:
+    def test_single_deck_shoe_not_reshuffled_at_or_before_min_pen_bound_of_fifty_percent(self, monkeypatch):
+        # Shuffle single-deck shoe at 50% pen ('front_cut_card' is at index 26)
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.step() # executes start_game() in STARTING, assigning active player
+        test_machine.shuffle_cut_and_burn(50)
+        test_machine.transition(bjfsm.GameState.DEALING)
+        # Step through the state machine enough times to deal 13 hands (26 cards)
+        for x in range (0, 13):
+            test_machine.step() # executes deal() in GameState.DEALING
+            test_machine.step() # executes score_hand() in GameState.SCORING
+            if test_machine.state == bjfsm.GameState.DEALING:
+                pass
+            elif test_machine.state == bjfsm.GameState.PLAYER_PLAYING:
+                monkeypatch.setattr('builtins.input', lambda _: 'stand')
+                test_machine.step() # executes play() in GameState.PLAYING /w supplied user input of 'stand'
+        # Check that next card to be dealt is 'front_cut_card' and we haven't reshuffled yet
+        assert test_machine.shoe[0] == 'front_cut_card'
+        assert len(test_machine.shoe) == 27
+        assert test_machine.state == bjfsm.GameState.DEALING
+    
+    def test_single_deck_shoe_is_reshuffled_only_after_min_pen_bound_of_fifty_percent(self, monkeypatch):
+        # Shuffle single-deck shoe at 50% pen ('front_cut_card' is at index 26)
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        test_machine.shuffle_cut_and_burn(50)
+        test_machine.transition(bjfsm.GameState.DEALING)
+        # Step through the state machine enough times to deal 14 hands (28 cards)
+        for x in range (0, 14):
+            test_machine.step() # executes deal() in GameState.DEALING
+            test_machine.step() # executes score_hand() in GameState.SCORING
+            if test_machine.state == bjfsm.GameState.DEALING:
+                pass
+            elif test_machine.state == bjfsm.GameState.PLAYING:
+                monkeypatch.setattr('builtins.input', lambda _: 'stand')
+                test_machine.step() # executes play() in GameState.PLAYING /w supplied user input of 'stand'
+        # Verify state machine is reshuffling at round end after dealing 28 cards
+        assert test_machine.state == bjfsm.GameState.SHUFFLING

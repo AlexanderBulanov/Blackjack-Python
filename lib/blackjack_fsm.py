@@ -21,7 +21,7 @@ class GameState(Enum):
     SHUFFLING = 1
     BETTING = 2
     DEALING = 3
-    SCORING = 4
+    INITIAL_SCORING = 4
     PLAYER_PLAYING = 5
     DEALER_PLAYING = 6
     ROUND_ENDING = 7
@@ -76,7 +76,7 @@ class BlackjackStateMachine:
         # Todo AB: Add hand_index as a variable to account for a single player playing multiple hands at a table
         self.handle_front_cut_card()
         player.current_hands[0].extend([self.shoe.pop(0)])
-        self.transition(GameState.SCORING)
+        self.transition(GameState.INITIAL_SCORING)
 
     def double_down(self):
         pass
@@ -242,7 +242,6 @@ class BlackjackStateMachine:
             pass
 
 
-
     def handle_front_cut_card(self):
         if ('front_cut_card' == self.shoe[0]):
             self.discard.extend([self.shoe.pop(0)])
@@ -261,32 +260,21 @@ class BlackjackStateMachine:
                     else:
                         self.current_round_natural_blackjacks[player].append(hand)
         #self.print_all_players_with_natural_blackjack_hands()
-
     
     def score_dealer_hand(self):
         dealer_hand_score = bjl.highest_hand_score(self.dealer.current_hands[0])
         self.dealer.current_hand_scores.append(dealer_hand_score)
 
-
-        """
-        for card in shoe_reference:
-            if card[:-1] not in card_counts.keys():
-                card_counts[card[:-1]] = [card]
-            else:
-                card_counts[card[:-1]].append(card)
-
-        print(card_counts)
-        """
-        """
-        # Score dealer's hand
-        dealer_hand_score = bjl.highest_hand_score(self.dealer.current_hands[0])
-        self.dealer.current_hand_scores.append(dealer_hand_score)
-        """
+    def offer_insurance_and_even_money_side_bets(self):
+        pass
 
     def reveal_dealer_hand(self):
         print("Dealer hand is: ", self.dealer.current_hands[0])
 
-    def handle_blackjack_pushes_after_dealing(self):
+    def pay_winning_side_bet_hands(self):
+        pass
+
+    def handle_initial_blackjack_push_hands(self):
         for player in self.current_round_natural_blackjacks.keys():
             for hand_count in range(0, len(self.current_round_natural_blackjacks[player])):
                 hand = self.current_round_natural_blackjacks[player][0]
@@ -298,7 +286,7 @@ class BlackjackStateMachine:
                 # Remove player's leftmost discarded blackjack hand score
                 player.current_hand_scores.remove(21)
 
-    def handle_remaining_player_hands_losing_to_dealer_blackjack(self):
+    def collect_losing_primary_bet_hands(self):
         for player in self.joined_players:
             for hand_count in range(0, len(player.current_hands)):
                 hand = player.current_hands[0]
@@ -309,9 +297,15 @@ class BlackjackStateMachine:
                 # Remove player's leftmost hand score
                 player.current_hand_scores.pop(0)
 
-    def discard_dealer_hand_and_reset_score(self):
+    def reset_dealer_hand(self):
         self.discard.extend(self.dealer.current_hands.pop(0))
         self.dealer.current_hand_scores.clear()
+
+    def collect_losing_side_bet_hands(self):
+        pass
+
+    def pay_winning_primary_bet_hands(self):
+        pass
 
 
     def check_for_and_handle_dealer_blackjack(self):
@@ -321,37 +315,35 @@ class BlackjackStateMachine:
         dealer_hole_card_value = bjo.cards[dealer_hole_card[:-1]][0]
         if (dealer_face_up_card in ['AH', 'AC', 'AD', 'AS']):
             print("Offering 'insurance' and 'even money' side bets")
+            self.offer_insurance_and_even_money_side_bets() # Todo AB: Add functionality
             if (dealer_hole_card_value == 10):
                 print("1. Reveal dealer hole card")
                 self.reveal_dealer_hand()
                 print("2. Pay out side bets to participating hands left-to-right, discard them and remove scores")
-                # Todo AB: PAY OUT ALL SIDE BETS TO PARTICIPATING HANDS LEFT-TO-RIGHT, DISCARD THEM AND RESET SCORES
-                
+                self.pay_winning_side_bet_hands() # Todo AB: Add functionality to pay out winning side bet hands
                 print("3. Push against all hands with Blackjack left-to-right, discard them and remove scores")
-                self.handle_blackjack_pushes_after_dealing()
+                self.handle_initial_blackjack_push_hands()
                 print("4. Collect bets from all hands without side bets or Blackjack left-to-right, discard them and remove scores")
-                # Todo AB: ITERATE OVER ALL PLAYERS' NON-BLACKJACK HANDS, DISCARD THEM AND RESET SCORES
-                self.handle_remaining_player_hands_losing_to_dealer_blackjack()
+                self.collect_losing_primary_bet_hands()
                 print("5. Discard dealer hand and reset score")
-                self.discard_dealer_hand_and_reset_score()
+                self.reset_dealer_hand()
                 print("ROUND END")
                 self.transition(GameState.DEALING)
             else:
                 print("Dealer doesn't have Blackjack!")
                 print("Collecting side bets from all participating hands left-to-right")
-                # Todo AB: COLLECT ALL SIDE BETS FROM PARTICIPATING HANDS LEFT-TO-RIGHT
-                
+                self.collect_losing_side_bet_hands() # Todo AB: Add functionality to collect losing side bet hands
                 self.transition(GameState.PLAYER_PLAYING)
         elif (dealer_face_up_card_value == 10):
             if (dealer_hole_card in ['AH', 'AC', 'AD', 'AS']):
                 print("1. Reveal dealer hole card")
                 self.reveal_dealer_hand()
                 print("2. Push against all hands with Blackjack left-to-right, discard them and remove scores")
-                self.handle_blackjack_pushes_after_dealing()
+                self.handle_initial_blackjack_push_hands()
                 print("3. Collect bets from all players without Blackjack left-to-right, discard them and remove scores")
-                self.handle_remaining_player_hands_losing_to_dealer_blackjack()
+                self.collect_losing_primary_bet_hands()
                 print("4. Discard dealer hand and reset score")
-                self.discard_dealer_hand_and_reset_score()
+                self.reset_dealer_hand()
                 print("ROUND END")
                 self.transition(GameState.DEALING)
             else:
@@ -376,6 +368,7 @@ class BlackjackStateMachine:
                     hand = self.current_round_natural_blackjacks[player][0]
                     # Pay Blackjack to player
                     print("Paying Blackjack 3:2 to player", player.name, "with hand of", hand)
+                    self.pay_winning_primary_bet_hands()
                     # Remove player's Blackjack hand from list of natural blackjacks for that player
                     if len(self.current_round_natural_blackjacks[player]) <= 1:
                         del self.current_round_natural_blackjacks[player]
@@ -425,7 +418,7 @@ class BlackjackStateMachine:
         self.print_all_hands()
         print(str(int(round(100-(100*(len(self.shoe)/(2+self.num_of_decks*52))), 0)))+"%"+" of the shoe dealt "
             +"(reshuffling at round end past "+str(self.pen)+"%"+")")
-        self.transition(GameState.SCORING)
+        self.transition(GameState.INITIAL_SCORING)
 
 
     def player_plays(self):
@@ -534,7 +527,7 @@ class BlackjackStateMachine:
                 self.shuffle_cut_and_burn(None) # Todo: AB - pen % is different upon each reshuffle in a single session
             case GameState.DEALING:
                 self.deal()
-            case GameState.SCORING:
+            case GameState.INITIAL_SCORING:
                 self.score_all_joined_players_hands()
                 self.score_dealer_hand()
                 self.check_for_and_handle_dealer_blackjack()
