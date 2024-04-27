@@ -360,6 +360,7 @@ class BlackjackStateMachine:
             self.transition(GameState.PLAYER_PLAYING)
         else:
             print("Paying Blackjacks to each eligible player hand")
+            self.pay_winning_primary_bet_hands()
             eligible_players = [player for player in self.current_round_natural_blackjacks.keys()]
             #print("Players /w Blackjack hands are:", eligible_players[0].name)
             for player in eligible_players:
@@ -368,7 +369,6 @@ class BlackjackStateMachine:
                     hand = self.current_round_natural_blackjacks[player][0]
                     # Pay Blackjack to player
                     print("Paying Blackjack 3:2 to player", player.name, "with hand of", hand)
-                    self.pay_winning_primary_bet_hands()
                     # Remove player's Blackjack hand from list of natural blackjacks for that player
                     if len(self.current_round_natural_blackjacks[player]) <= 1:
                         del self.current_round_natural_blackjacks[player]
