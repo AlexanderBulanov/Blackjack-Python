@@ -247,7 +247,7 @@ class BlackjackStateMachine:
             self.discard.extend([self.shoe.pop(0)])
 
 
-    def score_all_joined_players_hands(self):
+    def score_all_hands_in_play(self):
         for player in self.joined_players:
             for hand in player.current_hands:
                 # Score each player's hands
@@ -260,8 +260,6 @@ class BlackjackStateMachine:
                     else:
                         self.current_round_natural_blackjacks[player].append(hand)
         #self.print_all_players_with_natural_blackjack_hands()
-    
-    def score_dealer_hand(self):
         dealer_hand_score = bjl.highest_hand_score(self.dealer.current_hands[0])
         self.dealer.current_hand_scores.append(dealer_hand_score)
 
@@ -271,10 +269,10 @@ class BlackjackStateMachine:
     def reveal_dealer_hand(self):
         print("Dealer hand is: ", self.dealer.current_hands[0])
 
-    def pay_winning_side_bet_hands(self):
+    def handle_winning_side_bet_hands(self):
         pass
 
-    def handle_initial_blackjack_push_hands(self):
+    def handle_initial_blackjack_hand_pushes(self):
         for player in self.current_round_natural_blackjacks.keys():
             for hand_count in range(0, len(self.current_round_natural_blackjacks[player])):
                 hand = self.current_round_natural_blackjacks[player][0]
@@ -286,7 +284,7 @@ class BlackjackStateMachine:
                 # Remove player's leftmost discarded blackjack hand score
                 player.current_hand_scores.remove(21)
 
-    def collect_losing_primary_bet_hands(self):
+    def handle_losing_primary_bet_hands(self):
         for player in self.joined_players:
             for hand_count in range(0, len(player.current_hands)):
                 hand = player.current_hands[0]
@@ -301,10 +299,10 @@ class BlackjackStateMachine:
         self.discard.extend(self.dealer.current_hands.pop(0))
         self.dealer.current_hand_scores.clear()
 
-    def collect_losing_side_bet_hands(self):
+    def handle_losing_side_bet_hands(self):
         pass
 
-    def pay_winning_primary_bet_hands(self):
+    def handle_winning_primary_bet_hands(self):
         pass
 
 
@@ -314,40 +312,32 @@ class BlackjackStateMachine:
         dealer_hole_card = self.dealer.current_hands[0][1]
         dealer_hole_card_value = bjo.cards[dealer_hole_card[:-1]][0]
         if (dealer_face_up_card in ['AH', 'AC', 'AD', 'AS']):
-            print("Offering 'insurance' and 'even money' side bets")
-            self.offer_insurance_and_even_money_side_bets() # Todo AB: Add functionality
+            print("Dealer's face-up card is an Ace!")
+            print("Offering 'insurance' and 'even money' side bets:")
+            self.offer_insurance_and_even_money_side_bets() # Todo AB: Add functionality to offer side bets
             if (dealer_hole_card_value == 10):
-                print("1. Reveal dealer hole card")
                 self.reveal_dealer_hand()
-                print("2. Pay out side bets to participating hands left-to-right, discard them and remove scores")
-                self.pay_winning_side_bet_hands() # Todo AB: Add functionality to pay out winning side bet hands
-                print("3. Push against all hands with Blackjack left-to-right, discard them and remove scores")
-                self.handle_initial_blackjack_push_hands()
-                print("4. Collect bets from all hands without side bets or Blackjack left-to-right, discard them and remove scores")
-                self.collect_losing_primary_bet_hands()
-                print("5. Discard dealer hand and reset score")
+                self.handle_winning_side_bet_hands() # Todo AB: Add functionality to pay out winning side bet hands
+                self.handle_initial_blackjack_hand_pushes()
+                self.handle_losing_primary_bet_hands()
                 self.reset_dealer_hand()
                 print("ROUND END")
                 self.transition(GameState.DEALING)
             else:
-                print("Dealer doesn't have Blackjack!")
-                print("Collecting side bets from all participating hands left-to-right")
-                self.collect_losing_side_bet_hands() # Todo AB: Add functionality to collect losing side bet hands
+                print("Dealer checks hole card (not a ten) - doesn't have Blackjack.")
+                self.handle_losing_side_bet_hands() # Todo AB: Add functionality to collect losing side bet hands
                 self.transition(GameState.PLAYER_PLAYING)
         elif (dealer_face_up_card_value == 10):
+            print("Dealer's face-up card is a ten!")
             if (dealer_hole_card in ['AH', 'AC', 'AD', 'AS']):
-                print("1. Reveal dealer hole card")
                 self.reveal_dealer_hand()
-                print("2. Push against all hands with Blackjack left-to-right, discard them and remove scores")
-                self.handle_initial_blackjack_push_hands()
-                print("3. Collect bets from all players without Blackjack left-to-right, discard them and remove scores")
-                self.collect_losing_primary_bet_hands()
-                print("4. Discard dealer hand and reset score")
+                self.handle_initial_blackjack_hand_pushes()
+                self.handle_losing_primary_bet_hands()
                 self.reset_dealer_hand()
                 print("ROUND END")
                 self.transition(GameState.DEALING)
             else:
-                print("Dealer doesn't have Blackjack!")
+                print("Dealer checks hole card (not an Ace) - doesn't have Blackjack.")
                 self.transition(GameState.PLAYER_PLAYING)
         else:
             print("Dealer can't have Blackjack.")
@@ -528,8 +518,7 @@ class BlackjackStateMachine:
             case GameState.DEALING:
                 self.deal()
             case GameState.INITIAL_SCORING:
-                self.score_all_joined_players_hands()
-                self.score_dealer_hand()
+                self.score_all_hands_in_play()
                 self.check_for_and_handle_dealer_blackjack()
                 if ((len(self.dealer.current_hand_scores) != 0) and (len(self.dealer.current_hands) != 0)):
                     self.check_for_and_handle_players_blackjacks()
