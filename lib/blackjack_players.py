@@ -25,11 +25,11 @@ class Player:
         self.Yellow = 0
         self.Brown = 0
         self.hole_card_face_down = False
-        self.current_primary_bets = []
+        self.current_primary_bets = [] # each bet is stored as a dictionary in format of chip_color: count
         self.current_primary_bet_values = []
-        self.current_side_bets = []
+        self.current_side_bets = [] # each bet is stored as a dictionary in format of chip_color: count
         self.current_side_bet_values = []
-        self.current_hands = []
+        self.current_hands = [] # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
         self.current_hand_scores = []
         self.action = None
 
@@ -63,11 +63,11 @@ class Player:
         Dealer.Yellow = 1000
         Dealer.Brown = 1000
         Dealer.hole_card_face_down = True
-        Dealer.current_primary_bets = []
+        Dealer.current_primary_bets = [] # each bet is stored as a dictionary in format of chip_color: count
         Dealer.current_primary_bet_values = []
-        Dealer.current_side_bets = []
+        Dealer.current_side_bets = [] # each bet is stored as a dictionary in format of chip_color: count
         Dealer.current_side_bet_values = []
-        Dealer.current_hands = []
+        Dealer.current_hands = [] # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
         Dealer.current_hand_scores = []
         Dealer.action = None
         return Dealer
@@ -87,11 +87,11 @@ class Player:
         NewPlayer.Yellow = 0
         NewPlayer.Brown = 0
         NewPlayer.hole_card_face_down = False
-        NewPlayer.current_primary_bets = []
+        NewPlayer.current_primary_bets = [] # each bet is stored as a dictionary in format of chip_color: count
         NewPlayer.current_primary_bet_values = []
-        NewPlayer.current_side_bets = []
+        NewPlayer.current_side_bets = [] # each bet is stored as a dictionary in format of chip_color: count
         NewPlayer.current_side_bet_values = []
-        NewPlayer.current_hands = []
+        NewPlayer.current_hands = [] # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
         NewPlayer.current_hand_scores = []
         NewPlayer.action = None
         return NewPlayer
@@ -121,3 +121,7 @@ class Player:
             else:
                 print(str(key)+": "+str(value))
         print("*  *  *  *  *")
+
+
+    def place_bet(self):
+        pass

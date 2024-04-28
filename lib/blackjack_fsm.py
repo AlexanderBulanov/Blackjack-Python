@@ -286,9 +286,20 @@ class BlackjackStateMachine:
         for player in self.current_round_natural_blackjacks.keys():
             for hand_count in range(0, len(self.current_round_natural_blackjacks[player])):
                 hand = self.current_round_natural_blackjacks[player][0]
-                print("Natural Blackjack push against player", player.name, "with hand of", hand)
-                # Remove player's leftmost blackjack hand from dictionary of blackjacks
+                print("Dealer pushes against player", player.name, "with natural blackjack of", hand)
+                # Remove player's leftmost blackjack hand from dictionary of natural blackjacks
                 self.current_round_natural_blackjacks[player].remove(hand)
+                # Push against player's bet
+                
+                # Todo AB: Iterate over player.current_primary_bets
+
+                # USE A DICTIONARY TO STORE EACH BET
+                # STORE ALL OF THE DICTIONARIES IN A LIST
+                for chip_group in player.current_primary_bets:
+                    player.chip_group += index
+
+
+
                 # Put player's leftmost blackjack hand into discard from hand
                 self.discard.extend(player.current_hands.pop(player.current_hands.index(hand)))
                 # Remove player's leftmost discarded blackjack hand score
@@ -301,8 +312,7 @@ class BlackjackStateMachine:
                 hand = player.current_hands[0]
                 dealer_blackjack = self.dealer.current_hands[0]
                 print(player.name, "loses with hand of", hand, "to Dealer's Blackjack of", dealer_blackjack)
-                # Collect player's leftmost hand bet
-                
+                # Todo AB: Collect player's leftmost hand bet
 
                 # Put player's leftmost hand into discard from hand
                 self.discard.extend(player.current_hands.pop(0))

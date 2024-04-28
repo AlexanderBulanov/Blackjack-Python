@@ -389,9 +389,11 @@ class TestNaturalBlackjacks_INITIAL_SCORING:
         assert ('8H' not in test_machine.shoe) and ('8H' in test_machine.discard)
         # Manually assign a bet of 2W ($2) to first player
         first_player = test_machine.joined_players[0]
-        first_player.current_bet.append('2W')
+        first_player_bet = '2 White, 1 Blue'
+        first_player.current_primary_bets.append(first_player_bet.split(', '))
+        first_player.current_primary_bet_values.append(2*1 + 1*5)
         first_player.White -= 2
-        first_player.current_bet_value = 2
+        first_player.Blue -= 1
         # Manually deal a blackjack hand to first player
         player_hand = ['QD', 'AH']
         test_machine.shoe.pop(test_machine.shoe.index('QD'))
@@ -402,12 +404,16 @@ class TestNaturalBlackjacks_INITIAL_SCORING:
         test_machine.shoe.pop(test_machine.shoe.index('AS'))
         test_machine.shoe.pop(test_machine.shoe.index('KC'))
         test_machine.dealer.current_hands.append(dealer_hand)
+        # DEBUG - print dealer and player stats #
+        test_machine.dealer.print_player_stats()
+        first_player.print_player_stats()
         # Transition to INITIAL_SCORING and execute all methods within
         test_machine.transition(bjfsm.GameState.INITIAL_SCORING)
         test_machine.step()
         ## Test ##
         assert test_machine.state == bjfsm.GameState.DEALING
         assert first_player.White == 50
+        assert first_player.Blue == 20
         assert len(test_machine.shoe) == 49
 
 
