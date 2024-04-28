@@ -400,7 +400,7 @@ class TestNaturalBlackjacks_INITIAL_SCORING:
 
 
 
-        first_player.current_primary_bets.append(first_player_bet.split(', '))
+        first_player.current_primary_bets.append(first_player_bet_string.split(', '))
         first_player.current_primary_bet_values.append(2*1 + 1*5)
         first_player.White -= 2
         first_player.Blue -= 1

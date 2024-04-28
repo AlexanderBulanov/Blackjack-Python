@@ -124,14 +124,16 @@ class Player:
 
 
     def add_primary_bet(self, hand, bet_string): # Example of bet_string --> '2 White, 1 Blue'
-        if (self.current_hands.index(hand) == 0):
-            # Create an empty dictionary at index 0 and populate it in the following format - chip_color: chip_count
+        hand_index = self.current_hands.index(hand)
+        if (hand_index == 0):
             self.current_primary_bets.append({})
-            for chip_bet in bet_string.split(", "):
-                chip_color, chip_count = chip_bet.split()
+            for chip_phrase in bet_string.split(", "):
+                chip_color, chip_count = chip_phrase.split()
                 self.current_primary_bets[0][chip_color] = chip_count
         else:
-            # Assign None to each preceding hand index to maintain coherence of specific index referring to the same
-            # hand, its primary and side bets in chip form, and its bet values in dollar amount
             for index in range(0, self.current_hands.index(hand)-1):
-                pass
+                self.current_primary_bets.append({})
+            self.current_primary_bets.append({})
+            for chip_phrase in bet_string.split(", "):
+                chip_color, chip_count = chip_phrase.split()
+                self.current_primary_bets[hand_index][chip_color] = chip_count
