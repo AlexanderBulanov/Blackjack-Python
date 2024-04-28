@@ -176,11 +176,12 @@ class BlackjackStateMachine:
     def print_all_hands(self):
         print("*  *  *  *  *")
         print(self.dealer.name, "has a hand of", self.dealer.current_hands[0])
-        for player in self.joined_players:
-            if len(player.current_hands) <= 1:
-                print(player.name, "has a hand of", player.current_hands[0])
-            else:
-                print(player.name, "has the following hands:", player.current_hands)
+        for player in self.joined_players.values():
+            if player != None:
+                if len(player.current_hands) <= 1:
+                    print(player.name, "has a hand of", player.current_hands[0])
+                else:
+                    print(player.name, "has the following hands:", player.current_hands)
         print("*  *  *  *  *")
 
     def print_all_players_with_natural_blackjack_hands(self):
@@ -224,8 +225,17 @@ class BlackjackStateMachine:
                 break
         # Add all new joined players to known
         for given_player in self.joined_players.values():
-            if given_player not in self.known_players:
-                self.known_players.append(given_player)
+            if given_player != None:
+                if given_player not in self.known_players:
+                    self.known_players.append(given_player)
+
+            """
+            if given_player == None:
+                continue
+            else:
+                if given_player not in self.known_players:
+                    self.known_players.append(given_player)
+            """
         """
         # DEBUG
         self.dealer.print_player_stats()
@@ -261,7 +271,7 @@ class BlackjackStateMachine:
     
 
     def get_primary_player_bets(self): # Todo AB: Use threading package provided by Python
-        player_responses = {player: None for player in self.joined_players}
+        player_responses = {player: None for player in self.joined_players.values()}
         #Poll players continously until you receive a response from each
         while None in player_responses.values():
             # Valid chip bet responses - bets using any combination of chips except for odd number of Pink ones
@@ -277,17 +287,18 @@ class BlackjackStateMachine:
 
 
     def score_all_hands_in_play(self):
-        for player in self.joined_players:
-            for hand in player.current_hands:
-                # Score each player's hands
-                player_hand_score = bjl.highest_hand_score(hand)
-                player.current_hand_scores.append(player_hand_score)
-                # Track natural blackjack hands for each player, as they're encountered
-                if (player_hand_score == 21):
-                    if (player not in self.current_round_natural_blackjacks.keys()):
-                        self.current_round_natural_blackjacks[player] = [hand]
-                    else:
-                        self.current_round_natural_blackjacks[player].append(hand)
+        for player in self.joined_players.values():
+            if player != None:
+                for hand in player.current_hands:
+                    # Score each player's hands
+                    player_hand_score = bjl.highest_hand_score(hand)
+                    player.current_hand_scores.append(player_hand_score)
+                    # Track natural blackjack hands for each player, as they're encountered
+                    if (player_hand_score == 21):
+                        if (player not in self.current_round_natural_blackjacks.keys()):
+                            self.current_round_natural_blackjacks[player] = [hand]
+                        else:
+                            self.current_round_natural_blackjacks[player].append(hand)
         #self.print_all_players_with_natural_blackjack_hands()
         dealer_hand_score = bjl.highest_hand_score(self.dealer.current_hands[0])
         self.dealer.current_hand_scores.append(dealer_hand_score)
@@ -325,17 +336,18 @@ class BlackjackStateMachine:
 
     def handle_losing_primary_bet_hands(self):
         # Go through losing primary bet hands left-to-right - collect bets, discard hands and reset their scores
-        for player in self.joined_players:
-            for hand_count in range(0, len(player.current_hands)):
-                hand = player.current_hands[0]
-                dealer_blackjack = self.dealer.current_hands[0]
-                print(player.name, "loses with hand of", hand, "to Dealer's Blackjack of", dealer_blackjack)
-                # Todo AB: Collect player's leftmost hand bet
+        for player in self.joined_players.values():
+            if player != None:
+                for hand_count in range(0, len(player.current_hands)):
+                    hand = player.current_hands[0]
+                    dealer_blackjack = self.dealer.current_hands[0]
+                    print(player.name, "loses with hand of", hand, "to Dealer's Blackjack of", dealer_blackjack)
+                    # Todo AB: Collect player's leftmost hand bet
 
-                # Put player's leftmost hand into discard from hand
-                self.discard.extend(player.current_hands.pop(0))
-                # Remove player's leftmost hand score
-                player.current_hand_scores.pop(0)
+                    # Put player's leftmost hand into discard from hand
+                    self.discard.extend(player.current_hands.pop(0))
+                    # Remove player's leftmost hand score
+                    player.current_hand_scores.pop(0)
 
     def reset_dealer_hand(self):
         self.discard.extend(self.dealer.current_hands.pop(0))
@@ -412,8 +424,9 @@ class BlackjackStateMachine:
                     self.discard.extend(player.current_hands.pop(player.current_hands.index(hand)))
             # Check if dealer's hand needs to be discarded due to all player hands being Blackjacks
             remaining_hands = 0
-            for player in self.joined_players:
-                remaining_hands += len(player.current_hands)
+            for player in self.joined_players.values():
+                if player != None:
+                    remaining_hands += len(player.current_hands)
             if remaining_hands == 0:
                 self.reset_dealer_hand()
                 print("ROUND END")
@@ -535,11 +548,12 @@ class BlackjackStateMachine:
 
         print("ROUND END")
         # Empty all players' hands by putting them in discard
-        for player in self.joined_players:
-            for hand_index in range(0, len(player.current_hands)):
-                self.discard.extend(player.current_hands.pop(0))    
-            # Reset all players' scores
-            player.current_hand_scores.clear()
+        for player in self.joined_players.values():
+            if player != None:
+                for hand_index in range(0, len(player.current_hands)):
+                    self.discard.extend(player.current_hands.pop(0))    
+                # Reset all players' scores
+                player.current_hand_scores.clear()
         # Empty dealer hand by putting it into discard
         self.discard.extend(self.dealer.current_hands.pop(0))
         # Reset dealer hand score
