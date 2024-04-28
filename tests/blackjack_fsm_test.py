@@ -394,6 +394,7 @@ class TestNaturalBlackjacks_INITIAL_SCORING:
         # Manually assign a bet of '2 White' with value of $2 to first player
         first_player = test_machine.joined_players[0]
         first_player_bet_string = '2 White, 1 Blue'
+        alternate_bet_string = '112'
 
 
         first_player.add_primary_bet(player_hand, first_player_bet_string)

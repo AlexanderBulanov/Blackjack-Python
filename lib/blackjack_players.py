@@ -7,7 +7,7 @@ Author: Alexander Bulanov
 
 
 # Local Imports #
-
+from msvcrt import getch
 
 ### Defining Players for Tracking ###
 class Player:
@@ -15,6 +15,7 @@ class Player:
         self.name = None
         self.is_dealer = False
         self.current_cash_balance = None
+        self.table_seat = None
         self.White = 0
         self.Pink = 0
         self.Red = 0
@@ -53,6 +54,7 @@ class Player:
         Dealer.name = 'Dealer'
         Dealer.is_dealer = True
         Dealer.current_cash_balance = 10000
+        Dealer.table_seat = None
         Dealer.White = 1000
         Dealer.Pink = 1000
         Dealer.Red = 1000
@@ -77,6 +79,7 @@ class Player:
         NewPlayer.name = player_name
         NewPlayer.is_dealer = False
         NewPlayer.current_cash_balance = 100
+        NewPlayer.table_seat = None
         NewPlayer.White = 50
         NewPlayer.Pink = 0
         NewPlayer.Red = 30
@@ -137,3 +140,55 @@ class Player:
             for chip_phrase in bet_string.split(", "):
                 chip_color, chip_count = chip_phrase.split()
                 self.current_primary_bets[hand_index][chip_color] = chip_count
+
+
+
+    def get_player_bet(self):
+        key_to_chip_mappings = {
+            '1': 'White',
+            '2': 'Pink',
+            '3': 'Red',
+            '4': 'Blue',
+            '5': 'Green',
+            '6': 'Black',
+            '7': 'Purple',
+            '8': 'Yellow',
+            '9': 'Brown',
+        }
+
+        print("Press keys 1-9 to add the following chips or 0 for separate menu")
+        key = getch()
+
+        match key:
+            case '0':
+                # Reset to enter a diffent bet
+                pass
+            case '1':
+                pass
+            case '2':
+                pass
+            case '3':
+                pass
+            case '4':
+                pass
+            case '5':
+                pass
+            case '6':
+                pass
+            case '7':
+                pass
+            case '8':
+                pass
+            case '9':
+                pass
+            case other:
+                print("Invalid input. Press the following numbers to add chips:")
+                print("1 - White ($1)")
+                print("2 - Pink ($2.5)")
+                print("3 - Red ($5)")
+                print("4 - Blue ($10)")
+                print("5 - Green ($25)")
+                print("6 - Black ($100)")
+                print("7 - Purple ($500)")
+                print("8 - Yellow ($1000)")
+                print("9 - Brown ($5000)")

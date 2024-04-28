@@ -5,7 +5,7 @@ Author: Alexander Bulanov
 
 # Global Imports #
 import random
-import time
+#import time
 from enum import Enum
 
 # Local Imports #
@@ -38,7 +38,7 @@ class BlackjackStateMachine:
         self.dealer = bjp.Player.create_casino_dealer()
         self.seventeen_rule = 'S17'
         self.waiting_players = []
-        self.joined_players = [bjp.Player.create_new_player_from_template('Alex')]
+        self.joined_players = {1: None, 2: None, 3: None, 4: None, 5: None, 6: None, 7: None}
         self.known_players = [] # list of all players who have played a shoe, now or in the past
         self.active_player = None
         self.current_round_natural_blackjacks = {} # dictionary storing all naturally dealt blackjacks per player
@@ -55,7 +55,7 @@ class BlackjackStateMachine:
             'join': lambda: self.join(),
             'color up': lambda: self.color_up(),
             'break down': lambda: self.break_down(),
-            'bet': lambda: self.place_bet(),
+            'bet': lambda: self.bet(),
             'skip': lambda: self.skip_turn(),
             'leave': lambda: self.leave()
         }
@@ -67,13 +67,21 @@ class BlackjackStateMachine:
 
     # Player Turn Actions #    
     def stand(self):
-        # Pass to next player
-        if (self.active_player != self.joined_players[-1]):
-            self.active_player = self.joined_players[self.joined_players.index(self.active_player)+1]
-            self.transition(GameState.PLAYER_PLAYING)
-        else:
-            # If there is no next player, pass to dealer
+        next_player_present = False
+        # Scan for next player to be set to active
+        for next_table_seat in range(self.active_player.table_seat+1, 8):
+            next_player = self.joined_players[next_table_seat]
+            if next_player != None:
+                # Assign next active player
+                next_player_present = True
+                self.active_player = next_player
+                self.transition(GameState.PLAYER_PLAYING)
+                break
+        if next_player_present == False:
+            # No next player --> pass to dealer
+            self.active_player = None
             self.transition(GameState.DEALER_PLAYING)
+            
 
     def hit(self, player):
         # Todo AB: Add hand_index as a variable to account for a single player playing multiple hands at a table
@@ -201,15 +209,23 @@ class BlackjackStateMachine:
 
 
     def start_game(self):
+        # Manually create a test player and assign them to table spot 2
+        player = bjp.Player.create_new_player_from_template('Alex')
+        player.table_seat = 2
+        self.joined_players[player.table_seat] = player
         print("STARTING GAME WITH THE FOLLOWING PLAYERS:")
-        for player in self.joined_players:
-            print(player.name)
+        for table_seat, given_player in self.joined_players.items():
+            if given_player != None:
+                print(player.name, "at table seat", table_seat)
         # Initialize first player (sitting leftmost w.r.t. dealer) to be active
-        self.active_player = self.joined_players[0]
+        for given_player in self.joined_players.values():
+            if given_player != None:
+                self.active_player = given_player
+                break
         # Add all new joined players to known
-        for player in self.joined_players:
-            if player not in self.known_players:
-                self.known_players.append(player)
+        for given_player in self.joined_players.values():
+            if given_player not in self.known_players:
+                self.known_players.append(given_player)
         """
         # DEBUG
         self.dealer.print_player_stats()
@@ -414,12 +430,13 @@ class BlackjackStateMachine:
     def deal(self):
         for x in range(0, 2):
             # Deal a card to each player, then dealer, repeat once
-            for player in self.joined_players:
-                # Slide 'front_cut_card' to discard if encountered mid-shoe
-                self.handle_front_cut_card()
-                if len(player.current_hands) == 0:
-                    player.current_hands.append([])
-                player.current_hands[0].extend([self.shoe.pop(0)])
+            for player in self.joined_players.values():
+                if player != None:
+                    # Slide 'front_cut_card' to discard if encountered mid-shoe
+                    self.handle_front_cut_card()
+                    if len(player.current_hands) == 0:
+                        player.current_hands.append([])
+                    player.current_hands[0].extend([self.shoe.pop(0)])
             # Slide 'front_cut_card' to discard if encountered mid-shoe
             self.handle_front_cut_card()
             if len(self.dealer.current_hands) == 0:
