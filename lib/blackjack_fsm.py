@@ -55,7 +55,7 @@ class BlackjackStateMachine:
             'join': lambda: self.join(),
             'color up': lambda: self.color_up(),
             'break down': lambda: self.break_down(),
-            'bet': lambda: self.bet(),
+            'bet': lambda: self.place_bet(),
             'skip': lambda: self.skip_turn(),
             'leave': lambda: self.leave()
         }
@@ -106,7 +106,9 @@ class BlackjackStateMachine:
     def break_down(self):
         pass
 
-    def bet(self):
+    def bet(self, player, player_hand):
+        # Create a dictionary containing 
+        
         pass
     
     def skip_turn(self):
@@ -238,10 +240,11 @@ class BlackjackStateMachine:
         # Burn (first card in the shoe)
         self.discard.extend([self.shoe.pop(0)])
         print("Burned card is", self.discard)
-        self.transition(GameState.DEALING)
+        self.transition(GameState.BETTING)
 
     
-    def get_player_bets(self): # Todo AB: Use threading package provided by Python
+
+    def get_primary_player_bets(self): # Todo AB: Use threading package provided by Python
         player_responses = {player: None for player in self.joined_players}
         #Poll players continously until you receive a response from each
         while None in player_responses.values():
@@ -249,6 +252,7 @@ class BlackjackStateMachine:
             # Other valid responses - bet using cash (???)
             # Other valid responses - skip, leave
             pass
+
 
 
     def handle_front_cut_card(self):
@@ -348,7 +352,7 @@ class BlackjackStateMachine:
                 self.handle_losing_primary_bet_hands()
                 self.reset_dealer_hand()
                 print("ROUND END")
-                self.transition(GameState.DEALING)
+                self.transition(GameState.BETTING)
             else:
                 print("Dealer checks hole card - not a ten, doesn't have Blackjack.")
                 self.handle_losing_side_bet_hands() # Todo AB: Add functionality to collect losing side bet hands
@@ -361,7 +365,7 @@ class BlackjackStateMachine:
                 self.handle_losing_primary_bet_hands()
                 self.reset_dealer_hand()
                 print("ROUND END")
-                self.transition(GameState.DEALING)
+                self.transition(GameState.BETTING)
             else:
                 print("Dealer checks hole card - not an Ace, doesn't have Blackjack.")
                 self.transition(GameState.PLAYER_PLAYING)
@@ -397,15 +401,16 @@ class BlackjackStateMachine:
             for player in self.joined_players:
                 remaining_hands += len(player.current_hands)
             if remaining_hands == 0:
-                # Reset dealer's hand
                 self.reset_dealer_hand()
+                print("ROUND END")
+                self.transition(GameState.DEALING)
+            else:
+                self.transition(GameState.PLAYER_PLAYING)
             """
             DEBUG:
             print("Current natural blackjacks:")
             print(self.current_round_natural_blackjacks)
             """
-            print("ROUND END")
-            self.transition(GameState.DEALING)
 
 
     def deal(self):
@@ -539,6 +544,8 @@ class BlackjackStateMachine:
                 self.start_game()
             case GameState.SHUFFLING:
                 self.shuffle_cut_and_burn(None) # Todo: AB - pen % is different upon each reshuffle in a single session
+            case GameState.BETTING:
+                self.transition(GameState.DEALING) # Todo AB: substitute in self.get_primary_player_bets()
             case GameState.DEALING:
                 self.deal()
             case GameState.INITIAL_SCORING:
@@ -564,12 +571,6 @@ class BlackjackStateMachine:
                 print("\nExiting state machine...")
                 #running = False
                 #print("Running has been set to",running)
-
-
-"""
-case GameState.BETTING:
-    self.get_player_bets()
-"""
 
 
 

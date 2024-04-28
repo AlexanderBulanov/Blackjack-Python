@@ -47,12 +47,12 @@ class Test_STARTING:
 
 
 class Test_SHUFFLING:
-    def test_blackjack_state_machine_transitions_to_DEALING_from_SHUFFLING(self):
+    def test_blackjack_state_machine_transitions_to_BETTING_from_SHUFFLING(self):
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
         test_machine.step() # executes start_game() in STARTING
         test_machine.step() # execute shuffle_cut_and_burn() in SHUFFLING
-        assert test_machine.state == bjfsm.GameState.DEALING
+        assert test_machine.state == bjfsm.GameState.BETTING
 
     def test_starting_single_deck_shoe_is_shuffle_cut_and_burned_correctly_at_randomly_chosen_pen_in_SHUFFLING(self):
         ## Setup ##
@@ -347,6 +347,7 @@ class Test_DEALING:
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
         test_machine.step() # executes start_game() in STARTING
         test_machine.step() # execute shuffle_cut_and_burn() in SHUFFLING
+        test_machine.step() # Todo AB: handle BETTING state properly instead of just skipping over it
         test_machine.step() # executes deal() in DEALING
         assert test_machine.state == bjfsm.GameState.INITIAL_SCORING
 
@@ -355,6 +356,7 @@ class Test_DEALING:
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
         test_machine.step() # executes start_game() in STARTING
         test_machine.step() # executes shuffle_cut_and_burn(None) in SHUFFLING
+        test_machine.step() # Todo AB: handle BETTING state properly instead of just skipping over it
         test_machine.step() # executes deal() in DEALING
         assert len(test_machine.joined_players[0].current_hands) == 1
 
@@ -363,6 +365,7 @@ class Test_DEALING:
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
         test_machine.step() # executes start_game() in STARTING
         test_machine.step() # executes shuffle_cut_and_burn(None) in SHUFFLING
+        test_machine.step() # Todo AB: handle BETTING state properly instead of just skipping over it
         test_machine.step() # executes deal() in DEALING
         assert len(test_machine.dealer.current_hands) == 1
 
@@ -371,6 +374,7 @@ class Test_DEALING:
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
         test_machine.step() # executes start_game() in STARTING
         test_machine.step() # executes shuffle_cut_and_burn(None) in SHUFFLING
+        test_machine.step() # Todo AB: handle BETTING state properly instead of just skipping over it
         test_machine.step() # executes deal() in DEALING
         assert len(test_machine.shoe) == 49
 
@@ -387,9 +391,10 @@ class TestNaturalBlackjacks_INITIAL_SCORING:
         test_machine.discard.clear()
         test_machine.discard.extend([test_machine.shoe.pop(test_machine.shoe.index('8H'))])
         assert ('8H' not in test_machine.shoe) and ('8H' in test_machine.discard)
-        # Manually assign a bet of 2W ($2) to first player
+        # Manually assign a bet of '2 White' with value of $2 to first player
         first_player = test_machine.joined_players[0]
         first_player_bet = '2 White, 1 Blue'
+        test_machine.place_bet(first_player, first_player_bet)
         first_player.current_primary_bets.append(first_player_bet.split(', '))
         first_player.current_primary_bet_values.append(2*1 + 1*5)
         first_player.White -= 2
@@ -411,7 +416,7 @@ class TestNaturalBlackjacks_INITIAL_SCORING:
         test_machine.transition(bjfsm.GameState.INITIAL_SCORING)
         test_machine.step()
         ## Test ##
-        assert test_machine.state == bjfsm.GameState.DEALING
+        assert test_machine.state == bjfsm.GameState.BETTING
         assert first_player.White == 50
         assert first_player.Blue == 20
         assert len(test_machine.shoe) == 49
