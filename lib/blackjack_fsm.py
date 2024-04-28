@@ -299,8 +299,6 @@ class BlackjackStateMachine:
 
                 # USE A DICTIONARY TO STORE EACH BET
                 # STORE ALL OF THE DICTIONARIES IN A LIST
-                for chip_group in player.current_primary_bets:
-                    player.chip_group += index
 
 
 

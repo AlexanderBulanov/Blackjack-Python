@@ -25,9 +25,9 @@ class Player:
         self.Yellow = 0
         self.Brown = 0
         self.hole_card_face_down = False
-        self.current_primary_bets = [] # each bet is stored as a dictionary in format of chip_color: count
+        self.current_primary_bets = [] # each bet is stored as a dictionary in format of chip_color: chip_count
         self.current_primary_bet_values = []
-        self.current_side_bets = [] # each bet is stored as a dictionary in format of chip_color: count
+        self.current_side_bets = [] # each bet is stored as a dictionary in format of chip_color: chip_count
         self.current_side_bet_values = []
         self.current_hands = [] # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
         self.current_hand_scores = []
@@ -63,9 +63,9 @@ class Player:
         Dealer.Yellow = 1000
         Dealer.Brown = 1000
         Dealer.hole_card_face_down = True
-        Dealer.current_primary_bets = [] # each bet is stored as a dictionary in format of chip_color: count
+        Dealer.current_primary_bets = [] # each bet is stored as a dictionary in format of chip_color: chip_count
         Dealer.current_primary_bet_values = []
-        Dealer.current_side_bets = [] # each bet is stored as a dictionary in format of chip_color: count
+        Dealer.current_side_bets = [] # each bet is stored as a dictionary in format of chip_color: chip_count
         Dealer.current_side_bet_values = []
         Dealer.current_hands = [] # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
         Dealer.current_hand_scores = []
@@ -87,9 +87,9 @@ class Player:
         NewPlayer.Yellow = 0
         NewPlayer.Brown = 0
         NewPlayer.hole_card_face_down = False
-        NewPlayer.current_primary_bets = [] # each bet is stored as a dictionary in format of chip_color: count
+        NewPlayer.current_primary_bets = [] # each bet is stored as a dictionary in format of chip_color: chip_count
         NewPlayer.current_primary_bet_values = []
-        NewPlayer.current_side_bets = [] # each bet is stored as a dictionary in format of chip_color: count
+        NewPlayer.current_side_bets = [] # each bet is stored as a dictionary in format of chip_color: chip_count
         NewPlayer.current_side_bet_values = []
         NewPlayer.current_hands = [] # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
         NewPlayer.current_hand_scores = []
@@ -123,5 +123,15 @@ class Player:
         print("*  *  *  *  *")
 
 
-    def place_bet(self):
-        pass
+    def add_primary_bet(self, hand, bet_string): # Example of bet_string --> '2 White, 1 Blue'
+        if (self.current_hands.index(hand) == 0):
+            # Create an empty dictionary at index 0 and populate it in the following format - chip_color: chip_count
+            self.current_primary_bets.append({})
+            for chip_bet in bet_string.split(", "):
+                chip_color, chip_count = chip_bet.split()
+                self.current_primary_bets[0][chip_color] = chip_count
+        else:
+            # Assign None to each preceding hand index to maintain coherence of specific index referring to the same
+            # hand, its primary and side bets in chip form, and its bet values in dollar amount
+            for index in range(0, self.current_hands.index(hand)-1):
+                pass

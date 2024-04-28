@@ -393,8 +393,13 @@ class TestNaturalBlackjacks_INITIAL_SCORING:
         assert ('8H' not in test_machine.shoe) and ('8H' in test_machine.discard)
         # Manually assign a bet of '2 White' with value of $2 to first player
         first_player = test_machine.joined_players[0]
-        first_player_bet = '2 White, 1 Blue'
-        test_machine.place_bet(first_player, first_player_bet)
+        first_player_bet_string = '2 White, 1 Blue'
+
+
+        first_player.add_primary_bet(player_hand, first_player_bet_string)
+
+
+
         first_player.current_primary_bets.append(first_player_bet.split(', '))
         first_player.current_primary_bet_values.append(2*1 + 1*5)
         first_player.White -= 2
