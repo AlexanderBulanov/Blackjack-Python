@@ -38,7 +38,7 @@ class BlackjackStateMachine:
         self.dealer = bjp.Player.create_casino_dealer()
         self.seventeen_rule = 'S17'
         self.waiting_players = []
-        self.joined_players = {1: None, 2: None, 3: None, 4: None, 5: None, 6: None, 7: None}
+        self.joined_players = {1: None, 2: bjp.Player.create_new_player_from_template('Alex'), 3: None, 4: None, 5: None, 6: None, 7: None}
         self.known_players = [] # list of all players who have played a shoe, now or in the past
         self.active_player = None
         self.current_round_natural_blackjacks = {} # dictionary storing all naturally dealt blackjacks per player
@@ -68,18 +68,27 @@ class BlackjackStateMachine:
     # Player Turn Actions #    
     def stand(self):
         next_player_present = False
-        # Scan for next player to be set to active
-        for next_table_seat in range(self.active_player.table_seat+1, 8):
+        current_active_table_seat = 0
+        # Get table seat of currently active player
+        for joined_player in self.joined_players.values():
+            current_active_table_seat += 1
+            if (joined_player == self.active_player):
+                break
+        # Scan for another player sitting at a higher-indexed table seat
+        for next_table_seat in range(current_active_table_seat+1, 8):
             next_player = self.joined_players[next_table_seat]
+            # Assign next active player at a higher-indexed table seat
             if next_player != None:
-                # Assign next active player
                 next_player_present = True
                 self.active_player = next_player
                 self.transition(GameState.PLAYER_PLAYING)
                 break
+        # No next player at higher-indexed table seat --> set leftmost (w.r.t dealer) player to be active
         if next_player_present == False:
-            # No next player --> pass to dealer
-            self.active_player = None
+            for joined_player in self.joined_players.values():
+                if joined_player != None:
+                    self.active_player = joined_player
+                    break
             self.transition(GameState.DEALER_PLAYING)
             
 
@@ -210,24 +219,26 @@ class BlackjackStateMachine:
 
 
     def start_game(self):
+        """
         # Manually create a test player and assign them to table spot 2
         player = bjp.Player.create_new_player_from_template('Alex')
         player.table_seat = 2
         self.joined_players[player.table_seat] = player
+        """
         print("STARTING GAME WITH THE FOLLOWING PLAYERS:")
-        for table_seat, given_player in self.joined_players.items():
-            if given_player != None:
-                print(player.name, "at table seat", table_seat)
+        for table_seat, joined_player in self.joined_players.items():
+            if joined_player != None:
+                print(joined_player.name, "at table seat", table_seat)
         # Initialize first player (sitting leftmost w.r.t. dealer) to be active
-        for given_player in self.joined_players.values():
-            if given_player != None:
-                self.active_player = given_player
+        for joined_player in self.joined_players.values():
+            if joined_player != None:
+                self.active_player = joined_player
                 break
         # Add all new joined players to known
-        for given_player in self.joined_players.values():
-            if given_player != None:
-                if given_player not in self.known_players:
-                    self.known_players.append(given_player)
+        for joined_player in self.joined_players.values():
+            if joined_player != None:
+                if joined_player not in self.known_players:
+                    self.known_players.append(joined_player)
 
             """
             if given_player == None:
@@ -469,6 +480,10 @@ class BlackjackStateMachine:
 
 
     def player_plays(self):
+        """
+        DEBUG
+        """
+        self.active_player.print_player_stats()
         # Get action from currently active player (starting leftmost at hand start)
         self.active_player.action = input("Enter an action: ").strip().lower()
         # Check that active player action is valid
@@ -572,7 +587,7 @@ class BlackjackStateMachine:
             case GameState.STARTING:
                 self.start_game()
             case GameState.SHUFFLING:
-                self.shuffle_cut_and_burn(None) # Todo: AB - pen % is different upon each reshuffle in a single session
+                self.shuffle_cut_and_burn(None) # Todo AB: pen % is different upon each reshuffle in a single session, need it fixed?
             case GameState.BETTING:
                 self.transition(GameState.DEALING) # Todo AB: substitute in self.get_primary_player_bets()
             case GameState.DEALING:

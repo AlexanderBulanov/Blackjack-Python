@@ -15,7 +15,6 @@ class Player:
         self.name = None
         self.is_dealer = False
         self.current_cash_balance = None
-        self.table_seat = None
         self.White = 0
         self.Pink = 0
         self.Red = 0
@@ -54,7 +53,6 @@ class Player:
         Dealer.name = 'Dealer'
         Dealer.is_dealer = True
         Dealer.current_cash_balance = 10000
-        Dealer.table_seat = None
         Dealer.White = 1000
         Dealer.Pink = 1000
         Dealer.Red = 1000
@@ -79,7 +77,6 @@ class Player:
         NewPlayer.name = player_name
         NewPlayer.is_dealer = False
         NewPlayer.current_cash_balance = 100
-        NewPlayer.table_seat = None
         NewPlayer.White = 50
         NewPlayer.Pink = 0
         NewPlayer.Red = 30

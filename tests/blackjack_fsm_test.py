@@ -30,20 +30,20 @@ class Test_STARTING:
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
         test_machine.step() # executes start_game() in STARTING
-        assert test_machine.active_player == test_machine.joined_players[0]
+        assert test_machine.active_player == test_machine.joined_players[2] # BlackjackStateMachine currently manually sets up 1 player at table seat 2
 
     def test_only_new_joined_player_added_to_known_players_in_STARTING(self):
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
         test_machine.step() # executes start_game() in STARTING
-        assert test_machine.known_players == test_machine.joined_players
+        assert test_machine.known_players == [test_machine.joined_players[2]] # BlackjackStateMachine currently manually sets up 1 player at table seat 2
 
     def test_joined_known_player_not_readded_to_list_of_known_players_in_STARTING(self):
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.known_players.append(test_machine.joined_players[0]) # Manually add known player
+        test_machine.known_players.append(test_machine.joined_players[2]) # Manually add player sitting at table seat 2
         test_machine.step() # executes start_game() in STARTING
-        assert test_machine.known_players == test_machine.joined_players
+        assert test_machine.known_players == [test_machine.joined_players[2]] # BlackjackStateMachine currently manually sets up 1 player at table seat 2
 
 
 class Test_SHUFFLING:
@@ -358,7 +358,7 @@ class Test_DEALING:
         test_machine.step() # executes shuffle_cut_and_burn(None) in SHUFFLING
         test_machine.step() # Todo AB: handle BETTING state properly instead of just skipping over it
         test_machine.step() # executes deal() in DEALING
-        assert len(test_machine.joined_players[0].current_hands) == 1
+        assert len(test_machine.joined_players[2].current_hands) == 1 # BlackjackStateMachine currently manually sets up 1 player at table seat 2
 
     def test_dealer_has_one_hand_dealt_in_DEALING(self):
         num_of_decks = 1
