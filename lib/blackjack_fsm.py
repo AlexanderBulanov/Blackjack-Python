@@ -594,6 +594,7 @@ class BlackjackStateMachine:
             case GameState.SHUFFLING:
                 self.shuffle_cut_and_burn(None) # Todo AB: pen % is different upon each reshuffle in a single session, need it fixed?
             case GameState.BETTING:
+                self.active_player.get_player_bet()
                 self.transition(GameState.DEALING) # Todo AB: substitute in self.get_primary_player_bets()
             case GameState.DEALING:
                 self.deal()
@@ -631,10 +632,4 @@ def add_transition(self, start_state, end_state):
     # How to store transitions?
     #self.state = end_state
     pass
-"""
-
-
-"""
-game = BlackjackSM()
-game.run()
 """

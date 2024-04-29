@@ -4,10 +4,38 @@ Author: Alexander Bulanov
 """
 
 # Global Imports #
-
+from msvcrt import getch
 
 # Local Imports #
-from msvcrt import getch
+from . import blackjack_game_objects as bjo
+
+# Global-scope reference objects #
+key_to_chip_bindings = {
+    '1': 'White',
+    '2': 'Pink',
+    '3': 'Red',
+    '4': 'Blue',
+    '5': 'Green',
+    '6': 'Black',
+    '7': 'Purple',
+    '8': 'Yellow',
+    '9': 'Brown',
+}
+
+other_key_bindings = {
+    'c': 'color up',
+    'b': 'break down',
+    'u': 'undo',
+    'r': 'reset bet',
+    'f': 'finish placing bet',
+    's': 'skip bet (this round)',
+    'l': 'leave table'
+}
+
+# Custom Exceptions #
+class ExitBettingInterface(Exception):
+    pass
+
 
 ### Defining Players for Tracking ###
 class Player:
@@ -123,69 +151,42 @@ class Player:
         print("*  *  *  *  *")
 
 
-    def add_primary_bet(self, hand, bet_string): # Example of bet_string --> '2 White, 1 Blue'
-        hand_index = self.current_hands.index(hand)
-        if (hand_index == 0):
-            self.current_primary_bets.append({})
-            for chip_phrase in bet_string.split(", "):
-                chip_color, chip_count = chip_phrase.split()
-                self.current_primary_bets[0][chip_color] = chip_count
-        else:
-            for index in range(0, self.current_hands.index(hand)-1):
-                self.current_primary_bets.append({})
-            self.current_primary_bets.append({})
-            for chip_phrase in bet_string.split(", "):
-                chip_color, chip_count = chip_phrase.split()
-                self.current_primary_bets[hand_index][chip_color] = chip_count
+    def get_bet_input_character(self):
+        player_bet = self.current_primary_bets[0]
+        # Todo AB: Make sure the above code scales with player making multiple hand bets
 
+        key = getch().decode('utf-8') # Get a key (as a byte string) and decode it
+        match key:
+            case 'f':
+                #print("Character 'f' entered!")
+                raise ExitBettingInterface
+            case '0':
+                print("Additional key options:")
+                for other_option_key, value in other_key_bindings.items():
+                    print(f"{other_option_key}: {value}")
+            case '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9':
+                chip_color = key_to_chip_bindings[key]
+                player_bet[chip_color] += 1
+                print(player_bet)
+            case 'c' | 'b' | 'u' | 'r' | 's' | 'l':
+                print(f"Special character {key} entered!")
+                # Todo AB: Handle input of special characters
+
+
+            case other:
+                print(f"Invalid input {key}. Press the following keys to add chips or enter 0 for more options.")
+                for chip_keybind, chip_color in key_to_chip_bindings.items():
+                    print(f"Key {chip_keybind}: ${bjo.chips[chip_color]} ({chip_color})")
 
 
     def get_player_bet(self):
-        key_to_chip_mappings = {
-            '1': 'White',
-            '2': 'Pink',
-            '3': 'Red',
-            '4': 'Blue',
-            '5': 'Green',
-            '6': 'Black',
-            '7': 'Purple',
-            '8': 'Yellow',
-            '9': 'Brown',
-        }
-
-        print("Press keys 1-9 to add the following chips or 0 for separate menu")
-        key = getch()
-
-        match key:
-            case '0':
-                # Reset to enter a diffent bet
-                pass
-            case '1':
-                pass
-            case '2':
-                pass
-            case '3':
-                pass
-            case '4':
-                pass
-            case '5':
-                pass
-            case '6':
-                pass
-            case '7':
-                pass
-            case '8':
-                pass
-            case '9':
-                pass
-            case other:
-                print("Invalid input. Press the following numbers to add chips:")
-                print("1 - White ($1)")
-                print("2 - Pink ($2.5)")
-                print("3 - Red ($5)")
-                print("4 - Blue ($10)")
-                print("5 - Green ($25)")
-                print("6 - Black ($100)")
-                print("7 - Purple ($500)")
-                print("8 - Yellow ($1000)")
-                print("9 - Brown ($5000)")
+        empty_bet = dict.fromkeys(bjo.chip_names, 0)
+        self.current_primary_bets.append(empty_bet)
+        print("Press the following keys to add chips to your bet or enter 0 for more options:")
+        for chip_keybind, chip_color in key_to_chip_bindings.items():
+            print(f"Key {chip_keybind}: ${bjo.chips[chip_color]} ({chip_color})")
+        try:
+            while True:
+                self.get_bet_input_character()
+        except ExitBettingInterface:
+                print("Exiting betting interface...\n")
