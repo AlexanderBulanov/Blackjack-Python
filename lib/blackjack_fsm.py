@@ -41,7 +41,7 @@ class BlackjackStateMachine:
         self.joined_players = {1: None, 2: bjp.Player.create_new_player_from_template('Alex'), 3: None, 4: None, 5: None, 6: None, 7: None}
         self.known_players = [] # list of all players who have played a shoe, now or in the past
         self.active_player = None
-        self.current_round_natural_blackjacks = {} # dictionary storing all naturally dealt blackjacks per player
+        self.current_round_natural_blackjacks = {} # dictionary of players and all of their naturally dealt blackjack hands in a given round
         self.player_turn_actions = {
             'stand': lambda: self.stand(),
             'hit': lambda: self.hit(),
@@ -431,8 +431,13 @@ class BlackjackStateMachine:
                         del self.current_round_natural_blackjacks[player]
                     else:
                         self.current_round_natural_blackjacks[player].remove(hand)
-                    # Discard player's Blackjack hand
+                    # Reset player's Blackjack hand score and discard it
+                    print("Current hands for player", player.name, "are", player.current_hands)
+                    print("Current hand scores for player", player.name, "are", player.current_hand_scores)
+                    player.current_hand_scores.pop(player.current_hands.index(hand))
                     self.discard.extend(player.current_hands.pop(player.current_hands.index(hand)))
+                    print("Updated hands for player", player.name, "are", player.current_hands)
+                    print("Updated hand scores for player", player.name, "are", player.current_hand_scores)
             # Check if dealer's hand needs to be discarded due to all player hands being Blackjacks
             remaining_hands = 0
             for player in self.joined_players.values():
