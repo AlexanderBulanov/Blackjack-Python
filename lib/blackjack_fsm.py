@@ -488,7 +488,7 @@ class BlackjackStateMachine:
         """
         DEBUG
         """
-        self.active_player.print_player_stats()
+        #self.active_player.print_player_stats()
         # Get action from currently active player (starting leftmost at hand start)
         self.active_player.action = input("Enter an action: ").strip().lower()
         # Check that active player action is valid
@@ -595,6 +595,7 @@ class BlackjackStateMachine:
                 self.shuffle_cut_and_burn(None) # Todo AB: pen % is different upon each reshuffle in a single session, need it fixed?
             case GameState.BETTING:
                 self.active_player.get_player_bet()
+                self.active_player.print_player_stats()
                 self.transition(GameState.DEALING) # Todo AB: substitute in self.get_primary_player_bets()
             case GameState.DEALING:
                 self.deal()
