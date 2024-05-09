@@ -35,14 +35,14 @@ key_to_chip_decrement_bindings = {
 }
 
 
-other_key_bindings = {
-    'p': 'print betting interface',
-    'd': 'display current bet',
+special_key_bindings = {
     'r': 'reset bet',
     'f': 'finish bet',
+    'p': 'print betting interface',
+    'd': 'display current bet',
     'c': 'color up',
     'b': 'break down',
-    's': 'skip bet',
+    's': 'skip bet', # Todo AB: switch seat?
     'l': 'leave table'
 }
 
@@ -67,8 +67,8 @@ class Player:
         self.Yellow = 0
         self.Brown = 0
         self.hole_card_face_down = False
-        self.current_primary_bets = [] # each bet is stored as a dictionary in format of chip_color: chip_count
-        self.current_primary_bet_values = []
+        self.current_main_bets = [] # each bet is stored as a dictionary in format of chip_color: chip_count
+        self.current_main_bet_values = []
         self.current_side_bets = [] # each bet is stored as a dictionary in format of chip_color: chip_count
         self.current_side_bet_values = []
         self.current_hands = [] # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
@@ -105,8 +105,8 @@ class Player:
         Dealer.Yellow = 1000
         Dealer.Brown = 1000
         Dealer.hole_card_face_down = True
-        Dealer.current_primary_bets = [] # each bet is stored as a dictionary in format of chip_color: chip_count
-        Dealer.current_primary_bet_values = []
+        Dealer.current_main_bets = [] # each bet is stored as a dictionary in format of chip_color: chip_count
+        Dealer.current_main_bet_values = []
         Dealer.current_side_bets = [] # each bet is stored as a dictionary in format of chip_color: chip_count
         Dealer.current_side_bet_values = []
         Dealer.current_hands = [] # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
@@ -129,8 +129,8 @@ class Player:
         NewPlayer.Yellow = 0
         NewPlayer.Brown = 0
         NewPlayer.hole_card_face_down = False
-        NewPlayer.current_primary_bets = [] # each bet is stored as a dictionary in format of chip_color: chip_count
-        NewPlayer.current_primary_bet_values = []
+        NewPlayer.current_main_bets = [] # each bet is stored as a dictionary in format of chip_color: chip_count
+        NewPlayer.current_main_bet_values = []
         NewPlayer.current_side_bets = [] # each bet is stored as a dictionary in format of chip_color: chip_count
         NewPlayer.current_side_bet_values = []
         NewPlayer.current_hands = [] # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
@@ -166,6 +166,17 @@ class Player:
 
 
     # Helper methods
+    def display_current_bet(self):
+        print(f"{self.name}'s ${self.current_main_bet_values[-1]} bet - ", end='')
+        print("{", end='')
+        player_bet = self.current_main_bets[0]
+        for chip_color, chip_count in player_bet.items():
+            if (chip_count > 0):
+                print(f"'{chip_color}': {chip_count}", end='')
+                # Todo AB: if this is not the last key:value pair, print ", "
+                
+        print("}")
+
     def color_up(self):
         pass
 
@@ -181,12 +192,10 @@ class Player:
 
 
     def get_bet_input_character(self):
-        player_bet = self.current_primary_bets[0]
+        player_bet = self.current_main_bets[0]
         # Todo AB: Make sure the above code scales with player making multiple hand bets
         key = getch().decode('utf-8') # Get a key (as a byte string) and decode it
         match key:
-            case 'p':
-                self.print_betting_prompt()
             case 'r':
                 for chip_color in player_bet.keys():
                     #print(f"Resetting chip color {chip_color} from {player_bet[chip_color]} chips to 0")
@@ -200,20 +209,28 @@ class Player:
             case '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9':
                 chip_color = key_to_chip_default_bindings[key]
                 player_bet[chip_color] += 1
+                self.current_main_bet_values[-1] += bjo.chips[chip_color]
+                # Todo AB: Provide a printing method to display only non-zero chip_color: chip_count key-value pairs
+
+
                 print(f"{self.name}'s bet - ", end='')
                 print(player_bet)
+                print(f"Total bet value - {self.current_main_bet_values[-1]}")
             case '!' | '@' | '#' | '$' | '%' | '^' | '&' | '*' | '(':
                 chip_color = key_to_chip_decrement_bindings[key]
                 if player_bet[chip_color] > 0:
                     player_bet[chip_color] -= 1
+                    self.current_main_bet_values[-1] -= bjo.chips[chip_color]
                     print(f"{self.name}'s bet - ", end='')
                     print(player_bet)
-            case 'd' | 'c' | 'b' | 's' | 'l':
+                    print(f"Total bet value - {self.current_main_bet_values[-1]}")
+            case 'p' | 'd' | 'c' | 'b' | 's' | 'l':
                 #print(f"Special character '{key}' entered!")
                 match key:
+                    case 'p':
+                        self.print_betting_prompt()
                     case 'd':
-                        print(f"{self.name}'s bet - ", end='')
-                        print(player_bet)
+                        self.display_current_bet()
                     case 'c':
                         self.color_up() # Todo AB: implement color_up()
                     case 'b':
@@ -228,7 +245,7 @@ class Player:
 
 
     def print_betting_prompt_padding(self, chip_color):
-        padding_spaces = 12
+        padding_spaces = 13
         for char in str(bjo.chips[chip_color]):
             padding_spaces -= 1
         for char in chip_color:
@@ -237,35 +254,35 @@ class Player:
             print(" ", end='')
 
 
-    def print_special_keybindings(self, index):
-        pass
+    def print_special_keybinding(self, chip_keybind, chip_color):
+        other_keybindings_list = list(special_key_bindings.keys())
+        if (int(chip_keybind)-1) < len(other_keybindings_list):
+            self.print_betting_prompt_padding(chip_color)
+            other_keybind = other_keybindings_list[int(chip_keybind)-1]
+            print(f"{other_keybind}: {special_key_bindings[other_keybind]}")
+        else:
+            print("")
 
 
     def print_betting_prompt(self):
         print("Press the following number keys to add/remove chips or press letter keys for special actions:")
         for chip_keybind, chip_color in key_to_chip_default_bindings.items():
-            chip_decrement_keybind = list(key_to_chip_decrement_bindings.keys())[int(chip_keybind)-1]
             print(f"{chip_keybind}: +${bjo.chips[chip_color]} ({chip_color})", end='')
             self.print_betting_prompt_padding(chip_color)
+            chip_decrement_keybind = list(key_to_chip_decrement_bindings.keys())[int(chip_keybind)-1]
             print(f"{chip_decrement_keybind}: -${bjo.chips[chip_color]} ({chip_color})", end='')
-
+            self.print_special_keybinding(chip_keybind, chip_color)
             # Todo AB: Possibly reimplement code below in print_special_keybindings(self, index) method above for visual clarity
-
-            other_keybindings_list = list(other_key_bindings.keys())
-            if (int(chip_keybind)-1) < len(other_keybindings_list):
-                self.print_betting_prompt_padding(chip_color)
-                other_keybind = other_keybindings_list[int(chip_keybind)-1]
-                print(f"{other_keybind}: {other_key_bindings[other_keybind]}")
-            else:
-                print("")
 
 
     def get_player_bet(self):
         empty_bet = dict.fromkeys(bjo.chip_names, 0)
-        self.current_primary_bets.append(empty_bet)
+        self.current_main_bets.append(empty_bet) # Add a new empty chip dictionary to track a new bet
+        self.current_main_bet_values.append(0) # Initialize value of a new bet to 0
         self.print_betting_prompt()
         try:
             while True:
                 self.get_bet_input_character()
         except ExitBettingInterface:
-                print("Exiting betting interface...\n")
+            # Todo AB: Tally up how many
+            print("Exiting betting interface...\n")
