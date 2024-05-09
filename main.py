@@ -10,6 +10,5 @@ Author: Alexander Bulanov
 import lib.blackjack_fsm as bjfsm
 
 ### Main Code ###
-
 BlackjackSM = bjfsm.BlackjackStateMachine(1)
 BlackjackSM.run()

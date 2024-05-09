@@ -340,6 +340,14 @@ class Test_SHUFFLING:
             #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
             assert card_occurrence_counts[card] == 8
 
+
+class Test_BETTING:
+    def test_empty_bet_handled_appropriately(self):
+        pass
+
+    def test_one_of_each_chip_placed_by_player_stored_correctly_at_table_seat(self):
+        pass
+
     
 class Test_DEALING:
     def test_blackjack_state_machine_transitions_to_INITIAL_SCORING_from_DEALING(self):

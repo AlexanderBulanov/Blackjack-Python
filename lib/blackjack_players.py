@@ -10,7 +10,7 @@ from msvcrt import getch
 from . import blackjack_game_objects as bjo
 
 # Global-scope reference objects #
-key_to_chip_bindings = {
+key_to_chip_default_bindings = {
     '1': 'White',
     '2': 'Pink',
     '3': 'Red',
@@ -21,6 +21,20 @@ key_to_chip_bindings = {
     '8': 'Yellow',
     '9': 'Brown',
 }
+
+key_to_chip_decrement_bindings = {
+    '!': 'White',
+    '@': 'Pink',
+    '#': 'Red',
+    '$': 'Blue',
+    '%': 'Green',
+    '^': 'Black',
+    '&': 'Purple',
+    '*': 'Yellow',
+    '(': 'Brown',
+}
+
+
 
 other_key_bindings = {
     'c': 'color up',
@@ -165,26 +179,48 @@ class Player:
                 for other_option_key, value in other_key_bindings.items():
                     print(f"{other_option_key}: {value}")
             case '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9':
-                chip_color = key_to_chip_bindings[key]
+                chip_color = key_to_chip_default_bindings[key]
                 player_bet[chip_color] += 1
                 print(player_bet)
+            case '!' | '@' | '#' | '$' | '%' | '^' | '&' | '*' | '(':
+                chip_color = key_to_chip_decrement_bindings[key]
+                if player_bet[chip_color] > 0:
+                    player_bet[chip_color] -= 1
+                    print(player_bet)
             case 'c' | 'b' | 'u' | 'r' | 's' | 'l':
                 print(f"Special character {key} entered!")
+                
                 # Todo AB: Handle input of special characters
 
-
             case other:
-                print(f"Invalid input {key}. Press the following keys to add chips or enter 0 for more options.")
-                for chip_keybind, chip_color in key_to_chip_bindings.items():
-                    print(f"Key {chip_keybind}: ${bjo.chips[chip_color]} ({chip_color})")
+                print(f"Invalid input {key}. Press the following keys to add chips or enter 0 to see other options.")
+                for chip_keybind, chip_color in key_to_chip_default_bindings.items():
+                    print(f"{chip_keybind}: ${bjo.chips[chip_color]} ({chip_color})")
+
+
+    def print_betting_prompt_padding(self, chip_color):
+        padding_spaces = 12
+        for char in str(bjo.chips[chip_color]):
+            padding_spaces -= 1
+        for char in chip_color:
+            padding_spaces -= 1
+        for num in range(0, padding_spaces):
+            print(" ", end='')
+
+
+    def print_betting_prompt(self):
+        print("Press the following keys to add/remove chips or enter 0 to see other options:")
+        for chip_keybind, chip_color in key_to_chip_default_bindings.items():
+            chip_decrement_keybind = list(key_to_chip_decrement_bindings.keys())[int(chip_keybind)-1]
+            print(f"{chip_keybind}: +${bjo.chips[chip_color]} ({chip_color})", end='')
+            self.print_betting_prompt_padding(chip_color)
+            print(f"{chip_decrement_keybind}: -${bjo.chips[chip_color]} ({chip_color})")
 
 
     def get_player_bet(self):
         empty_bet = dict.fromkeys(bjo.chip_names, 0)
         self.current_primary_bets.append(empty_bet)
-        print("Press the following keys to add chips to your bet or enter 0 for more options:")
-        for chip_keybind, chip_color in key_to_chip_bindings.items():
-            print(f"Key {chip_keybind}: ${bjo.chips[chip_color]} ({chip_color})")
+        self.print_betting_prompt()
         try:
             while True:
                 self.get_bet_input_character()
