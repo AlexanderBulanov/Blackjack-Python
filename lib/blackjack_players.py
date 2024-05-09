@@ -35,14 +35,14 @@ key_to_chip_decrement_bindings = {
 }
 
 
-
 other_key_bindings = {
+    'p': 'print betting interface',
+    'd': 'display current bet',
+    'r': 'reset bet',
+    'f': 'finish bet',
     'c': 'color up',
     'b': 'break down',
-    'u': 'undo',
-    'r': 'reset bet',
-    'f': 'finish placing bet',
-    's': 'skip bet (this round)',
+    's': 'skip bet',
     'l': 'leave table'
 }
 
@@ -165,37 +165,66 @@ class Player:
         print("*  *  *  *  *")
 
 
+    # Helper methods
+    def color_up(self):
+        pass
+
+    def break_down(self):
+        pass
+
+    def skip_bet(self):
+        pass
+
+    def leave_table(self):
+        pass
+
+
+
     def get_bet_input_character(self):
         player_bet = self.current_primary_bets[0]
         # Todo AB: Make sure the above code scales with player making multiple hand bets
-
         key = getch().decode('utf-8') # Get a key (as a byte string) and decode it
         match key:
+            case 'p':
+                self.print_betting_prompt()
+            case 'r':
+                for chip_color in player_bet.keys():
+                    #print(f"Resetting chip color {chip_color} from {player_bet[chip_color]} chips to 0")
+                    player_bet[chip_color] = 0
+                print(f"Resetting {self.name}'s bet!")
+                print(f"{self.name}'s bet - ", end='')
+                print(player_bet)
             case 'f':
-                #print("Character 'f' entered!")
+                #print("Special character 'f' entered!")
                 raise ExitBettingInterface
-            case '0':
-                print("Additional key options:")
-                for other_option_key, value in other_key_bindings.items():
-                    print(f"{other_option_key}: {value}")
             case '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9':
                 chip_color = key_to_chip_default_bindings[key]
                 player_bet[chip_color] += 1
+                print(f"{self.name}'s bet - ", end='')
                 print(player_bet)
             case '!' | '@' | '#' | '$' | '%' | '^' | '&' | '*' | '(':
                 chip_color = key_to_chip_decrement_bindings[key]
                 if player_bet[chip_color] > 0:
                     player_bet[chip_color] -= 1
+                    print(f"{self.name}'s bet - ", end='')
                     print(player_bet)
-            case 'c' | 'b' | 'u' | 'r' | 's' | 'l':
-                print(f"Special character {key} entered!")
-                
-                # Todo AB: Handle input of special characters
-
+            case 'd' | 'c' | 'b' | 's' | 'l':
+                #print(f"Special character '{key}' entered!")
+                match key:
+                    case 'd':
+                        print(f"{self.name}'s bet - ", end='')
+                        print(player_bet)
+                    case 'c':
+                        self.color_up() # Todo AB: implement color_up()
+                    case 'b':
+                        self.break_down() # Todo AB: implement break_down()
+                    case 's':
+                        self.skip_bet() # Todo AB: implement skip_bet()
+                    case 'l':
+                        self.leave_table() # Todo AB: implement leave_table()
             case other:
-                print(f"Invalid input {key}. Press the following keys to add chips or enter 0 to see other options.")
-                for chip_keybind, chip_color in key_to_chip_default_bindings.items():
-                    print(f"{chip_keybind}: ${bjo.chips[chip_color]} ({chip_color})")
+                print(f"Invalid input '{key}'")
+                self.print_betting_prompt()
 
 
     def print_betting_prompt_padding(self, chip_color):
@@ -208,13 +237,27 @@ class Player:
             print(" ", end='')
 
 
+    def print_special_keybindings(self, index):
+        other_keybindings_list = list(other_key_bindings.keys())
+        if (int(index)-1) < len(other_keybindings_list):
+            print(other_keybindings_list)
+            print(int(index)-1)
+
+
     def print_betting_prompt(self):
-        print("Press the following keys to add/remove chips or enter 0 to see other options:")
+        print("Press the following number keys to add/remove chips or press letter keys for special actions:")
         for chip_keybind, chip_color in key_to_chip_default_bindings.items():
             chip_decrement_keybind = list(key_to_chip_decrement_bindings.keys())[int(chip_keybind)-1]
             print(f"{chip_keybind}: +${bjo.chips[chip_color]} ({chip_color})", end='')
             self.print_betting_prompt_padding(chip_color)
-            print(f"{chip_decrement_keybind}: -${bjo.chips[chip_color]} ({chip_color})")
+            print(f"{chip_decrement_keybind}: -${bjo.chips[chip_color]} ({chip_color})", end='')
+            other_keybindings_list = list(other_key_bindings.keys())
+            if (int(chip_keybind)-1) < len(other_keybindings_list):
+                self.print_betting_prompt_padding(chip_color)
+                other_keybind = other_keybindings_list[int(chip_keybind)-1]
+                print(f"{other_keybind}: {other_key_bindings[other_keybind]}")
+            else:
+                print("")
 
 
     def get_player_bet(self):
