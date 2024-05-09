@@ -238,10 +238,7 @@ class Player:
 
 
     def print_special_keybindings(self, index):
-        other_keybindings_list = list(other_key_bindings.keys())
-        if (int(index)-1) < len(other_keybindings_list):
-            print(other_keybindings_list)
-            print(int(index)-1)
+        pass
 
 
     def print_betting_prompt(self):
@@ -251,6 +248,9 @@ class Player:
             print(f"{chip_keybind}: +${bjo.chips[chip_color]} ({chip_color})", end='')
             self.print_betting_prompt_padding(chip_color)
             print(f"{chip_decrement_keybind}: -${bjo.chips[chip_color]} ({chip_color})", end='')
+
+            # Todo AB: Possibly reimplement code below in print_special_keybindings(self, index) method above for visual clarity
+
             other_keybindings_list = list(other_key_bindings.keys())
             if (int(chip_keybind)-1) < len(other_keybindings_list):
                 self.print_betting_prompt_padding(chip_color)
