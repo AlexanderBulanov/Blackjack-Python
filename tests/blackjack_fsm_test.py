@@ -342,10 +342,11 @@ class Test_SHUFFLING:
 
 
 class Test_BETTING:
-    def test_empty_bet_handled_appropriately(self):
+    def test_empty_bet_handled_appropriately(self, monkeypatch):
+        # Monkeypatch an input of 'f'
         pass
 
-    def test_one_of_each_chip_placed_by_player_stored_correctly_at_table_seat(self):
+    def test_one_of_each_chip_placed_by_player_stored_correctly_at_table_seat(self, monkeypatch):
         pass
 
     

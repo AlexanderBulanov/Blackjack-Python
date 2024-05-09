@@ -36,8 +36,8 @@ key_to_chip_decrement_bindings = {
 
 
 special_key_bindings = {
-    'r': 'reset bet',
-    'f': 'finish bet',
+    'r': 'reset current bet',
+    'f': 'finish current bet',
     'p': 'print betting interface',
     'd': 'display current bet',
     'c': 'color up',
@@ -166,16 +166,23 @@ class Player:
 
 
     # Helper methods
+    def reset_current_bet(self):
+        player_bet = self.current_main_bets[0]
+        player_bet_values = self.current_main_bet_values
+        for chip_color in player_bet.keys():
+            #print(f"Resetting chip color {chip_color} from {player_bet[chip_color]} chips to 0")
+            player_bet[chip_color] = 0
+            player_bet_values[0] = 0
+        print(f"Reset {self.name}'s bet!")
+
     def display_current_bet(self):
         print(f"{self.name}'s ${self.current_main_bet_values[-1]} bet - ", end='')
-        print("{", end='')
         player_bet = self.current_main_bets[0]
+        displayed_bet = {}
         for chip_color, chip_count in player_bet.items():
             if (chip_count > 0):
-                print(f"'{chip_color}': {chip_count}", end='')
-                # Todo AB: if this is not the last key:value pair, print ", "
-                
-        print("}")
+                displayed_bet[chip_color] = chip_count
+        print(displayed_bet)
 
     def color_up(self):
         pass
@@ -193,16 +200,13 @@ class Player:
 
     def get_bet_input_character(self):
         player_bet = self.current_main_bets[0]
+        player_bet_values = self.current_main_bet_values
         # Todo AB: Make sure the above code scales with player making multiple hand bets
         key = getch().decode('utf-8') # Get a key (as a byte string) and decode it
         match key:
             case 'r':
-                for chip_color in player_bet.keys():
-                    #print(f"Resetting chip color {chip_color} from {player_bet[chip_color]} chips to 0")
-                    player_bet[chip_color] = 0
-                print(f"Resetting {self.name}'s bet!")
-                print(f"{self.name}'s bet - ", end='')
-                print(player_bet)
+                self.reset_current_bet()
+                self.display_current_bet()
             case 'f':
                 #print("Special character 'f' entered!")
                 raise ExitBettingInterface
@@ -210,20 +214,13 @@ class Player:
                 chip_color = key_to_chip_default_bindings[key]
                 player_bet[chip_color] += 1
                 self.current_main_bet_values[-1] += bjo.chips[chip_color]
-                # Todo AB: Provide a printing method to display only non-zero chip_color: chip_count key-value pairs
-
-
-                print(f"{self.name}'s bet - ", end='')
-                print(player_bet)
-                print(f"Total bet value - {self.current_main_bet_values[-1]}")
+                self.display_current_bet()
             case '!' | '@' | '#' | '$' | '%' | '^' | '&' | '*' | '(':
                 chip_color = key_to_chip_decrement_bindings[key]
                 if player_bet[chip_color] > 0:
                     player_bet[chip_color] -= 1
                     self.current_main_bet_values[-1] -= bjo.chips[chip_color]
-                    print(f"{self.name}'s bet - ", end='')
-                    print(player_bet)
-                    print(f"Total bet value - {self.current_main_bet_values[-1]}")
+                    self.display_current_bet()
             case 'p' | 'd' | 'c' | 'b' | 's' | 'l':
                 #print(f"Special character '{key}' entered!")
                 match key:
@@ -241,7 +238,8 @@ class Player:
                         self.leave_table() # Todo AB: implement leave_table()
             case other:
                 print(f"Invalid input '{key}'")
-                self.print_betting_prompt()
+                print("Provide a valid key or press 'p' to see valid key input options")
+                #self.print_betting_prompt()
 
 
     def print_betting_prompt_padding(self, chip_color):
