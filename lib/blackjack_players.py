@@ -36,15 +36,17 @@ key_to_chip_decrement_bindings = {
 
 
 special_key_bindings = {
-    'd': 'display current bet',
+    'v': 'view betting interface',
+    'd': "display player's chip pool",
+    'p': 'print current bet',
     'r': 'reset current bet',
     'f': 'finish current bet',
-    'p': 'print betting interface',
     'g': 'get chips',
     'c': 'color up',
     'b': 'break down',
-    's': 'skip bet', # Todo AB: switch seat?
-    'l': 'leave table'
+    's': 'skip bet',
+    'm': 'move seat',
+    'l': 'leave table',
 }
 
 # Custom Exceptions #
@@ -195,7 +197,7 @@ class Player:
     def reset_current_bet(self):
         player_bet = self.current_main_bets[0]
         player_bet_values = self.current_main_bet_amounts
-        print(player_bet)
+        #print(player_bet)
         for chip_color, chip_count in player_bet.items():
             chip_worth = bjo.chips[chip_color]
             for chip in range(0, chip_count):
@@ -206,7 +208,7 @@ class Player:
         self.clean_up_fractions()
         print(f"Reset {self.name}'s bet to ${self.current_main_bet_amounts[-1]}!")
 
-    def display_current_bet(self):
+    def print_current_bet(self):
         print(f"{self.name}'s ${self.current_main_bet_amounts[-1]} bet - ", end='')
         player_bet = self.current_main_bets[0]
         displayed_bet = {}
@@ -227,6 +229,9 @@ class Player:
     def skip_bet(self):
         pass
 
+    def move_seat(self):
+        pass
+
     def leave_table(self):
         pass
 
@@ -237,12 +242,14 @@ class Player:
 
         key = getch().decode('utf-8') # Get a key (as a byte string) and decode it
         match key:
+            case 'v':
+                self.view_betting_interface()
             case 'd':
-                self.display_current_bet()
                 self.display_player_chip_pool()
+            case 'p':
+                self.print_current_bet()
             case 'r':
                 self.reset_current_bet()
-                self.display_player_chip_pool()
             case 'f':
                 player_bet_value = self.current_main_bet_amounts[-1]
                 fraction = player_bet_value % 1
@@ -256,17 +263,15 @@ class Player:
                     raise ExitBettingInterface
             case '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9':
                 self.increase_bet(key)
-                self.display_current_bet()
-                self.display_player_chip_pool()
+                #self.display_player_chip_pool()
+                self.print_current_bet()
             case '!' | '@' | '#' | '$' | '%' | '^' | '&' | '*' | '(':
                 self.decrease_bet(key)
-                self.display_current_bet()
-                self.display_player_chip_pool()
+                #self.display_player_chip_pool()
+                self.print_current_bet()
             case 'p' | 'g' | 'c' | 'b' | 's' | 'l':
                 #print(f"Special character '{key}' entered!")
                 match key:
-                    case 'p':
-                        self.print_betting_prompt()
                     case 'g':
                         self.get_chips() # Todo AB: implement get_chips()
                     case 'c':
@@ -282,7 +287,7 @@ class Player:
                 print("Provide a valid key or press 'p' to see valid key input options")
 
 
-    def print_betting_prompt_padding(self, chip_color):
+    def print_betting_interface_padding(self, chip_color):
         padding_spaces = 13
         for char in str(bjo.chips[chip_color]):
             padding_spaces -= 1
@@ -295,18 +300,18 @@ class Player:
     def print_letter_keybinding(self, chip_keybind, chip_color):
         other_keybindings_list = list(special_key_bindings.keys())
         if (int(chip_keybind)-1) < len(other_keybindings_list):
-            self.print_betting_prompt_padding(chip_color)
+            self.print_betting_interface_padding(chip_color)
             other_keybind = other_keybindings_list[int(chip_keybind)-1]
             print(f"{other_keybind}: {special_key_bindings[other_keybind]}")
         else:
             print("")
 
 
-    def print_betting_prompt(self):
+    def view_betting_interface(self):
         print("Press the following number keys to add chips, symbol keys to remove chips, and letter keys to execute special actions:")
         for chip_keybind, chip_color in key_to_chip_default_bindings.items():
             print(f"{chip_keybind}: +${bjo.chips[chip_color]} ({chip_color})", end='')
-            self.print_betting_prompt_padding(chip_color)
+            self.print_betting_interface_padding(chip_color)
             chip_decrement_keybind = list(key_to_chip_decrement_bindings.keys())[int(chip_keybind)-1]
             print(f"{chip_decrement_keybind}: -${bjo.chips[chip_color]} ({chip_color})", end='')
             self.print_letter_keybinding(chip_keybind, chip_color)
@@ -316,7 +321,7 @@ class Player:
         empty_bet = dict.fromkeys(bjo.chip_names, 0)
         self.current_main_bets.append(empty_bet) # Add a new empty chip dictionary to track a new bet
         self.current_main_bet_amounts.append(0) # Initialize value of a new bet to 0
-        self.print_betting_prompt()
+        self.view_betting_interface()
         self.display_player_chip_pool()
         try:
             while True:
