@@ -40,6 +40,7 @@ special_key_bindings = {
     'r': 'reset current bet',
     'f': 'finish current bet',
     'p': 'print betting interface',
+    'g': 'get chips',
     'c': 'color up',
     'b': 'break down',
     's': 'skip bet', # Todo AB: switch seat?
@@ -179,7 +180,6 @@ class Player:
             self.current_main_bet_amounts[-1] += chip_worth
             self.chip_pool_balance -= chip_worth
             self.clean_up_fractions()
-            
 
     def decrease_bet(self, key):
         chip_color = key_to_chip_decrement_bindings[key]
@@ -215,6 +215,9 @@ class Player:
                 displayed_bet[chip_color] = chip_count
         print(displayed_bet)
 
+    def get_chips(self):
+        pass
+
     def color_up(self):
         pass
 
@@ -229,7 +232,7 @@ class Player:
 
 
 
-    def get_bet_input_character(self):
+    def get_bet_input_character(self, min_bet, max_bet):
         # Todo AB: Make sure the above code scales with player making multiple hand bets
 
         key = getch().decode('utf-8') # Get a key (as a byte string) and decode it
@@ -245,6 +248,10 @@ class Player:
                 fraction = player_bet_value % 1
                 if (fraction != 0):
                     print(f"Invalid (fractional) bet amount of ${player_bet_value} - please resubmit a bet /w an even number of Pink chips!")
+                elif (player_bet_value < min_bet):
+                    print(f"{self.name}'s bet amount - ${player_bet_value}, please submit a bet between inclusive bounds of ${min_bet} and ${max_bet}")
+                elif (player_bet_value > max_bet):
+                    print(f"{self.name}'s bet amount - ${player_bet_value}, please submit a bet between inclusive bounds of ${min_bet} and ${max_bet}")
                 else:
                     raise ExitBettingInterface
             case '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9':
@@ -255,11 +262,13 @@ class Player:
                 self.decrease_bet(key)
                 self.display_current_bet()
                 self.display_player_chip_pool()
-            case 'p' | 'c' | 'b' | 's' | 'l':
+            case 'p' | 'g' | 'c' | 'b' | 's' | 'l':
                 #print(f"Special character '{key}' entered!")
                 match key:
                     case 'p':
                         self.print_betting_prompt()
+                    case 'g':
+                        self.get_chips() # Todo AB: implement get_chips()
                     case 'c':
                         self.color_up() # Todo AB: implement color_up()
                     case 'b':
@@ -303,7 +312,7 @@ class Player:
             self.print_letter_keybinding(chip_keybind, chip_color)
 
 
-    def get_player_bet(self):
+    def get_player_bet(self, min_bet, max_bet):
         empty_bet = dict.fromkeys(bjo.chip_names, 0)
         self.current_main_bets.append(empty_bet) # Add a new empty chip dictionary to track a new bet
         self.current_main_bet_amounts.append(0) # Initialize value of a new bet to 0
@@ -311,6 +320,6 @@ class Player:
         self.display_player_chip_pool()
         try:
             while True:
-                self.get_bet_input_character()
+                self.get_bet_input_character(min_bet, max_bet)
         except ExitBettingInterface:
             print("Exiting betting interface...\n")

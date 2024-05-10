@@ -37,6 +37,9 @@ class BlackjackStateMachine:
         self.discard = []
         self.dealer = bjp.Player.create_casino_dealer()
         self.seventeen_rule = 'S17'
+        self.min_bet = 1
+        self.max_bet = 100
+        self.blackjack_ratio = 3/2
         self.waiting_players = []
         self.joined_players = {1: None, 2: bjp.Player.create_new_player_from_template('Alex'), 3: None, 4: None, 5: None, 6: None, 7: None}
         self.known_players = [] # list of all players who have played a shoe, now or in the past
@@ -55,7 +58,6 @@ class BlackjackStateMachine:
             'join': lambda: self.join(),
             'color up': lambda: self.color_up(),
             'break down': lambda: self.break_down(),
-            'bet': lambda: self.bet(),
             'skip': lambda: self.skip_turn(),
             'leave': lambda: self.leave()
         }
@@ -121,11 +123,6 @@ class BlackjackStateMachine:
         pass
 
     def break_down(self):
-        pass
-
-    def bet(self, player, player_hand):
-        # Create a dictionary containing 
-        
         pass
     
     def skip_turn(self):
@@ -446,7 +443,7 @@ class BlackjackStateMachine:
             if remaining_hands == 0:
                 self.reset_dealer_hand()
                 print("ROUND END")
-                self.transition(GameState.DEALING)
+                self.transition(GameState.BETTING)
             else:
                 self.transition(GameState.PLAYER_PLAYING)
             """
@@ -594,7 +591,7 @@ class BlackjackStateMachine:
             case GameState.SHUFFLING:
                 self.shuffle_cut_and_burn(None) # Todo AB: pen % is different upon each reshuffle in a single session, need it fixed?
             case GameState.BETTING:
-                self.active_player.get_player_bet()
+                self.active_player.get_player_bet(self.min_bet, self.max_bet)
                 self.active_player.print_player_stats()
                 self.transition(GameState.DEALING) # Todo AB: substitute in self.get_primary_player_bets()
             case GameState.DEALING:
