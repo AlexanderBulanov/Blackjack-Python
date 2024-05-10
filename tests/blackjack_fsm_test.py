@@ -346,6 +346,12 @@ class Test_BETTING:
         # Monkeypatch an input of 'f'
         pass
 
+    def test_betting_fifty_one_white_chips_out_of_fifty_in_chip_pool_makes_for_a_fifty_dollar_bet(self, monkeypatch):
+        pass
+
+    def test_chip_pool_balance_plus_main_bet_amount_adds_to_five_hundred_for_template_player_after_BETTING(self, monkeypatch):
+        pass
+
     def test_one_of_each_chip_placed_by_player_stored_correctly_at_table_seat(self, monkeypatch):
         pass
 
