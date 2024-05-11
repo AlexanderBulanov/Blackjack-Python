@@ -37,16 +37,17 @@ key_to_chip_decrement_bindings = {
 
 special_key_bindings = {
     'v': 'view betting interface',
-    'd': "display player's chip pool",
+    'd': 'display player chip pool',
     'p': 'print current bet',
     'r': 'reset current bet',
     'f': 'finish current bet',
+    's': 'skip betting',
     'g': 'get chips',
     'c': 'color up',
     'b': 'break down',
-    's': 'skip bet',
     'm': 'move seat',
-    'l': 'leave table',
+    'a': 'add seat',
+    'l': 'leave seat',
 }
 
 # Custom Exceptions #
@@ -168,8 +169,16 @@ class Player:
         if (chip_pool_balance_fraction == 0):
             self.chip_pool_balance = int(self.chip_pool_balance)
 
+    def print_current_bet(self):
+        print(f"{self.name}'s ${self.current_main_bet_amounts[-1]} bet - ", end='')
+        player_bet = self.current_main_bets[0]
+        displayed_bet = {}
+        for chip_color, chip_count in player_bet.items():
+            if (chip_count > 0):
+                displayed_bet[chip_color] = chip_count
+        print(displayed_bet)
 
-    def increase_bet(self, key):
+    def increase_current_bet(self, key):
         chip_color = key_to_chip_default_bindings[key]
         player_bet = self.current_main_bets[0]
         if (self.chips[chip_color] == 0):
@@ -183,7 +192,7 @@ class Player:
             self.chip_pool_balance -= chip_worth
             self.clean_up_fractions()
 
-    def decrease_bet(self, key):
+    def decrease_current_bet(self, key):
         chip_color = key_to_chip_decrement_bindings[key]
         player_bet = self.current_main_bets[0]
         if player_bet[chip_color] > 0:
@@ -208,15 +217,6 @@ class Player:
         self.clean_up_fractions()
         print(f"Reset {self.name}'s bet to ${self.current_main_bet_amounts[-1]}!")
 
-    def print_current_bet(self):
-        print(f"{self.name}'s ${self.current_main_bet_amounts[-1]} bet - ", end='')
-        player_bet = self.current_main_bets[0]
-        displayed_bet = {}
-        for chip_color, chip_count in player_bet.items():
-            if (chip_count > 0):
-                displayed_bet[chip_color] = chip_count
-        print(displayed_bet)
-
     def get_chips(self):
         pass
 
@@ -229,12 +229,19 @@ class Player:
     def skip_bet(self):
         pass
 
+    def add_seat(self):
+        pass
+
     def move_seat(self):
         pass
 
-    def leave_table(self):
+    def leave_seat(self):
         pass
 
+    """
+    def leave_table(self):
+        pass
+    """
 
 
     def get_bet_input_character(self, min_bet, max_bet):
@@ -261,16 +268,17 @@ class Player:
                     print(f"{self.name}'s bet amount - ${player_bet_value}, please submit a bet between inclusive bounds of ${min_bet} and ${max_bet}")
                 else:
                     raise ExitBettingInterface
+            case 's':
+                self.skip_bet()
             case '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9':
-                self.increase_bet(key)
+                self.increase_current_bet(key)
                 #self.display_player_chip_pool()
                 self.print_current_bet()
             case '!' | '@' | '#' | '$' | '%' | '^' | '&' | '*' | '(':
-                self.decrease_bet(key)
+                self.decrease_current_bet(key)
                 #self.display_player_chip_pool()
                 self.print_current_bet()
-            case 'p' | 'g' | 'c' | 'b' | 's' | 'l':
-                #print(f"Special character '{key}' entered!")
+            case 'g' | 'c' | 'b' | 'm' | 'a' | 'l':
                 match key:
                     case 'g':
                         self.get_chips() # Todo AB: implement get_chips()
@@ -278,17 +286,19 @@ class Player:
                         self.color_up() # Todo AB: implement color_up()
                     case 'b':
                         self.break_down() # Todo AB: implement break_down()
-                    case 's':
+                    case 'm':
                         self.skip_bet() # Todo AB: implement skip_bet()
+                    case 'a':
+                        self.add_seat() # Todo AB: implement add_seat()
                     case 'l':
-                        self.leave_table() # Todo AB: implement leave_table()
+                        self.leave_seat() # Todo AB: implement leave_table()
             case other:
                 print(f"Invalid input '{key}'")
                 print("Provide a valid key or press 'p' to see valid key input options")
 
 
     def print_betting_interface_padding(self, chip_color):
-        padding_spaces = 13
+        padding_spaces = 14
         for char in str(bjo.chips[chip_color]):
             padding_spaces -= 1
         for char in chip_color:
@@ -298,13 +308,37 @@ class Player:
 
 
     def print_letter_keybinding(self, chip_keybind, chip_color):
-        other_keybindings_list = list(special_key_bindings.keys())
+        if ((int(chip_keybind)-1) < 6):
+            other_keybindings_list = list(special_key_bindings.keys())
+            # Print 6 keybindings in one column, then 6 more in the padded one to the right
+            self.print_betting_interface_padding(chip_color)
+            other_keybind_col_one = other_keybindings_list[int(chip_keybind)-1]
+            print(f"{other_keybind_col_one}: {special_key_bindings[other_keybind_col_one]}", end='')
+
+            padding_spaces = 28
+            other_keybinding_names = list(special_key_bindings.values())
+            other_keybinding_name = other_keybinding_names[int(chip_keybind)-1]
+            #print(repr(other_keybinding_name))
+            for char in other_keybinding_name:
+                padding_spaces -= 1
+            #print(padding_spaces, end='')
+            for num in range(0, padding_spaces):
+                print(" ", end='')
+            other_keybind_col_two = other_keybindings_list[int(chip_keybind)-1+6]
+            print(f"{other_keybind_col_two}: {special_key_bindings[other_keybind_col_two]}")
+
+        else:
+            print("")
+
+
+        """
         if (int(chip_keybind)-1) < len(other_keybindings_list):
             self.print_betting_interface_padding(chip_color)
             other_keybind = other_keybindings_list[int(chip_keybind)-1]
             print(f"{other_keybind}: {special_key_bindings[other_keybind]}")
         else:
             print("")
+        """
 
 
     def view_betting_interface(self):
