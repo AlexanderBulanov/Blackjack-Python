@@ -591,7 +591,7 @@ class BlackjackStateMachine:
             case GameState.SHUFFLING:
                 self.shuffle_cut_and_burn(None) # Todo AB: pen % is different upon each reshuffle in a single session, need it fixed?
             case GameState.BETTING:
-                self.active_player.get_player_bet(self.min_bet, self.max_bet)
+                self.active_player.get_player_bets(self.min_bet, self.max_bet)
                 self.active_player.print_player_stats()
                 self.transition(GameState.DEALING) # Todo AB: substitute in self.get_primary_player_bets()
             case GameState.DEALING:

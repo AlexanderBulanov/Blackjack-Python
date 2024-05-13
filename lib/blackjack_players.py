@@ -62,6 +62,7 @@ class Player:
         self.chips = dict.fromkeys(bjo.chip_names, 0)
         self.chip_pool_balance = 0
         self.hole_card_face_down = False
+        self.active_seats = ['current_seat']
         self.current_main_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
             'left_seat': None,
             'current_seat': None,
@@ -117,9 +118,10 @@ class Player:
         Dealer.chips = dict.fromkeys(bjo.chip_names, 1000)
         Dealer.chip_pool_balance = 1000*(1+2.5+5+10+25+100+500+1000+5000)
         Dealer.hole_card_face_down = True
+        Dealer.active_seats = ['current_seat']
         Dealer.current_main_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
             'left_seat': None,
-            'current_seat': 0,
+            'current_seat': None,
             'right_seat': None
         }
         Dealer.current_main_bet_amounts = {
@@ -127,10 +129,26 @@ class Player:
             'current_seat': None,
             'right_seat': None
         }
-        Dealer.current_side_bets = [] # each bet is stored as a dictionary in format of chip_color: chip_count
-        Dealer.current_side_bet_amounts = []
-        Dealer.current_hands = [] # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
-        Dealer.current_hand_scores = []
+        Dealer.current_side_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
+            'left_seat': None,
+            'current_seat': None,
+            'right_seat': None
+        }
+        Dealer.current_side_bet_amounts = {
+            'left_seat': None,
+            'current_seat': None,
+            'right_seat': None
+        }
+        Dealer.current_hands = { # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
+            'left_seat': None,
+            'current_seat': None,
+            'right_seat': None
+        }
+        Dealer.current_hand_scores = {
+            'left_seat': None,
+            'current_seat': None,
+            'right_seat': None
+        }
         Dealer.action = None
         return Dealer
     
@@ -147,12 +165,37 @@ class Player:
         NewPlayer.chips['Green'] = 5
         NewPlayer.chip_pool_balance = int(50*1 + 30*2.5 + 20*5 + 15*10 + 5*25)
         NewPlayer.hole_card_face_down = False
-        NewPlayer.current_main_bets = [] # each bet is stored as a dictionary in format of chip_color: chip_count
-        NewPlayer.current_main_bet_amounts = []
-        NewPlayer.current_side_bets = [] # each bet is stored as a dictionary in format of chip_color: chip_count
-        NewPlayer.current_side_bet_amounts = []
-        NewPlayer.current_hands = [] # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
-        NewPlayer.current_hand_scores = []
+        NewPlayer.active_seats = ['current_seat']
+        NewPlayer.current_main_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
+            'left_seat': None,
+            'current_seat': None,
+            'right_seat': None
+        }
+        NewPlayer.current_main_bet_amounts = {
+            'left_seat': None,
+            'current_seat': None,
+            'right_seat': None
+        }
+        NewPlayer.current_side_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
+            'left_seat': None,
+            'current_seat': None,
+            'right_seat': None
+        }
+        NewPlayer.current_side_bet_amounts = {
+            'left_seat': None,
+            'current_seat': None,
+            'right_seat': None
+        }
+        NewPlayer.current_hands = { # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
+            'left_seat': None,
+            'current_seat': None,
+            'right_seat': None
+        }
+        NewPlayer.current_hand_scores = {
+            'left_seat': None,
+            'current_seat': None,
+            'right_seat': None
+        }
         NewPlayer.action = None
         return NewPlayer
     
@@ -191,26 +234,26 @@ class Player:
         print(displayed_bet)
 
     # Helper methods
-    def clean_up_fractions(self):
-        bet_amount_fraction = self.current_main_bet_amounts[-1] % 1
+    def clean_up_fractions(self, seat):
+        bet_amount_fraction = self.current_main_bet_amounts[seat] % 1
         chip_pool_balance_fraction = self.chip_pool_balance % 1
         if (bet_amount_fraction == 0):
-            self.current_main_bet_amounts[-1] = int(self.current_main_bet_amounts[-1])
+            self.current_main_bet_amounts[seat] = int(self.current_main_bet_amounts[seat])
         if (chip_pool_balance_fraction == 0):
             self.chip_pool_balance = int(self.chip_pool_balance)
 
-    def print_current_bet(self):
-        print(f"{self.name}'s ${self.current_main_bet_amounts[-1]} bet - ", end='')
-        player_bet = self.current_main_bets[0]
+    def print_current_bet(self, seat):
+        print(f"{self.name}'s ${self.current_main_bet_amounts[seat]} bet - ", end='')
+        player_bet = self.current_main_bets[seat]
         displayed_bet = {}
         for chip_color, chip_count in player_bet.items():
             if (chip_count > 0):
                 displayed_bet[chip_color] = chip_count
         print(displayed_bet)
 
-    def increase_current_bet(self, key):
+    def increase_current_bet(self, seat, key):
         chip_color = key_to_chip_default_bindings[key]
-        player_bet = self.current_main_bets[0]
+        player_bet = self.current_main_bets[seat]
         if (self.chips[chip_color] == 0):
             print(f"Cannot add {chip_color} (${bjo.chips[chip_color]}) chip - not enough chips of this type in {self.name}'s chip pool!")
             self.display_player_chip_pool()
@@ -219,25 +262,25 @@ class Player:
             self.chips[chip_color] -= 1
             player_bet[chip_color] += 1
             chip_worth = bjo.chips[chip_color]
-            self.current_main_bet_amounts[-1] += chip_worth
+            self.current_main_bet_amounts[seat] += chip_worth
             self.chip_pool_balance -= chip_worth
-            self.clean_up_fractions()
-            self.print_current_bet()
+            self.clean_up_fractions(seat)
+            self.print_current_bet(seat)
 
-    def decrease_current_bet(self, key):
+    def decrease_current_bet(self, seat, key):
         chip_color = key_to_chip_decrement_bindings[key]
-        player_bet = self.current_main_bets[0]
+        player_bet = self.current_main_bets[seat]
         if player_bet[chip_color] > 0:
             player_bet[chip_color] -= 1
             self.chips[chip_color] += 1
             chip_worth = bjo.chips[chip_color]
-            self.current_main_bet_amounts[-1] -= chip_worth
+            self.current_main_bet_amounts[seat] -= chip_worth
             self.chip_pool_balance += chip_worth
-            self.clean_up_fractions()
-            self.print_current_bet()
+            self.clean_up_fractions(seat)
+            self.print_current_bet(seat)
     
-    def reset_current_bet(self):
-        player_bet = self.current_main_bets[0]
+    def reset_current_bet(self, seat):
+        player_bet = self.current_main_bets[seat]
         player_bet_values = self.current_main_bet_amounts
         #print(player_bet)
         for chip_color, chip_count in player_bet.items():
@@ -246,9 +289,9 @@ class Player:
                 self.chips[chip_color] += 1
                 self.chip_pool_balance += chip_worth
             player_bet[chip_color] = 0
-            player_bet_values[0] = 0
-        self.clean_up_fractions()
-        print(f"Reset {self.name}'s bet to ${self.current_main_bet_amounts[-1]}!")
+            player_bet_values[seat] = 0
+        self.clean_up_fractions(seat)
+        print(f"Reset {self.name}'s bet to ${self.current_main_bet_amounts[seat]}!")
 
     def get_chips(self):
         pass
@@ -277,7 +320,7 @@ class Player:
     """
 
 
-    def get_bet_input_character(self, min_bet, max_bet):
+    def get_bet_input_character(self, min_bet, max_bet, seat):
         # Todo AB: Make sure the above code scales with player making multiple hand bets
 
         key = getch().decode('utf-8') # Get a key (as a byte string) and decode it
@@ -287,11 +330,11 @@ class Player:
             case 'd':
                 self.display_player_chip_pool()
             case 'p':
-                self.print_current_bet()
+                self.print_current_bet(seat)
             case 'r':
-                self.reset_current_bet()
+                self.reset_current_bet(seat)
             case 'f':
-                player_bet_value = self.current_main_bet_amounts[-1]
+                player_bet_value = self.current_main_bet_amounts[seat]
                 fraction = player_bet_value % 1
                 if (fraction != 0):
                     print(f"Invalid (fractional) bet amount of ${player_bet_value} - please resubmit a bet /w an even number of Pink chips!")
@@ -302,13 +345,13 @@ class Player:
                 else:
                     raise ExitBettingInterface
             case 's':
-                self.skip_bet()
+                self.skip_bet(seat)
             case '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9':
-                self.increase_current_bet(key)
+                self.increase_current_bet(seat, key)
                 #self.display_player_chip_pool()
                 #self.print_current_bet()
             case '!' | '@' | '#' | '$' | '%' | '^' | '&' | '*' | '(':
-                self.decrease_current_bet(key)
+                self.decrease_current_bet(seat, key)
                 #self.display_player_chip_pool()
                 #self.print_current_bet()
             case 'g' | 'c' | 'b' | 'm' | 'a' | 'l':
@@ -384,15 +427,16 @@ class Player:
             self.print_letter_keybinding(chip_keybind, chip_color)
 
 
-    def get_player_bet(self, table_seat, min_bet, max_bet): # Todo AB: Incorporate table_seat
-
-        empty_bet = dict.fromkeys(bjo.chip_names, 0)
-        self.current_main_bets.append(empty_bet) # Add a new empty chip dictionary to track a new bet
-        self.current_main_bet_amounts.append(0) # Initialize value of a new bet to 0
-        self.view_betting_interface()
-        self.display_player_chip_pool()
-        try:
-            while True:
-                self.get_bet_input_character(min_bet, max_bet)
-        except ExitBettingInterface:
-            print("Exiting betting interface...\n")
+    def get_player_bets(self, min_bet, max_bet):
+        for seat in self.active_seats:
+            # Initialize seat variables
+            empty_bet = dict.fromkeys(bjo.chip_names, 0)
+            self.current_main_bets[seat] = empty_bet
+            self.current_main_bet_amounts[seat] = 0
+            self.view_betting_interface()
+            self.display_player_chip_pool()
+            try:
+                while True:
+                    self.get_bet_input_character(min_bet, max_bet, seat)
+            except ExitBettingInterface:
+                print("Exiting betting interface...\n")
