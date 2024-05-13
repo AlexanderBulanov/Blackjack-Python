@@ -182,8 +182,9 @@ class Player:
         chip_color = key_to_chip_default_bindings[key]
         player_bet = self.current_main_bets[0]
         if (self.chips[chip_color] == 0):
-            print(f"Cannot add {chip_color} chip - not enough chips of this type in {self.name}'s chip pool")
-            print(f"Either 'color up' smaller chips or 'break down' larger chips to get more {chip_color} chips")
+            print(f"Cannot add {chip_color} (${bjo.chips[chip_color]}) chip - not enough chips of this type in {self.name}'s chip pool!")
+            self.display_player_chip_pool()
+            print(f"Enter 'g' to exchange cash to chips, 'c' to convert smaller chips into bigger ones, or 'b' to convert bigger chips into smaller ones")
         else:
             self.chips[chip_color] -= 1
             player_bet[chip_color] += 1
@@ -191,6 +192,7 @@ class Player:
             self.current_main_bet_amounts[-1] += chip_worth
             self.chip_pool_balance -= chip_worth
             self.clean_up_fractions()
+            self.print_current_bet()
 
     def decrease_current_bet(self, key):
         chip_color = key_to_chip_decrement_bindings[key]
@@ -202,6 +204,7 @@ class Player:
             self.current_main_bet_amounts[-1] -= chip_worth
             self.chip_pool_balance += chip_worth
             self.clean_up_fractions()
+            self.print_current_bet()
     
     def reset_current_bet(self):
         player_bet = self.current_main_bets[0]
@@ -263,9 +266,9 @@ class Player:
                 if (fraction != 0):
                     print(f"Invalid (fractional) bet amount of ${player_bet_value} - please resubmit a bet /w an even number of Pink chips!")
                 elif (player_bet_value < min_bet):
-                    print(f"{self.name}'s bet amount - ${player_bet_value}, please submit a bet between inclusive bounds of ${min_bet} and ${max_bet}")
+                    print(f"{self.name}'s ${player_bet_value} bet is below table minimum, please submit a bet between inclusive bounds of ${min_bet} and ${max_bet}")
                 elif (player_bet_value > max_bet):
-                    print(f"{self.name}'s bet amount - ${player_bet_value}, please submit a bet between inclusive bounds of ${min_bet} and ${max_bet}")
+                    print(f"{self.name}'s ${player_bet_value} bet is above table maximum, please submit a bet between inclusive bounds of ${min_bet} and ${max_bet}")
                 else:
                     raise ExitBettingInterface
             case 's':
@@ -273,11 +276,11 @@ class Player:
             case '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9':
                 self.increase_current_bet(key)
                 #self.display_player_chip_pool()
-                self.print_current_bet()
+                #self.print_current_bet()
             case '!' | '@' | '#' | '$' | '%' | '^' | '&' | '*' | '(':
                 self.decrease_current_bet(key)
                 #self.display_player_chip_pool()
-                self.print_current_bet()
+                #self.print_current_bet()
             case 'g' | 'c' | 'b' | 'm' | 'a' | 'l':
                 match key:
                     case 'g':
@@ -294,7 +297,7 @@ class Player:
                         self.leave_seat() # Todo AB: implement leave_table()
             case other:
                 print(f"Invalid input '{key}'")
-                print("Provide a valid key or press 'p' to see valid key input options")
+                print("Provide a valid key or press 'v' to see valid key input options")
 
 
     def print_betting_interface_padding(self, chip_color):
