@@ -34,7 +34,6 @@ key_to_chip_decrement_bindings = {
     '(': 'Brown',
 }
 
-
 special_key_bindings = {
     'v': 'view betting interface',
     'd': 'display player chip pool',
@@ -54,7 +53,6 @@ special_key_bindings = {
 class ExitBettingInterface(Exception):
     pass
 
-
 ### Defining Players for Tracking ###
 class Player:
     def __init__(self):
@@ -64,28 +62,52 @@ class Player:
         self.chips = dict.fromkeys(bjo.chip_names, 0)
         self.chip_pool_balance = 0
         self.hole_card_face_down = False
-        self.current_main_bets = [] # each bet is stored as a dictionary in format of chip_color: chip_count
-        self.current_main_bet_amounts = []
-        self.current_side_bets = [] # each bet is stored as a dictionary in format of chip_color: chip_count
-        self.current_side_bet_amounts = []
-        self.current_hands = [] # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
-        self.current_hand_scores = []
+        self.current_main_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
+            'left_seat': None,
+            'current_seat': None,
+            'right_seat': None
+        }
+        self.current_main_bet_amounts = {
+            'left_seat': None,
+            'current_seat': None,
+            'right_seat': None
+        }
+        self.current_side_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
+            'left_seat': None,
+            'current_seat': None,
+            'right_seat': None
+        }
+        self.current_side_bet_amounts = {
+            'left_seat': None,
+            'current_seat': None,
+            'right_seat': None
+        }
+        self.current_hands = { # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
+            'left_seat': None,
+            'current_seat': None,
+            'right_seat': None
+        }
+        self.current_hand_scores = {
+            'left_seat': None,
+            'current_seat': None,
+            'right_seat': None
+        }
         self.action = None
 
     # Player actions are:
         # Out-of-Round:
-            # Join
-            # Leave
+            # Join ('j')
+            # Leave ('l')
         # In-Round (Main Bets):
-            # Place a Bet
-            # Stand
-            # Hit
-            # Double-Down
-            # Split
-            # Surrender
+            # Bet ('b')
+            # Stand ('st')
+            # Hit ('h')
+            # Double-Down ('d')
+            # Split ('sp')
+            # Surrender ('su')
         # In-Round (Side Bets):
-            # Insurance
-            # Even Money
+            # Insurance ('i')
+            # Even Money ('em')
 
     def create_casino_dealer():
         Dealer = Player()
@@ -95,8 +117,16 @@ class Player:
         Dealer.chips = dict.fromkeys(bjo.chip_names, 1000)
         Dealer.chip_pool_balance = 1000*(1+2.5+5+10+25+100+500+1000+5000)
         Dealer.hole_card_face_down = True
-        Dealer.current_main_bets = [] # each bet is stored as a dictionary in format of chip_color: chip_count
-        Dealer.current_main_bet_amounts = []
+        Dealer.current_main_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
+            'left_seat': None,
+            'current_seat': 0,
+            'right_seat': None
+        }
+        Dealer.current_main_bet_amounts = {
+            'left_seat': None,
+            'current_seat': None,
+            'right_seat': None
+        }
         Dealer.current_side_bets = [] # each bet is stored as a dictionary in format of chip_color: chip_count
         Dealer.current_side_bet_amounts = []
         Dealer.current_hands = [] # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
@@ -354,7 +384,8 @@ class Player:
             self.print_letter_keybinding(chip_keybind, chip_color)
 
 
-    def get_player_bet(self, min_bet, max_bet):
+    def get_player_bet(self, table_seat, min_bet, max_bet): # Todo AB: Incorporate table_seat
+
         empty_bet = dict.fromkeys(bjo.chip_names, 0)
         self.current_main_bets.append(empty_bet) # Add a new empty chip dictionary to track a new bet
         self.current_main_bet_amounts.append(0) # Initialize value of a new bet to 0

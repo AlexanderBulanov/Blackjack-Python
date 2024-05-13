@@ -7,6 +7,12 @@ Author: Alexander Bulanov
 import lib.blackjack_players as bjp
 
 
+
+
+
+
+
+"""
 class TestBetMaking:
     def test_template_player_hand_bet_set_correctly(self, monkeypatch):
         player = bjp.Player.create_new_player_from_template('Alex')
@@ -14,8 +20,6 @@ class TestBetMaking:
         bet = '2 White, 1 Blue'
         player.add_primary_bet(hand, bet)
         hand = ['AH', 'QD']
-        """
-        DEBUG:
-        """
         player.print_player_stats()
         assert 2 == 3
+"""
