@@ -219,25 +219,37 @@ class BlackjackStateMachine:
         print("Welcome to Pass-and-Play Casino Blackjack!")
         print("|---------------------------------|")
         print("|             Dealer              |")
-        print("|[7]                           [1]|")
-        print("|    [6]                   [2]    |")
-        print("|         [5]   [4]   [3]         |")
-        print("|---------------------------------|")
-        print("Please enter your username and preferred seat.")
-        start = False
-        # Todo AB: automatically pick an open seat for 7th player and notify them of this
-        while (start == False):
+        print(f"|[7]                           [1]|")
+        print(f"|    [6]                   [2]    |")
+        print(f"|         [5]   [4]   [3]         |")
+        print("|---------------------------------|") # Todo AB: have each player's username replace integers in square brackets once they join
+        print("Please enter your username and preferred seat out of those available above.")
+        start_flag = False
+        remaining_seats = list(self.seated_players.keys())
+        while (start_flag != 'S'):
             new_player_username = input("Username: ")
-            new_player_preferred_seat = None
-            while new_player_preferred_seat not in range(1, 8):
-                new_player_preferred_seat = input("Preferred seat number: ")
-            bjp.Player.create_new_player_from_template(new_player_username, new_player_preferred_seat)
+            new_player_chosen_seat = None
+            if (len(remaining_seats) == 1):
+                print(f"Only one seat available! Assigning seat {remaining_seats[0]} to player {new_player_username}!")
+                new_player_chosen_seat = remaining_seats[0]
+                self.seated_players[new_player_chosen_seat] = bjp.Player.create_new_player_from_template(new_player_username, new_player_chosen_seat)
+            else:
+                # Use a context manager to "factor out" checking whether chosen seat is of type int?
 
 
-            print("Pass keyboard to the next player")
-        
-
-
+                while (type(new_player_chosen_seat) != int) and (new_player_chosen_seat not in remaining_seats):
+                    try:
+                        seat_number_input = input("Preferred seat number: ")
+                        new_player_chosen_seat = int(seat_number_input)
+                        if new_player_chosen_seat not in remaining_seats:
+                            print(f"Seat {new_player_chosen_seat} is already occupied by {self.seated_players[new_player_chosen_seat].name}. Please choose a different seat.")
+                        else:
+                            self.seated_players[new_player_chosen_seat] = bjp.Player.create_new_player_from_template(new_player_username, new_player_chosen_seat)
+                            remaining_seats.pop(new_player_chosen_seat-1)
+                        # Todo AB: Check that the seat is not occupied, print a warning otherwise and re-request seat number input
+                    except ValueError:
+                        print(f"Non-integer seat number {seat_number_input} provided. Please input an integer between 1 and 7, inclusive")
+            print("Pass keyboard to the next player or enter 'S' to start the game /w all currently seated players")
         self.transition(GameState.STARTING)
 
 
