@@ -17,20 +17,21 @@ from . import cut_helper as cut
 
 ### Blackjack State Machine ###
 class GameState(Enum):
-    STARTING = 0
-    SHUFFLING = 1
-    BETTING = 2
-    DEALING = 3
-    INITIAL_SCORING = 4
-    PLAYER_PLAYING = 5
-    DEALER_PLAYING = 6
-    RESCORING = 7
-    ROUND_ENDING = 8
+    WAITING = 0
+    STARTING = 1
+    SHUFFLING = 2
+    BETTING = 3
+    DEALING = 4
+    INITIAL_SCORING = 5
+    PLAYER_PLAYING = 6
+    DEALER_PLAYING = 7
+    RESCORING = 8
+    ROUND_ENDING = 9
 
 
 class BlackjackStateMachine:
     def __init__(self, num_of_decks):
-        self.state = GameState.STARTING
+        self.state = GameState.WAITING
         self.num_of_decks = num_of_decks
         self.pen = None
         self.shoe = bjo.get_shoe_of_n_decks(self.num_of_decks)
@@ -41,7 +42,7 @@ class BlackjackStateMachine:
         self.max_bet = 100
         self.blackjack_ratio = 3/2
         self.waiting_players = []
-        self.joined_players = {1: None, 2: bjp.Player.create_new_player_from_template('Alex'), 3: None, 4: None, 5: None, 6: None, 7: None}
+        self.seated_players = {1: None, 2: None, 3: None, 4: None, 5: None, 6: None, 7: None}
         self.known_players = [] # list of all players who have played a shoe, now or in the past
         self.active_player = None
         self.current_round_natural_blackjacks = {} # dictionary of players and all of their naturally dealt blackjack hands in a given round
@@ -72,13 +73,13 @@ class BlackjackStateMachine:
         next_player_present = False
         current_active_table_seat = 0
         # Get table seat of currently active player
-        for joined_player in self.joined_players.values():
+        for seated_player in self.seated_players.values():
             current_active_table_seat += 1
-            if (joined_player == self.active_player):
+            if (seated_player == self.active_player):
                 break
         # Scan for another player sitting at a higher-indexed table seat
         for next_table_seat in range(current_active_table_seat+1, 8):
-            next_player = self.joined_players[next_table_seat]
+            next_player = self.seated_players[next_table_seat]
             # Assign next active player at a higher-indexed table seat
             if next_player != None:
                 next_player_present = True
@@ -87,9 +88,9 @@ class BlackjackStateMachine:
                 break
         # No next player at higher-indexed table seat --> set leftmost (w.r.t dealer) player to be active
         if next_player_present == False:
-            for joined_player in self.joined_players.values():
-                if joined_player != None:
-                    self.active_player = joined_player
+            for seated_player in self.seated_players.values():
+                if seated_player != None:
+                    self.active_player = seated_player
                     break
             self.transition(GameState.DEALER_PLAYING)
             
@@ -182,7 +183,7 @@ class BlackjackStateMachine:
     def print_all_hands(self):
         print("*  *  *  *  *")
         print(self.dealer.name, "has a hand of", self.dealer.current_hands[0])
-        for player in self.joined_players.values():
+        for player in self.seated_players.values():
             if player != None:
                 if len(player.current_hands) <= 1:
                     print(player.name, "has a hand of", player.current_hands[0])
@@ -214,28 +215,53 @@ class BlackjackStateMachine:
         self.transition(GameState.STARTING)
     """
 
+    def wait_for_players_to_join(self): # Pass-and-Play version
+        print("Welcome to Pass-and-Play Casino Blackjack!")
+        print("|---------------------------------|")
+        print("|             Dealer              |")
+        print("|[7]                           [1]|")
+        print("|    [6]                   [2]    |")
+        print("|         [5]   [4]   [3]         |")
+        print("|---------------------------------|")
+        print("Please enter your username and preferred seat.")
+        start = False
+        # Todo AB: automatically pick an open seat for 7th player and notify them of this
+        while (start == False):
+            new_player_username = input("Username: ")
+            new_player_preferred_seat = None
+            while new_player_preferred_seat not in range(1, 8):
+                new_player_preferred_seat = input("Preferred seat number: ")
+            bjp.Player.create_new_player_from_template(new_player_username, new_player_preferred_seat)
+
+
+            print("Pass keyboard to the next player")
+        
+
+
+        self.transition(GameState.STARTING)
+
 
     def start_game(self):
         """
         # Manually create a test player and assign them to table spot 2
         player = bjp.Player.create_new_player_from_template('Alex')
         player.table_seat = 2
-        self.joined_players[player.table_seat] = player
+        self.seated_players[player.table_seat] = player
         """
         print("STARTING GAME WITH THE FOLLOWING PLAYERS:")
-        for table_seat, joined_player in self.joined_players.items():
-            if joined_player != None:
-                print(joined_player.name, "at table seat", table_seat)
+        for table_seat, seated_player in self.seated_players.items():
+            if seated_player != None:
+                print(seated_player.name, "at table seat", table_seat)
         # Initialize first player (sitting leftmost w.r.t. dealer) to be active
-        for joined_player in self.joined_players.values():
-            if joined_player != None:
-                self.active_player = joined_player
+        for seated_player in self.seated_players.values():
+            if seated_player != None:
+                self.active_player = seated_player
                 break
         # Add all new joined players to known
-        for joined_player in self.joined_players.values():
-            if joined_player != None:
-                if joined_player not in self.known_players:
-                    self.known_players.append(joined_player)
+        for seated_player in self.seated_players.values():
+            if seated_player != None:
+                if seated_player not in self.known_players:
+                    self.known_players.append(seated_player)
 
             """
             if given_player == None:
@@ -247,7 +273,7 @@ class BlackjackStateMachine:
         """
         # DEBUG
         self.dealer.print_player_stats()
-        for player in self.joined_players:
+        for player in self.seated_players:
             player.print_player_stats()
         """
         self.transition(GameState.SHUFFLING)
@@ -279,7 +305,7 @@ class BlackjackStateMachine:
     
 
     def get_primary_player_bets(self): # Todo AB: Use threading package provided by Python
-        player_responses = {player: None for player in self.joined_players.values()}
+        player_responses = {player: None for player in self.seated_players.values()}
         #Poll players continously until you receive a response from each
         while None in player_responses.values():
             # Valid chip bet responses - bets using any combination of chips except for odd number of Pink ones
@@ -295,7 +321,7 @@ class BlackjackStateMachine:
 
 
     def score_all_hands_in_play(self):
-        for player in self.joined_players.values():
+        for player in self.seated_players.values():
             if player != None:
                 for hand in player.current_hands:
                     # Score each player's hands
@@ -344,7 +370,7 @@ class BlackjackStateMachine:
 
     def handle_losing_primary_bet_hands(self):
         # Go through losing primary bet hands left-to-right - collect bets, discard hands and reset their scores
-        for player in self.joined_players.values():
+        for player in self.seated_players.values():
             if player != None:
                 for hand_count in range(0, len(player.current_hands)):
                     hand = player.current_hands[0]
@@ -437,7 +463,7 @@ class BlackjackStateMachine:
                     print("Updated hand scores for player", player.name, "are", player.current_hand_scores)
             # Check if dealer's hand needs to be discarded due to all player hands being Blackjacks
             remaining_hands = 0
-            for player in self.joined_players.values():
+            for player in self.seated_players.values():
                 if player != None:
                     remaining_hands += len(player.current_hands)
             if remaining_hands == 0:
@@ -456,7 +482,7 @@ class BlackjackStateMachine:
     def deal(self):
         for x in range(0, 2):
             # Deal a card to each player, then dealer, repeat once
-            for player in self.joined_players.values():
+            for player in self.seated_players.values():
                 if player != None:
                     # Slide 'front_cut_card' to discard if encountered mid-shoe
                     self.handle_front_cut_card()
@@ -472,7 +498,7 @@ class BlackjackStateMachine:
         """
         # DEBUG
         self.dealer.print_player_stats()
-        for player in self.joined_players:
+        for player in self.seated_players:
             player.print_player_stats()
         """
         self.print_all_hands()
@@ -565,7 +591,7 @@ class BlackjackStateMachine:
 
         print("ROUND END")
         # Empty all players' hands by putting them in discard
-        for player in self.joined_players.values():
+        for player in self.seated_players.values():
             if player != None:
                 for hand_index in range(0, len(player.current_hands)):
                     self.discard.extend(player.current_hands.pop(0))    
@@ -586,6 +612,8 @@ class BlackjackStateMachine:
     def step(self):
         print(f"Current state: {self.state}")
         match self.state:
+            case GameState.WAITING:
+                self.wait_for_players_to_join()
             case GameState.STARTING:
                 self.start_game()
             case GameState.SHUFFLING:

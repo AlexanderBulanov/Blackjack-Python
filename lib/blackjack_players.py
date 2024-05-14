@@ -62,7 +62,11 @@ class Player:
         self.chips = dict.fromkeys(bjo.chip_names, 0)
         self.chip_pool_balance = 0
         self.hole_card_face_down = False
-        self.active_seats = ['current_seat']
+        self.occupied_seats = {
+            'left_seat': None,
+            'current_seat': None,
+            'right_seat': None
+        }
         self.current_main_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
             'left_seat': None,
             'current_seat': None,
@@ -118,7 +122,11 @@ class Player:
         Dealer.chips = dict.fromkeys(bjo.chip_names, 1000)
         Dealer.chip_pool_balance = 1000*(1+2.5+5+10+25+100+500+1000+5000)
         Dealer.hole_card_face_down = True
-        Dealer.active_seats = ['current_seat']
+        Dealer.occupied_seats = {
+            'left_seat': None,
+            'current_seat': None,
+            'right_seat': None
+        }
         Dealer.current_main_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
             'left_seat': None,
             'current_seat': None,
@@ -152,9 +160,9 @@ class Player:
         Dealer.action = None
         return Dealer
     
-    def create_new_player_from_template(player_name):
+    def create_new_player_from_template(player_username, preferred_seat):
         NewPlayer = Player()
-        NewPlayer.name = player_name
+        NewPlayer.name = player_username
         NewPlayer.is_dealer = False
         NewPlayer.current_cash_balance = 100
         NewPlayer.chips = dict.fromkeys(bjo.chip_names, 0)
@@ -165,7 +173,11 @@ class Player:
         NewPlayer.chips['Green'] = 5
         NewPlayer.chip_pool_balance = int(50*1 + 30*2.5 + 20*5 + 15*10 + 5*25)
         NewPlayer.hole_card_face_down = False
-        NewPlayer.active_seats = ['current_seat']
+        NewPlayer.occupied_seats = {
+            'left_seat': None,
+            'current_seat': preferred_seat,
+            'right_seat': None
+        }
         NewPlayer.current_main_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
             'left_seat': None,
             'current_seat': None,
@@ -305,7 +317,7 @@ class Player:
     def skip_bet(self):
         pass
 
-    def add_seat(self):
+    def add_seat(self): # Todo AB: How to propagate seat adding/moving/leaving to blackjack_fsm.py
         pass
 
     def move_seat(self):
@@ -428,7 +440,7 @@ class Player:
 
 
     def get_player_bets(self, min_bet, max_bet):
-        for seat in self.active_seats:
+        for seat in self.occupied_seats:
             # Initialize seat variables
             empty_bet = dict.fromkeys(bjo.chip_names, 0)
             self.current_main_bets[seat] = empty_bet
