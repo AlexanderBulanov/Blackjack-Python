@@ -8,6 +8,7 @@ import random
 import math
 #import time
 from enum import Enum
+from msvcrt import getch
 
 # Local Imports #
 from . import blackjack_game_logic as bjl
@@ -200,44 +201,26 @@ class BlackjackStateMachine:
 
 
     # State Machine Actions #
-    """
-    def wait_for_players(self):
-        print("Waiting for players to join...")
-        while self.current_wait_timer != 0:
-            if len(self.waiting_players) == 0:
-                # Reset timer if waiting player count drops to zero at any point before timer expires
-                self.current_wait_timer = self.wait_timer_duration
-            else:
-                print("Game starting in",self.current_wait_timer,"seconds, waiting for more players to join...")
-                time.sleep(1)
-                self.current_wait_timer -= 1
-        # Reset timer and transition to next state
-        self.current_wait_timer = self.wait_timer_duration
-        self.transition(GameState.STARTING)
-    """
-
     def print_blackjack_table(self):
         seat_display_elements = []
-        for seat, seated_player in self.seated_players.items():
+        for seat_number, seated_player in self.seated_players.items():
             if (seated_player == None):
-                seat_display_elements.append(seat)
+                seat_display_elements.append(seat_number)
             else:
                 seat_display_elements.append(seated_player.name)
-
         top_row_num_chars = len(str(seat_display_elements[6])) + len(str(seat_display_elements[0])) + 4
-        mid_row_num_chars = len(str(seat_display_elements[5])) + len(str(seat_display_elements[1])) + 4
-        bot_row_num_chars = len(str(seat_display_elements[4])) + len(str(seat_display_elements[3])) + len(str(seat_display_elements[2])) + 6
+        mid_row_num_chars = len(str(seat_display_elements[5])) + len(str(seat_display_elements[1])) + 4 + 2*5
+        bot_row_num_chars = len(str(seat_display_elements[4])) + len(str(seat_display_elements[3])) + len(str(seat_display_elements[2])) + 6 + 11 + 12
         max_num_row_chars = max(top_row_num_chars, mid_row_num_chars, bot_row_num_chars)
-        total_padding_spaces = max_num_row_chars+30
-
-        print(f"|{'-'*(total_padding_spaces)}|") # Todo AB: For every line, subtract padding spaces based on length of strings on the line
+        total_padding_spaces = max_num_row_chars+20
+        print(f"|{'-'*(total_padding_spaces)}|")
         print(f"|{' '*int(math.floor((total_padding_spaces-7)/2 + 1))}Dealer{' '*int(math.floor((total_padding_spaces-7)/2 + 0.5))}|")
         print(f"|[{seat_display_elements[6]}]{' '*(total_padding_spaces-top_row_num_chars)}[{seat_display_elements[0]}]|")
-        print(f"|    [{seat_display_elements[5]}]{' '*(total_padding_spaces-mid_row_num_chars-8)}[{seat_display_elements[1]}]    |")
-        print(f"|        [{seat_display_elements[4]}]{' '*int(math.floor((total_padding_spaces-mid_row_num_chars-16)/3 + 2))}[{seat_display_elements[3]}]{' '*int(math.floor((total_padding_spaces-mid_row_num_chars-16)/2 - 1))}[{seat_display_elements[2]}]        |")
-
-        #print(f"|         [{seat_display_elements[4]}]   [{seat_display_elements[3]}]   [{seat_display_elements[2]}]         |")
-        
+        print(f"|{' '*5}[{seat_display_elements[5]}]{' '*(total_padding_spaces-mid_row_num_chars)}[{seat_display_elements[1]}]{' '*5}|")
+        print(f"|{' '*11}[{seat_display_elements[4]}]", end='')
+        print(f"{' '*int(math.floor((total_padding_spaces-bot_row_num_chars)/3 + 4))}[{seat_display_elements[3]}]{' '*int(math.floor((total_padding_spaces-bot_row_num_chars)/2 + 1))}", end='')
+        print(f"[{seat_display_elements[2]}]{' '*11}|") # Todo AB: Line up seat_display_elements[3] /w 'Dealer' word in line 2
+        print(f"|{'-'*(total_padding_spaces)}|")        
 
 
     def wait_for_players_to_join(self): # Pass-and-Play version
@@ -246,7 +229,7 @@ class BlackjackStateMachine:
         print("Please enter your username and preferred seat out of those available above.")
         start_flag = False
         remaining_seats = list(self.seated_players.keys())
-        while (start_flag != 'S'):
+        while (start_flag != 's'):
             new_player_username = input("Username: ")
             new_player_chosen_seat = None
             if (len(remaining_seats) == 1):
@@ -254,8 +237,8 @@ class BlackjackStateMachine:
                 new_player_chosen_seat = remaining_seats[0]
                 self.seated_players[new_player_chosen_seat] = bjp.Player.create_new_player_from_template(new_player_username, new_player_chosen_seat)
             else:
-                switch_to_next_player = False # Flag to signal termination of while loop
-                while (switch_to_next_player == False):
+                switch_to_next_player_flag = False # Flag to signal termination of while loop
+                while (switch_to_next_player_flag == False):
                     try:
                         seat_number_input = input("Preferred seat number: ")
                         new_player_chosen_seat = int(seat_number_input)
@@ -264,26 +247,32 @@ class BlackjackStateMachine:
                         else:
                             self.seated_players[new_player_chosen_seat] = bjp.Player.create_new_player_from_template(new_player_username, new_player_chosen_seat)
                             remaining_seats.pop(remaining_seats.index(new_player_chosen_seat))
-                            switch_to_next_player = True # Update the flag to get next player's input
+                            switch_to_next_player_flag = True # Update the flag to get next player's input
                     except ValueError:
                         print(f"Non-integer seat number '{seat_number_input}' provided. Please input an integer between 1 and 7")
-            print("Pass keyboard to the next player.")
-            print("Press 'S' to start the game /w all currently seated players:")
+            print("Press 'p' to pass the keyboard to the next player or 's' to start the game with the following currently seated players:")
             self.print_blackjack_table()
+            switch_to_next_player_flag = False # Flag to signal termination of while loop
+            while (switch_to_next_player_flag == False):
+                key = getch().decode('utf-8') # Get a key (as a byte string) and decode it
+                match key:
+                    case 'p':
+                        switch_to_next_player_flag = True
+                        print("Please enter your username and preferred seat out of those available above.")
+                    case 's':
+                        switch_to_next_player_flag = True
+                        start_flag = 's'
+                    case other:
+                        print(f"Invalid input '{key}'")
+                        print("Press 'p' to pass the keyboard to the next player or 's' to start the game with currently seated players")
         self.transition(GameState.STARTING)
 
 
     def start_game(self):
-        """
-        # Manually create a test player and assign them to table spot 2
-        player = bjp.Player.create_new_player_from_template('Alex')
-        player.table_seat = 2
-        self.seated_players[player.table_seat] = player
-        """
         print("STARTING GAME WITH THE FOLLOWING PLAYERS:")
         for table_seat, seated_player in self.seated_players.items():
             if seated_player != None:
-                print(seated_player.name, "at table seat", table_seat)
+                print(seated_player.name, "in seat", table_seat)
         # Initialize first player (sitting leftmost w.r.t. dealer) to be active
         for seated_player in self.seated_players.values():
             if seated_player != None:
