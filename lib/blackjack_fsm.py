@@ -5,6 +5,7 @@ Author: Alexander Bulanov
 
 # Global Imports #
 import random
+import math
 #import time
 from enum import Enum
 
@@ -215,14 +216,33 @@ class BlackjackStateMachine:
         self.transition(GameState.STARTING)
     """
 
+    def print_blackjack_table(self):
+        seat_display_elements = []
+        for seat, seated_player in self.seated_players.items():
+            if (seated_player == None):
+                seat_display_elements.append(seat)
+            else:
+                seat_display_elements.append(seated_player.name)
+
+        top_row_num_chars = len(str(seat_display_elements[6])) + len(str(seat_display_elements[0])) + 4
+        mid_row_num_chars = len(str(seat_display_elements[5])) + len(str(seat_display_elements[1])) + 4
+        bot_row_num_chars = len(str(seat_display_elements[4])) + len(str(seat_display_elements[3])) + len(str(seat_display_elements[2])) + 6
+        max_num_row_chars = max(top_row_num_chars, mid_row_num_chars, bot_row_num_chars)
+        total_padding_spaces = max_num_row_chars+30
+
+        print(f"|{'-'*(total_padding_spaces)}|") # Todo AB: For every line, subtract padding spaces based on length of strings on the line
+        print(f"|{' '*int(math.floor((total_padding_spaces-7)/2 + 1))}Dealer{' '*int(math.floor((total_padding_spaces-7)/2 + 0.5))}|")
+        print(f"|[{seat_display_elements[6]}]{' '*(total_padding_spaces-top_row_num_chars)}[{seat_display_elements[0]}]|")
+        print(f"|    [{seat_display_elements[5]}]{' '*(total_padding_spaces-mid_row_num_chars-8)}[{seat_display_elements[1]}]    |")
+        print(f"|        [{seat_display_elements[4]}]{' '*int(math.floor((total_padding_spaces-mid_row_num_chars-16)/3 + 2))}[{seat_display_elements[3]}]{' '*int(math.floor((total_padding_spaces-mid_row_num_chars-16)/2 - 1))}[{seat_display_elements[2]}]        |")
+
+        #print(f"|         [{seat_display_elements[4]}]   [{seat_display_elements[3]}]   [{seat_display_elements[2]}]         |")
+        
+
+
     def wait_for_players_to_join(self): # Pass-and-Play version
         print("Welcome to Pass-and-Play Casino Blackjack!")
-        print("|---------------------------------|")
-        print("|             Dealer              |")
-        print(f"|[7]                           [1]|")
-        print(f"|    [6]                   [2]    |")
-        print(f"|         [5]   [4]   [3]         |")
-        print("|---------------------------------|") # Todo AB: have each player's username replace integers in square brackets once they join
+        self.print_blackjack_table()
         print("Please enter your username and preferred seat out of those available above.")
         start_flag = False
         remaining_seats = list(self.seated_players.keys())
@@ -230,14 +250,12 @@ class BlackjackStateMachine:
             new_player_username = input("Username: ")
             new_player_chosen_seat = None
             if (len(remaining_seats) == 1):
-                print(f"Only one seat available! Assigning seat {remaining_seats[0]} to player {new_player_username}!")
+                print(f"Only one seat available! Assigning seat {remaining_seats[0]} to player {new_player_username}")
                 new_player_chosen_seat = remaining_seats[0]
                 self.seated_players[new_player_chosen_seat] = bjp.Player.create_new_player_from_template(new_player_username, new_player_chosen_seat)
             else:
-                # Use a context manager to "factor out" checking whether chosen seat is of type int?
-
-
-                while (type(new_player_chosen_seat) != int) and (new_player_chosen_seat not in remaining_seats):
+                switch_to_next_player = False # Flag to signal termination of while loop
+                while (switch_to_next_player == False):
                     try:
                         seat_number_input = input("Preferred seat number: ")
                         new_player_chosen_seat = int(seat_number_input)
@@ -245,11 +263,13 @@ class BlackjackStateMachine:
                             print(f"Seat {new_player_chosen_seat} is already occupied by {self.seated_players[new_player_chosen_seat].name}. Please choose a different seat.")
                         else:
                             self.seated_players[new_player_chosen_seat] = bjp.Player.create_new_player_from_template(new_player_username, new_player_chosen_seat)
-                            remaining_seats.pop(new_player_chosen_seat-1)
-                        # Todo AB: Check that the seat is not occupied, print a warning otherwise and re-request seat number input
+                            remaining_seats.pop(remaining_seats.index(new_player_chosen_seat))
+                            switch_to_next_player = True # Update the flag to get next player's input
                     except ValueError:
-                        print(f"Non-integer seat number {seat_number_input} provided. Please input an integer between 1 and 7, inclusive")
-            print("Pass keyboard to the next player or enter 'S' to start the game /w all currently seated players")
+                        print(f"Non-integer seat number '{seat_number_input}' provided. Please input an integer between 1 and 7")
+            print("Pass keyboard to the next player.")
+            print("Press 'S' to start the game /w all currently seated players:")
+            self.print_blackjack_table()
         self.transition(GameState.STARTING)
 
 
