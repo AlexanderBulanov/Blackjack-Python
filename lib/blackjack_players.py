@@ -67,15 +67,25 @@ class Player:
             'center_seat': None,
             'right_seat': None
         }
-        self.bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
-            'left_seat': {'main': None, 'side': None},
-            'center_seat': {'main': None, 'side': None},
-            'right_seat': {'main': None, 'side': None},
+        self.main_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
+            'left_seat': None,
+            'center_seat': None,
+            'right_seat': None,
         }
-        self.bet_amounts = { # each bet amount is stored as an integer (betting of $2.5 chips is restricted to pairs only)
-            'left_seat': {'main': None, 'side': None},
-            'center_seat': {'main': None, 'side': None},
-            'right_seat': {'main': None, 'side': None},
+        self.main_bet_amounts = { # each bet amount is stored as an integer (betting of $2.5 chips is restricted to pairs only)
+            'left_seat': None,
+            'center_seat': None,
+            'right_seat': None,
+        }
+        self.side_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
+            'left_seat': None,
+            'center_seat': None,
+            'right_seat': None,
+        }
+        self.side_bet_amounts = { # each bet amount is stored as an integer (betting of $2.5 chips is restricted to pairs only)
+            'left_seat': None,
+            'center_seat': None,
+            'right_seat': None,
         }
         self.hands = { # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
             'left_seat': None,
@@ -117,15 +127,25 @@ class Player:
             'center_seat': None,
             'right_seat': None
         }
-        Dealer.bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
-            'left_seat': {'main': None, 'side': None},
-            'center_seat': {'main': None, 'side': None},
-            'right_seat': {'main': None, 'side': None},
+        Dealer.main_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
+            'left_seat': None,
+            'center_seat': None,
+            'right_seat': None,
         }
-        Dealer.bet_amounts = { # each bet amount is stored as an integer (betting of $2.5 chips is restricted to pairs only)
-            'left_seat': {'main': None, 'side': None},
-            'center_seat': {'main': None, 'side': None},
-            'right_seat': {'main': None, 'side': None},
+        Dealer.main_bet_amounts = { # each bet amount is stored as an integer (betting of $2.5 chips is restricted to pairs only)
+            'left_seat': None,
+            'center_seat': None,
+            'right_seat': None,
+        }
+        Dealer.side_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
+            'left_seat': None,
+            'center_seat': None,
+            'right_seat': None,
+        }
+        Dealer.side_bet_amounts = { # each bet amount is stored as an integer (betting of $2.5 chips is restricted to pairs only)
+            'left_seat': None,
+            'center_seat': None,
+            'right_seat': None,
         }
         Dealer.hands = { # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
             'left_seat': None,
@@ -158,15 +178,25 @@ class Player:
             'center_seat': preferred_seat,
             'right_seat': None
         }
-        NewPlayer.bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
-            'left_seat': {'main': None, 'side': None},
-            'center_seat': {'main': None, 'side': None},
-            'right_seat': {'main': None, 'side': None},
+        NewPlayer.main_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
+            'left_seat': None,
+            'center_seat': None,
+            'right_seat': None,
         }
-        NewPlayer.bet_amounts = { # each bet amount is stored as an integer (betting of $2.5 chips is restricted to pairs only)
-            'left_seat': {'main': None, 'side': None},
-            'center_seat': {'main': None, 'side': None},
-            'right_seat': {'main': None, 'side': None},
+        NewPlayer.main_bet_amounts = { # each bet amount is stored as an integer (betting of $2.5 chips is restricted to pairs only)
+            'left_seat': None,
+            'center_seat': None,
+            'right_seat': None,
+        }
+        NewPlayer.side_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
+            'left_seat': None,
+            'center_seat': None,
+            'right_seat': None,
+        }
+        NewPlayer.side_bet_amounts = { # each bet amount is stored as an integer (betting of $2.5 chips is restricted to pairs only)
+            'left_seat': None,
+            'center_seat': None,
+            'right_seat': None,
         }
         NewPlayer.hands = { # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
             'left_seat': None,
@@ -181,10 +211,18 @@ class Player:
         NewPlayer.action = None
         return NewPlayer
     
-    def player_has_no_bets_in_play(self):
+    def player_has_no_main_bets_in_play(self):
         return_bool = True
-        for seat in self.bets:
-            if (self.bets[seat]['main'] != None):
+        for main_bet in self.main_bets.values(): # side bets can't exist w/o main bets already in place - no need to check them
+            if main_bet != None:
+                return_bool = False
+                break
+        return return_bool
+    
+    def player_has_no_side_bets_in_play(self):
+        return_bool = True
+        for side_bet in self.side_bets.values(): # side bets can't exist w/o main bets already in place - no need to check them
+            if side_bet != None:
                 return_bool = False
                 break
         return return_bool
@@ -198,12 +236,6 @@ class Player:
         return return_bool
 
 
-
-
-
-
-
-
     def print_player_stats(self, flag=None):
         print("*  *  *  *  *")
         if self.name == 'Dealer':
@@ -212,6 +244,9 @@ class Player:
             print(f"Printing Statistics for Player '{self.name}'")
         for key, value in self.__dict__.items():
             match key:
+                case 'name' | 'is_dealer' | 'hole_card_face_down':
+                    if (flag == 'v'):
+                        print(f"{key}: {value}")
                 case 'cash_balance' | 'chip_pool_balance':
                     print(f"{key}: ${value}")
                 case 'chips':
@@ -226,61 +261,79 @@ class Player:
                 case 'occupied_seats':
                     print(f"{key}:", end='')
                     for seat, seat_number in self.occupied_seats.items():
-                        if (flag == 'v'):
+                        if (seat_number != None):
                             print("\n    ", end='')
-                            if (seat_number != None):
-                                print(f"'{seat}': Seat #{seat_number}", end='')
-                            else:
-                                print(f"'{seat}': {seat_number}", end='')
-                        else:
-                            if (seat_number != None):
-                                print("\n    ", end='')
-                                print(f"'{seat}': Seat #{seat_number}", end='')
+                            print(f"'{seat}': #{seat_number}", end='')
+                        elif (flag == 'v'):
+                            print("\n    ", end='')
+                            print(f"'{seat}': {seat_number}", end='')
                     print("")
-                case 'bets' | 'bet_amounts':
+                case 'main_bets' | 'side_bets':
                     print(f"{key}:", end='')
-                    if self.player_has_no_bets_in_play():
-                        print(" None")
-                    else:
-                        for seat in self.occupied_seats:
-                            print(f"\n    '{seat}':", end='')
-                            if (self.bets[seat]['main'] == None):
-                                print(" None")
+                    bet_type = getattr(self, key) # self.main_bets or self.side_bets
+                    for seat, seat_number in self.occupied_seats.items():
+                        if (flag == 'v'):
+                            print(f"\n    '{seat}': {bet_type[seat]}", end='')
+                        elif ((key == 'main_bets') and (self.player_has_no_main_bets_in_play())):
+                            print(" None", end='')
+                            break
+                        elif ((key == 'side_bets') and (self.player_has_no_side_bets_in_play())):
+                            print(" None", end='')
+                            break
+                        else:
+                            if ((seat_number != None) and (bet_type[seat] != None)):
+                                non_zero_bet_chips = {}
+                                for chip_color, chip_count in bet_type[seat].items():
+                                    if (chip_count != 0):
+                                        non_zero_bet_chips[chip_color] = chip_count
+                                print(f"\n    '{seat}': {non_zero_bet_chips}", end='')
+                    print("")
+                case 'main_bet_amounts' | 'side_bet_amounts':
+                    print(f"{key}:", end='')
+                    bet_type = getattr(self, key) # self.main_bet_amounts or self.side_bet_amounts
+                    for seat, seat_number in self.occupied_seats.items():
+                        if (flag == 'v'):
+                            if (bet_type[seat] != None):
+                                print(f"\n    '{seat}': ${bet_type[seat]}", end='')
                             else:
-
-                                
-                                if (key == 'bets'):
-                                    non_zero_bet_chips = {}
-                                    for bet_type, bet in self.bets[seat].items():
-                                        print(f"\n        {bet_type}: {bet}", end='')
-
-                                elif (key == 'bet_amounts'):
-                                    for bet_type, bet_amount in self.bet_amounts[seat].items():
-                                        print(f"\n        {bet_type}: ${bet_amount}", end='')
-
-                        print("")
-                case 'hands' | 'hand_scores':
+                                print(f"\n    '{seat}': {bet_type[seat]}", end='')
+                        elif ((key == 'main_bet_amounts') and (self.player_has_no_main_bets_in_play())):
+                            print(" None", end='')
+                            break
+                        elif ((key == 'side_bet_amounts') and (self.player_has_no_side_bets_in_play())):
+                            print(" None", end='')
+                            break
+                        else:
+                            if ((seat_number != None) and (bet_type[seat] != None) and (bet_type[seat] != 0)):
+                                print(f"\n    '{seat}': ${bet_type[seat]}", end='')
+                    print("")
+                case 'hands':
                     print(f"{key}:", end='')
-                    if self.player_has_no_cards_in_play():
-                        print(" None")
-                    elif (self.hole_card_face_down == True):
-                        for seat, hand in self.hands.items():
-                            print("\n    ", end='')
-                            print(f"'{seat}': [{hand[0]}, '**']", end='')
-                        print("")
-                    else:
-                        print("\n    ", end='')
-                        print(f"{seat}': hand")
+                    for seat, seat_number in self.occupied_seats.items():
+                        if (flag == 'v'):
+                            print(f"\n    '{seat}': {self.hands[seat]}", end='')
+                        elif self.player_has_no_cards_in_play():
+                            print(" None", end='')
+                            break
+                        else:
+                            if ((seat_number != None) and (self.hands[seat] != None) and (self.hands[seat] != [])):
+                                print(f"\n    '{seat}': {self.hands[seat]}", end='')
+                    print("")
+                case 'hand_scores':
+                    print(f"{key}:", end='')
+                    for seat, seat_number in self.occupied_seats.items():
+                        if (flag == 'v'):
+                            print(f"\n    '{seat}': {self.hand_scores[seat]}", end='')
+                        elif self.player_has_no_cards_in_play():
+                            print(" None", end='')
+                            break
+                        else:
+                            if ((seat_number != None) and (self.hand_scores[seat] != None)):
+                                print(f"\n    '{seat}': {self.hand_scores[seat]}", end='')
+                    print("")
                 case other:
                     print(f"{key}: {value}")
         print("*  *  *  *  *")
-
-
-
-
-
-
-
 
     def display_player_chip_pool(self):
         print(f"{self.name}'s ${self.chip_pool_balance} chip pool - ", end='')
@@ -292,16 +345,16 @@ class Player:
 
     # Helper methods
     def clean_up_fractions(self, seat):
-        bet_amount_fraction = self.bet_amounts[seat]['main'] % 1
+        bet_amount_fraction = self.main_bet_amounts[seat] % 1
         chip_pool_balance_fraction = self.chip_pool_balance % 1
         if (bet_amount_fraction == 0):
-            self.bet_amounts[seat]['main'] = int(self.bet_amounts[seat]['main'])
+            self.main_bet_amounts[seat] = int(self.main_bet_amounts[seat])
         if (chip_pool_balance_fraction == 0):
             self.chip_pool_balance = int(self.chip_pool_balance)
 
     def print_current_bet(self, seat):
-        print(f"{self.name}'s ${self.bet_amounts[seat]['main']} bet - ", end='')
-        player_bet = self.bets[seat]['main']
+        print(f"{self.name}'s ${self.main_bet_amounts[seat]} bet - ", end='')
+        player_bet = self.main_bets[seat]
         displayed_bet = {}
         for chip_color, chip_count in player_bet.items():
             if (chip_count > 0):
@@ -310,7 +363,7 @@ class Player:
 
     def increase_current_bet(self, seat, key):
         chip_color = key_to_chip_default_bindings[key]
-        player_bet = self.bets[seat]['main']
+        player_bet = self.main_bets[seat]
         if (self.chips[chip_color] == 0):
             print(f"Cannot add {chip_color} (${bjo.chips[chip_color]}) chip - not enough chips of this type in {self.name}'s chip pool!")
             self.display_player_chip_pool()
@@ -319,26 +372,26 @@ class Player:
             self.chips[chip_color] -= 1
             player_bet[chip_color] += 1
             chip_worth = bjo.chips[chip_color]
-            self.bet_amounts[seat]['main'] += chip_worth
+            self.main_bet_amounts[seat] += chip_worth
             self.chip_pool_balance -= chip_worth
             self.clean_up_fractions(seat)
             self.print_current_bet(seat)
 
     def decrease_current_bet(self, seat, key):
         chip_color = key_to_chip_decrement_bindings[key]
-        player_bet = self.bets[seat]['main']
+        player_bet = self.main_bets[seat]
         if player_bet[chip_color] > 0:
             player_bet[chip_color] -= 1
             self.chips[chip_color] += 1
             chip_worth = bjo.chips[chip_color]
-            self.bet_amounts[seat]['main'] -= chip_worth
+            self.main_bet_amounts[seat] -= chip_worth
             self.chip_pool_balance += chip_worth
             self.clean_up_fractions(seat)
             self.print_current_bet(seat)
     
     def reset_current_bet(self, seat):
-        player_bet = self.bets[seat]['main']
-        player_bet_values = self.bet_amounts[seat]
+        player_bet = self.main_bets[seat]
+        player_bet_values = self.main_bet_amounts[seat]
         #print(player_bet)
         for chip_color, chip_count in player_bet.items():
             chip_worth = bjo.chips[chip_color]
@@ -346,9 +399,9 @@ class Player:
                 self.chips[chip_color] += 1
                 self.chip_pool_balance += chip_worth
             player_bet[chip_color] = 0
-            player_bet_values['main'] = 0
+            player_bet_values['main_bet'] = 0
         self.clean_up_fractions(seat)
-        print(f"Reset {self.name}'s bet to ${self.bet_amounts[seat]['main']}!")
+        print(f"Reset {self.name}'s bet to ${self.main_bet_amounts[seat]}!")
 
     def get_chips(self):
         pass
@@ -391,7 +444,7 @@ class Player:
             case 'r':
                 self.reset_current_bet(seat)
             case 'f':
-                player_bet_value = self.bet_amounts[seat]['main']
+                player_bet_value = self.main_bet_amounts[seat]
                 fraction = player_bet_value % 1
                 if (fraction != 0):
                     print(f"Invalid (fractional) bet amount of ${player_bet_value} - please resubmit a bet /w an even number of Pink chips!")
@@ -447,7 +500,6 @@ class Player:
             self.print_betting_interface_padding(chip_color)
             other_keybind_col_one = other_keybindings_list[int(chip_keybind)-1]
             print(f"{other_keybind_col_one}: {special_key_bindings[other_keybind_col_one]}", end='')
-
             padding_spaces = 28
             other_keybinding_names = list(special_key_bindings.values())
             other_keybinding_name = other_keybinding_names[int(chip_keybind)-1]
@@ -459,7 +511,6 @@ class Player:
                 print(" ", end='')
             other_keybind_col_two = other_keybindings_list[int(chip_keybind)-1+6]
             print(f"{other_keybind_col_two}: {special_key_bindings[other_keybind_col_two]}")
-
         else:
             print("")
 
@@ -489,8 +540,8 @@ class Player:
             if (seat_pos != None):
                 # Initialize seat variables
                 empty_bet = dict.fromkeys(bjo.chip_names, 0)
-                self.bets[seat_name]['main'] = empty_bet
-                self.bet_amounts[seat_name]['main'] = 0
+                self.main_bets[seat_name] = empty_bet
+                self.main_bet_amounts[seat_name] = 0
                 self.view_betting_interface()
                 self.display_player_chip_pool()
                 try:
