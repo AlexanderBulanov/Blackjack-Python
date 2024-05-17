@@ -13,6 +13,10 @@ import lib.blackjack_game_settings as bjs
 import lib.blackjack_game_objects as bjo
 
 
+class Test_WAITING:
+    def test_something(self):
+        pass
+
 
 class Test_STARTING:
     def test_blackjack_state_machine_beginning_state_is_STARTING(self):
