@@ -346,16 +346,3 @@ class TestPlayerBetting:
         assert test_player.main_bet_amounts['center_seat'] == 25
         assert type(test_player.main_bet_amounts['center_seat']) == int
 
-
-
-"""
-class TestBetMaking:
-    def test_template_player_hand_bet_set_correctly(self, monkeypatch):
-        player = bjp.Player.create_new_player_from_template('Alex')
-        # Bet is placed on a spot at the table, without knowing what the hand will be
-        bet = '2 White, 1 Blue'
-        player.add_primary_bet(hand, bet)
-        hand = ['AH', 'QD']
-        player.print_player_stats()
-        assert 2 == 3
-"""
