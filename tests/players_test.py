@@ -92,7 +92,7 @@ class TestPlayerCreation:
         assert test_player.player_has_no_cards_in_play()
 
 
-class TestPlayerBetMaking:
+class TestPlayerBetting:
     def test_initial_bet_is_empty(self):
         # Setup
         tri_seat_player_bet_attributes = [
@@ -153,22 +153,198 @@ class TestPlayerBetMaking:
         # Verify center_seat spot of test_player has main_bet value of $41
         assert test_player.main_bet_amounts['center_seat'] == 41
 
-
-
-    # Test - Add one of each chip, then remove all but White chip using 'undo' keys
-
-
-    # Test - Add one of each chip, then reset, then add Red chip
-
-
-
-    def test_resetting_an_empty_bet_leaves_empty_bet(self):
-        pass
-
-    def test_chip_pool_balance_and_bet_amounts_kept_as_ints_at_even_numbers_of_pink_chips(self):
+    def test_single_seat_adding_one_of_each_non_Pink_chip_only_adds_White_Red_Blue_Green_for_template_player(self, monkeypatch):
         # Setup
-        pass
+        test_username = 'abulanov'
+        test_seat = 1
+        test_player = bjp.Player.create_new_player_from_template(test_username, test_seat)
+        table_min = 1
+        table_max = 100      
+        simulated_char_inputs = [b'1', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'f']
+        iterable_simulated_char_inputs = iter(simulated_char_inputs)
+        test_player.init_seat_main_bet_fields('center_seat')
+        for i in range(0, len(simulated_char_inputs)):
+            monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
+            test_player.get_bet_input_character(table_min, table_max, 'center_seat')
+        #test_player.print_player_stats()
+        # Verify only 1 of each White/Red/Blue/Green chips are subtracted from test_player chip pool
+        test_player_chip_pool_dict = test_player.chips
+        for chip_color, chip_count in test_player_chip_pool_dict.items():
+            if chip_color in ['Black', 'Purple', 'Yellow', 'Brown']:
+                assert chip_count == 0
+            else:
+                pass
+                if (chip_color == 'White'):
+                    assert chip_count == 49
+                elif (chip_color == 'Pink'):
+                    assert chip_count == 30
+                elif (chip_color == 'Red'):
+                    assert chip_count == 19
+                elif (chip_color == 'Blue'):
+                    assert chip_count == 14
+                elif (chip_color == 'Green'):
+                    assert chip_count == 4
+        # Verify only 1 of each White/Red/Blue/Green chips are added to center_seat spot of test_player
+        center_seat_bet_dict = test_player.main_bets['center_seat']
+        for chip_color, chip_count in center_seat_bet_dict.items():
+            if chip_color in ['White', 'Red', 'Blue', 'Green']:
+                assert chip_count == 1
+            else:
+                assert chip_count == 0
+        # Verify test_player chip_pool_balance has been reduced by $41
+        assert test_player.chip_pool_balance == 500-41
+        # Verify center_seat spot of test_player has main_bet value of $41
+        assert test_player.main_bet_amounts['center_seat'] == 41
 
+    def test_single_seat_adding_one_of_each_chip_then_removing_all_but_one_White_handled_correctly(self, monkeypatch):
+        # Setup
+        test_username = 'abulanov'
+        test_seat = 1
+        test_player = bjp.Player.create_new_player_from_template(test_username, test_seat)
+        table_min = 1
+        table_max = 100      
+        simulated_char_inputs = [b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9',
+                                 b'(', b'*', b'&', b'^', b'%', b'$', b'#', b'@', b'f']
+        iterable_simulated_char_inputs = iter(simulated_char_inputs)
+        test_player.init_seat_main_bet_fields('center_seat')
+        for i in range(0, len(simulated_char_inputs)):
+            monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
+            test_player.get_bet_input_character(table_min, table_max, 'center_seat')
+        #test_player.print_player_stats()
+        # Verify only 1 White chip is subtracted from test_player chip pool
+        test_player_chip_pool_dict = test_player.chips
+        for chip_color, chip_count in test_player_chip_pool_dict.items():
+            if chip_color in ['Black', 'Purple', 'Yellow', 'Brown']:
+                assert chip_count == 0
+            else:
+                pass
+                if (chip_color == 'White'):
+                    assert chip_count == 49
+                elif (chip_color == 'Pink'):
+                    assert chip_count == 30
+                elif (chip_color == 'Red'):
+                    assert chip_count == 20
+                elif (chip_color == 'Blue'):
+                    assert chip_count == 15
+                elif (chip_color == 'Green'):
+                    assert chip_count == 5
+        # Verify only 1 White chip is added to center_seat spot of test_player
+        center_seat_bet_dict = test_player.main_bets['center_seat']
+        for chip_color, chip_count in center_seat_bet_dict.items():
+            if chip_color == 'White':
+                assert chip_count == 1
+            else:
+                assert chip_count == 0
+        # Verify test_player chip_pool_balance has been reduced by $1
+        assert test_player.chip_pool_balance == 500-1
+        # Verify center_seat spot of test_player has main_bet value of $1
+        assert test_player.main_bet_amounts['center_seat'] == 1
+        
+    def test_single_seat_adding_one_of_each_chip_then_resetting_bet_and_adding_two_Green_handled_correctly(self, monkeypatch):
+        # Setup
+        test_username = 'abulanov'
+        test_seat = 1
+        test_player = bjp.Player.create_new_player_from_template(test_username, test_seat)
+        table_min = 1
+        table_max = 100      
+        simulated_char_inputs = [b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'r', b'5', b'5', b'f']
+        iterable_simulated_char_inputs = iter(simulated_char_inputs)
+        test_player.init_seat_main_bet_fields('center_seat')
+        for i in range(0, len(simulated_char_inputs)):
+            monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
+            test_player.get_bet_input_character(table_min, table_max, 'center_seat')
+        #test_player.print_player_stats()
+        # Verify only 2 Green chips subtracted from test_player chip pool
+        test_player_chip_pool_dict = test_player.chips
+        for chip_color, chip_count in test_player_chip_pool_dict.items():
+            if chip_color in ['Black', 'Purple', 'Yellow', 'Brown']:
+                assert chip_count == 0
+            else:
+                pass
+                if (chip_color == 'White'):
+                    assert chip_count == 50
+                elif (chip_color == 'Pink'):
+                    assert chip_count == 30
+                elif (chip_color == 'Red'):
+                    assert chip_count == 20
+                elif (chip_color == 'Blue'):
+                    assert chip_count == 15
+                elif (chip_color == 'Green'):
+                    assert chip_count == 3
+        # Verify only 2 Green chips are added to center_seat spot of test_player
+        center_seat_bet_dict = test_player.main_bets['center_seat']
+        for chip_color, chip_count in center_seat_bet_dict.items():
+            if chip_color == 'Green':
+                assert chip_count == 2
+            else:
+                assert chip_count == 0
+        # Verify test_player chip_pool_balance has been reduced by $50
+        assert test_player.chip_pool_balance == 500-50
+        # Verify center_seat spot of test_player has main_bet value of $50
+        assert test_player.main_bet_amounts['center_seat'] == 50
+
+    def test_single_seat_betting_one_Red_two_Pink_chips_has_correct_chip_pool_balance_and_bet_amounts_as_ints(self, monkeypatch):
+        # Setup
+        test_username = 'abulanov'
+        test_seat = 1
+        test_player = bjp.Player.create_new_player_from_template(test_username, test_seat)
+        table_min = 1
+        table_max = 100      
+        simulated_char_inputs = [b'3', b'2', b'2', b'f']
+        iterable_simulated_char_inputs = iter(simulated_char_inputs)
+        test_player.init_seat_main_bet_fields('center_seat')
+        for i in range(0, len(simulated_char_inputs)):
+            monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
+            test_player.get_bet_input_character(table_min, table_max, 'center_seat')
+        #test_player.print_player_stats()
+        # Verify test_player chip_pool_balance is reduced by $10 and is an int() datatype
+        assert test_player.chip_pool_balance == 500-10
+        assert type(test_player.chip_pool_balance) == int
+        # Verify center_seat spot of test_player has main_bet value of $10 and is an int() datatype
+        assert test_player.main_bet_amounts['center_seat'] == 10
+        assert type(test_player.main_bet_amounts['center_seat']) == int
+
+    def test_single_seat_betting_one_Blue_Green_Pink_remove_Pink_has_correct_chip_pool_balance_and_bet_amounts_as_ints(self, monkeypatch):
+        # Setup
+        test_username = 'abulanov'
+        test_seat = 1
+        test_player = bjp.Player.create_new_player_from_template(test_username, test_seat)
+        table_min = 1
+        table_max = 100      
+        simulated_char_inputs = [b'4', b'5', b'2', b'@', b'f']
+        iterable_simulated_char_inputs = iter(simulated_char_inputs)
+        test_player.init_seat_main_bet_fields('center_seat')
+        for i in range(0, len(simulated_char_inputs)):
+            monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
+            test_player.get_bet_input_character(table_min, table_max, 'center_seat')
+        #test_player.print_player_stats()
+        # Verify test_player chip_pool_balance is reduced by $35 and is an int() datatype
+        assert test_player.chip_pool_balance == 500-35
+        assert type(test_player.chip_pool_balance) == int
+        # Verify center_seat spot of test_player has main_bet value of $35 and is an int() datatype
+        assert test_player.main_bet_amounts['center_seat'] == 35
+        assert type(test_player.main_bet_amounts['center_seat']) == int
+
+    def test_single_seat_betting_one_Blue_Green_Pink_reset_then_betting_one_Green_has_correct_chip_pool_balance_and_bet_amounts_as_ints(self, monkeypatch):
+        # Setup
+        test_username = 'abulanov'
+        test_seat = 1
+        test_player = bjp.Player.create_new_player_from_template(test_username, test_seat)
+        table_min = 1
+        table_max = 100      
+        simulated_char_inputs = [b'4', b'5', b'2', b'r', b'5', b'f']
+        iterable_simulated_char_inputs = iter(simulated_char_inputs)
+        test_player.init_seat_main_bet_fields('center_seat')
+        for i in range(0, len(simulated_char_inputs)):
+            monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
+            test_player.get_bet_input_character(table_min, table_max, 'center_seat')
+        #test_player.print_player_stats()
+        # Verify test_player chip_pool_balance is reduced by $25 and is an int() datatype
+        assert test_player.chip_pool_balance == 500-25
+        assert type(test_player.chip_pool_balance) == int
+        # Verify center_seat spot of test_player has main_bet value of $25 and is an int() datatype
+        assert test_player.main_bet_amounts['center_seat'] == 25
+        assert type(test_player.main_bet_amounts['center_seat']) == int
 
 
 

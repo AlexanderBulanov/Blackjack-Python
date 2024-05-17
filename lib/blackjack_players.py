@@ -232,7 +232,6 @@ class Player:
                 break
         return return_bool
 
-
     def print_player_stats(self, flag=None):
         print("*  *  *  *  *")
         if self.name == 'Dealer':
@@ -354,7 +353,7 @@ class Player:
         if (self.chips[chip_color] == 0):
             print(f"Cannot add {chip_color} (${bjo.chips[chip_color]}) chip - not enough chips of this type in {self.name}'s chip pool!")
             self.display_player_chip_pool()
-            print(f"Press 'g' to exchange cash to chips, 'c' to convert smaller chips into bigger ones, or 'b' to convert bigger chips into smaller ones")
+            print(f"Press 'g' to change cash to chips, 'c' to convert smaller chips into bigger ones, or 'b' to convert bigger chips into smaller ones")
         else:
             self.chips[chip_color] -= 1
             player_bet[chip_color] += 1
@@ -378,7 +377,7 @@ class Player:
     
     def reset_current_bet(self, seat):
         player_bet = self.main_bets[seat]
-        player_bet_values = self.main_bet_amounts[seat]
+        player_bet_values = self.main_bet_amounts
         #print(player_bet)
         for chip_color, chip_count in player_bet.items():
             chip_worth = bjo.chips[chip_color]
@@ -386,7 +385,7 @@ class Player:
                 self.chips[chip_color] += 1
                 self.chip_pool_balance += chip_worth
             player_bet[chip_color] = 0
-            player_bet_values['main_bet'] = 0
+            player_bet_values[seat] = 0
         self.clean_up_fractions(seat)
         print(f"Reset {self.name}'s bet to ${self.main_bet_amounts[seat]}!")
 
