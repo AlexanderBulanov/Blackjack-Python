@@ -7,7 +7,7 @@ Author: Alexander Bulanov
 import lib.blackjack_players as bjp
 import lib.blackjack_game_objects as bjo
 
-class TestSomething:
+class TestPlayerCreation:
     def test_casino_dealer_created_correctly_from_template(self):
         # Setup
         tri_seat_player_attributes = [
@@ -67,7 +67,15 @@ class TestSomething:
                 assert getattr(test_player, player_attr)['center_seat'] == None
         assert test_player.action == None
 
-    def test_player_created_from_template_has_no_bets_or_cards_in_play(self):
+    def test_dealer_created_from_template_has_no_bets_or_cards_in_play(self):
+        # Setup
+        test_dealer = bjp.Player.create_casino_dealer()
+        # Test
+        assert test_dealer.player_has_no_main_bets_in_play()
+        assert test_dealer.player_has_no_side_bets_in_play()
+        assert test_dealer.player_has_no_cards_in_play()
+
+    def test_new_player_created_from_template_has_no_bets_or_cards_in_play(self):
         # Setup
         test_username = 'username'
         test_seat = 1
