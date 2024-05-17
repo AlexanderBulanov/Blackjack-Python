@@ -609,6 +609,7 @@ class BlackjackStateMachine:
         print("Pushing against all players who match the dealer")
         print("Collecting bets from all players who lose to dealer")
 
+        # Todo AB: Reset appropriate player fields back to None
 
         print("ROUND END")
         # Empty all players' hands by putting them in discard
@@ -641,7 +642,7 @@ class BlackjackStateMachine:
                 self.shuffle_cut_and_burn(None) # Todo AB: pen % is different upon each reshuffle in a single session, need it fixed?
             case GameState.BETTING:
                 self.active_player.get_player_bets(self.min_bet, self.max_bet)
-                self.active_player.print_player_stats('v')
+                self.active_player.print_player_stats()
                 self.transition(GameState.DEALING) # Todo AB: substitute in self.get_primary_player_bets()
             case GameState.DEALING:
                 self.deal()
@@ -666,8 +667,6 @@ class BlackjackStateMachine:
                 self.step()
         except KeyboardInterrupt:
                 print("\nExiting state machine...")
-                #running = False
-                #print("Running has been set to",running)
 
 
 

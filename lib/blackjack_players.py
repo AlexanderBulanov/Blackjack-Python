@@ -4,7 +4,8 @@ Author: Alexander Bulanov
 """
 
 # Global Imports #
-from msvcrt import getch
+#from msvcrt import getch
+import msvcrt
 
 # Local Imports #
 from . import blackjack_game_objects as bjo
@@ -48,10 +49,6 @@ special_key_bindings = {
     'a': 'add seat',
     'l': 'leave seat',
 }
-
-# Custom Exceptions #
-class ExitBettingInterface(Exception):
-    pass
 
 ### Defining Players for Tracking ###
 class Player:
@@ -290,13 +287,13 @@ class Player:
                     print("")
                 case 'main_bet_amounts' | 'side_bet_amounts':
                     print(f"{key}:", end='')
-                    bet_type = getattr(self, key) # self.main_bet_amounts or self.side_bet_amounts
+                    bet_type_amount = getattr(self, key) # self.main_bet_amounts or self.side_bet_amounts
                     for seat, seat_number in self.occupied_seats.items():
                         if (flag == 'v'):
-                            if (bet_type[seat] != None):
-                                print(f"\n    '{seat}': ${bet_type[seat]}", end='')
+                            if (bet_type_amount[seat] != None):
+                                print(f"\n    '{seat}': ${bet_type_amount[seat]}", end='')
                             else:
-                                print(f"\n    '{seat}': {bet_type[seat]}", end='')
+                                print(f"\n    '{seat}': {bet_type_amount[seat]}", end='')
                         elif ((key == 'main_bet_amounts') and (self.player_has_no_main_bets_in_play())):
                             print(" None", end='')
                             break
@@ -304,22 +301,22 @@ class Player:
                             print(" None", end='')
                             break
                         else:
-                            if ((seat_number != None) and (bet_type[seat] != None) and (bet_type[seat] != 0)):
-                                print(f"\n    '{seat}': ${bet_type[seat]}", end='')
+                            if ((seat_number != None) and (bet_type_amount[seat] != None) and (bet_type_amount[seat] != 0)):
+                                print(f"\n    '{seat}': ${bet_type_amount[seat]}", end='')
                     print("")
                 case 'hands' | 'hand_scores':
                     print(f"{key}:", end='')
-                    bet_type = getattr(self, key) # self.hands or self.hand_scores
+                    key_type = getattr(self, key) # self.hands or self.hand_scores
                     for seat, seat_number in self.occupied_seats.items():
                         if (flag == 'v'):
-                            print(f"\n    '{seat}': {bet_type[seat]}", end='')
+                            print(f"\n    '{seat}': {key_type[seat]}", end='')
                         elif self.player_has_no_cards_in_play():
                             print(" None", end='')
                             break
                         else:
-                            if ((seat_number != None) and (bet_type[seat] != None)):
-                                if ((key != 'hands') and (bet_type[seat] != [])):
-                                    print(f"\n    '{seat}': {bet_type[seat]}", end='')
+                            if ((seat_number != None) and (key_type[seat] != None)):
+                                if ((key != 'hands') and (key_type[seat] != [])):
+                                    print(f"\n    '{seat}': {key_type[seat]}", end='')
                     print("")
                 case other:
                     print(f"{key}: {value}")
@@ -357,7 +354,7 @@ class Player:
         if (self.chips[chip_color] == 0):
             print(f"Cannot add {chip_color} (${bjo.chips[chip_color]}) chip - not enough chips of this type in {self.name}'s chip pool!")
             self.display_player_chip_pool()
-            print(f"Enter 'g' to exchange cash to chips, 'c' to convert smaller chips into bigger ones, or 'b' to convert bigger chips into smaller ones")
+            print(f"Press 'g' to exchange cash to chips, 'c' to convert smaller chips into bigger ones, or 'b' to convert bigger chips into smaller ones")
         else:
             self.chips[chip_color] -= 1
             player_bet[chip_color] += 1
@@ -419,11 +416,17 @@ class Player:
         pass
     """
 
+    """
+    def get_single_character(self):
+        char = msvcrt.getch().decode('utf-8') # Get a key (as a byte string) and decode it
+        #char = input("")
+        print(char)
+    """
+
 
     def get_bet_input_character(self, min_bet, max_bet, seat):
         # Todo AB: Make sure the above code scales with player making multiple hand bets
-
-        key = getch().decode('utf-8') # Get a key (as a byte string) and decode it
+        key = msvcrt.getch().decode('utf-8') # Get a key (as a byte string) and decode it
         match key:
             case 'v':
                 self.view_betting_interface()
@@ -443,7 +446,7 @@ class Player:
                 elif (player_bet_value > max_bet):
                     print(f"{self.name}'s ${player_bet_value} bet is above table maximum, please submit a bet between inclusive bounds of ${min_bet} and ${max_bet}")
                 else:
-                    raise ExitBettingInterface
+                    return True # finalize bet for current seat
             case 's':
                 self.skip_bet(seat)
             case '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9':
@@ -505,16 +508,6 @@ class Player:
             print("")
 
 
-        """
-        if (int(chip_keybind)-1) < len(other_keybindings_list):
-            self.print_betting_interface_padding(chip_color)
-            other_keybind = other_keybindings_list[int(chip_keybind)-1]
-            print(f"{other_keybind}: {special_key_bindings[other_keybind]}")
-        else:
-            print("")
-        """
-
-
     def view_betting_interface(self):
         print("Press the following number keys to add chips, symbol keys to remove chips, and letter keys to execute special actions:")
         for chip_keybind, chip_color in key_to_chip_default_bindings.items():
@@ -524,18 +517,18 @@ class Player:
             print(f"{chip_decrement_keybind}: -${bjo.chips[chip_color]} ({chip_color})", end='')
             self.print_letter_keybinding(chip_keybind, chip_color)
 
+    def init_seat_main_bet_fields(self, seat_name):
+        empty_bet = dict.fromkeys(bjo.chip_names, 0)
+        self.main_bets[seat_name] = empty_bet
+        self.main_bet_amounts[seat_name] = 0
 
     def get_player_bets(self, min_bet, max_bet):
         for seat_name, seat_pos in self.occupied_seats.items():
-            if (seat_pos != None):
-                # Initialize seat variables
-                empty_bet = dict.fromkeys(bjo.chip_names, 0)
-                self.main_bets[seat_name] = empty_bet
-                self.main_bet_amounts[seat_name] = 0
+            if (seat_pos != None): # Get each player's bets from up to 3 seats they can occupy
+                self.init_seat_main_bet_fields(seat_name)
                 self.view_betting_interface()
                 self.display_player_chip_pool()
-                try:
-                    while True:
-                        self.get_bet_input_character(min_bet, max_bet, seat_name)
-                except ExitBettingInterface:
-                    print("Exiting betting interface...\n")
+                while True: # Using this format instead of try-except and custom exception ExitBettingInterface, to pass tests
+                    if self.get_bet_input_character(min_bet, max_bet, seat_name): 
+                        print("Exiting betting interface...")
+                        break

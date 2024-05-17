@@ -14,7 +14,9 @@ import lib.blackjack_game_objects as bjo
 
 
 class Test_WAITING:
-    def test_something(self):
+    
+    
+    def test_betting_single_pink_chip_does_not_continue_to_DEALING(self):
         pass
 
 
@@ -348,6 +350,21 @@ class Test_SHUFFLING:
 class Test_BETTING:
     def test_empty_bet_handled_appropriately(self, monkeypatch):
         # Monkeypatch an input of 'f'
+        pass
+
+    def test_single_player_submitting_bet_under_table_minimum_does_not_continue_to_DEALING(self):
+        pass
+
+    def test_single_player_submitting_bet_over_table_maximum_does_not_continue_to_DEALING(self):
+        pass
+
+    def test_single_player_submitting_bet_within_table_min_and_max_continues_to_DEALING(self):
+        pass
+
+    def test_single_player_betting_single_pink_chip_does_not_continue_to_DEALING(self):
+        pass
+
+    def test_single_player_betting_two_pink_chips_continues_to_DEALING(self):
         pass
 
     def test_betting_fifty_one_white_chips_out_of_fifty_in_chip_pool_makes_for_a_fifty_dollar_bet(self, monkeypatch):
