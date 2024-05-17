@@ -60,39 +60,39 @@ class Player:
         self.chip_pool_balance = 0
         self.hole_card_face_down = False
         self.occupied_seats = {
-            'left_seat': None,
+            'right_seat': None,
             'center_seat': None,
-            'right_seat': None
+            'left_seat': None
         }
         self.main_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
-            'left_seat': None,
-            'center_seat': None,
             'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
         }
         self.main_bet_amounts = { # each bet amount is stored as an integer (betting of $2.5 chips is restricted to pairs only)
-            'left_seat': None,
-            'center_seat': None,
             'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
         }
         self.side_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
-            'left_seat': None,
-            'center_seat': None,
             'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
         }
         self.side_bet_amounts = { # each bet amount is stored as an integer (betting of $2.5 chips is restricted to pairs only)
-            'left_seat': None,
-            'center_seat': None,
             'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
         }
         self.hands = { # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
-            'left_seat': None,
+            'right_seat': None,
             'center_seat': None,
-            'right_seat': None
+            'left_seat': None
         }
         self.hand_scores = {
-            'left_seat': None,
+            'right_seat': None,
             'center_seat': None,
-            'right_seat': None
+            'left_seat': None
         }
         self.action = None
 
@@ -120,39 +120,39 @@ class Player:
         Dealer.chip_pool_balance = 1000*(1+2.5+5+10+25+100+500+1000+5000)
         Dealer.hole_card_face_down = True
         Dealer.occupied_seats = {
-            'left_seat': None,
+            'right_seat': None,
             'center_seat': None,
-            'right_seat': None
+            'left_seat': None
         }
         Dealer.main_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
-            'left_seat': None,
-            'center_seat': None,
             'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
         }
         Dealer.main_bet_amounts = { # each bet amount is stored as an integer (betting of $2.5 chips is restricted to pairs only)
-            'left_seat': None,
-            'center_seat': None,
             'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
         }
         Dealer.side_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
-            'left_seat': None,
-            'center_seat': None,
             'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
         }
         Dealer.side_bet_amounts = { # each bet amount is stored as an integer (betting of $2.5 chips is restricted to pairs only)
-            'left_seat': None,
-            'center_seat': None,
             'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
         }
         Dealer.hands = { # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
-            'left_seat': None,
+            'right_seat': None,
             'center_seat': None,
-            'right_seat': None
+            'left_seat': None
         }
         Dealer.hand_scores = {
-            'left_seat': None,
+            'right_seat': None,
             'center_seat': None,
-            'right_seat': None
+            'left_seat': None
         }
         Dealer.action = None
         return Dealer
@@ -171,39 +171,39 @@ class Player:
         NewPlayer.chip_pool_balance = int(50*1 + 30*2.5 + 20*5 + 15*10 + 5*25)
         NewPlayer.hole_card_face_down = False
         NewPlayer.occupied_seats = {
-            'left_seat': None,
+            'right_seat': None,
             'center_seat': preferred_seat,
-            'right_seat': None
+            'left_seat': None
         }
         NewPlayer.main_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
-            'left_seat': None,
-            'center_seat': None,
             'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
         }
         NewPlayer.main_bet_amounts = { # each bet amount is stored as an integer (betting of $2.5 chips is restricted to pairs only)
-            'left_seat': None,
-            'center_seat': None,
             'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
         }
         NewPlayer.side_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
-            'left_seat': None,
-            'center_seat': None,
             'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
         }
         NewPlayer.side_bet_amounts = { # each bet amount is stored as an integer (betting of $2.5 chips is restricted to pairs only)
-            'left_seat': None,
-            'center_seat': None,
             'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
         }
         NewPlayer.hands = { # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
-            'left_seat': None,
+            'right_seat': None,
             'center_seat': None,
-            'right_seat': None
+            'left_seat': None
         }
         NewPlayer.hand_scores = {
-            'left_seat': None,
+            'right_seat': None,
             'center_seat': None,
-            'right_seat': None
+            'left_seat': None
         }
         NewPlayer.action = None
         return NewPlayer

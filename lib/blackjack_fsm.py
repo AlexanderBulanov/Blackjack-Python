@@ -243,7 +243,7 @@ class BlackjackStateMachine:
                         seat_number_input = input("Preferred seat number: ")
                         new_player_chosen_seat = int(seat_number_input)
                         if new_player_chosen_seat not in remaining_seats:
-                            print(f"Seat {new_player_chosen_seat} is already occupied by {self.seated_players[new_player_chosen_seat].name}. Please choose a different seat.")
+                            print(f"Seat {new_player_chosen_seat} is already occupied by '{self.seated_players[new_player_chosen_seat].name}'. Please choose a different seat.")
                         else:
                             self.seated_players[new_player_chosen_seat] = bjp.Player.create_new_player_from_template(new_player_username, new_player_chosen_seat)
                             remaining_seats.pop(remaining_seats.index(new_player_chosen_seat))
@@ -641,6 +641,13 @@ class BlackjackStateMachine:
             case GameState.SHUFFLING:
                 self.shuffle_cut_and_burn(None) # Todo AB: pen % is different upon each reshuffle in a single session, need it fixed?
             case GameState.BETTING:
+                """
+                for seat_number, seated_player in self.seated_players.items():
+
+                    # get_player_bets() from each player, accounting for the fact that each player
+                    # may have multiple seats
+                    if (seated_player != None):
+                """
                 self.active_player.get_player_bets(self.min_bet, self.max_bet)
                 self.active_player.print_player_stats()
                 self.transition(GameState.DEALING) # Todo AB: substitute in self.get_primary_player_bets()
