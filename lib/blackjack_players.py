@@ -307,29 +307,19 @@ class Player:
                             if ((seat_number != None) and (bet_type[seat] != None) and (bet_type[seat] != 0)):
                                 print(f"\n    '{seat}': ${bet_type[seat]}", end='')
                     print("")
-                case 'hands':
+                case 'hands' | 'hand_scores':
                     print(f"{key}:", end='')
+                    bet_type = getattr(self, key) # self.hands or self.hand_scores
                     for seat, seat_number in self.occupied_seats.items():
                         if (flag == 'v'):
-                            print(f"\n    '{seat}': {self.hands[seat]}", end='')
+                            print(f"\n    '{seat}': {bet_type[seat]}", end='')
                         elif self.player_has_no_cards_in_play():
                             print(" None", end='')
                             break
                         else:
-                            if ((seat_number != None) and (self.hands[seat] != None) and (self.hands[seat] != [])):
-                                print(f"\n    '{seat}': {self.hands[seat]}", end='')
-                    print("")
-                case 'hand_scores':
-                    print(f"{key}:", end='')
-                    for seat, seat_number in self.occupied_seats.items():
-                        if (flag == 'v'):
-                            print(f"\n    '{seat}': {self.hand_scores[seat]}", end='')
-                        elif self.player_has_no_cards_in_play():
-                            print(" None", end='')
-                            break
-                        else:
-                            if ((seat_number != None) and (self.hand_scores[seat] != None)):
-                                print(f"\n    '{seat}': {self.hand_scores[seat]}", end='')
+                            if ((seat_number != None) and (bet_type[seat] != None)):
+                                if ((key != 'hands') and (bet_type[seat] != [])):
+                                    print(f"\n    '{seat}': {bet_type[seat]}", end='')
                     print("")
                 case other:
                     print(f"{key}: {value}")
