@@ -211,8 +211,7 @@ class BlackjackStateMachine:
     def print_all_players_with_natural_blackjack_hands(self):
         for player in self.current_round_natural_blackjacks.keys():
             for hand in self.current_round_natural_blackjacks[player]:
-                print(player.name,"has natural blackjack of", hand)
-
+                print(f"{player.name} has natural blackjack of {hand}")
 
 
     # State Machine Actions #
@@ -356,25 +355,27 @@ class BlackjackStateMachine:
     def score_all_hands_in_play(self):
         for player in self.seated_players.values():
             if player != None:
-                for hand in player.current_hands:
-                    # Score each player's hands
-                    player_hand_score = bjl.highest_hand_score(hand)
-                    player.current_hand_scores.append(player_hand_score)
-                    # Track natural blackjack hands for each player, as they're encountered
-                    if (player_hand_score == 21):
-                        if (player not in self.current_round_natural_blackjacks.keys()):
-                            self.current_round_natural_blackjacks[player] = [hand]
-                        else:
-                            self.current_round_natural_blackjacks[player].append(hand)
+                # Score each player's hands
+                for seat_name, seat_number in player.occupied_seats.items():
+                    if (seat_number != None):
+                        player_hand_score = bjl.highest_hand_score(player.hands[seat_name])
+                        player.hand_scores[seat_name] = player_hand_score
+                        # Track natural blackjack hands for each player, as they're encountered
+                        if (player_hand_score == 21):
+                            if (player not in self.current_round_natural_blackjacks.keys()):
+                                self.current_round_natural_blackjacks[player] = [player.hands[seat_name]]
+                            else:
+                                self.current_round_natural_blackjacks[player].append(player.hands[seat_name])
         #self.print_all_players_with_natural_blackjack_hands()
-        dealer_hand_score = bjl.highest_hand_score(self.dealer.current_hands[0])
-        self.dealer.current_hand_scores.append(dealer_hand_score)
+        dealer_seat_name = 'center_seat'
+        dealer_hand_score = bjl.highest_hand_score(self.dealer.hands[dealer_seat_name])
+        self.dealer.hand_scores[dealer_seat_name] = dealer_hand_score
 
     def offer_insurance_and_even_money_side_bets(self):
         pass
 
     def reveal_dealer_hand(self):
-        print("Dealer hand is: ", self.dealer.current_hands[0])
+        print(f"Dealer hand is {self.dealer.hands['center_seat']}")
 
     def handle_winning_side_bet_hands(self):
         # Go through winning side bet hands left-to-right and pay winnings
@@ -430,9 +431,9 @@ class BlackjackStateMachine:
 
 
     def check_for_and_handle_dealer_blackjack(self):
-        dealer_face_up_card = self.dealer.current_hands[0][0]
+        dealer_face_up_card = self.dealer.hands['center_seat'][0]
         dealer_face_up_card_value = bjo.cards[dealer_face_up_card[:-1]][0]
-        dealer_hole_card = self.dealer.current_hands[0][1]
+        dealer_hole_card = self.dealer.hands['center_seat'][1]
         dealer_hole_card_value = bjo.cards[dealer_hole_card[:-1]][0]
         if (dealer_face_up_card in ['AH', 'AC', 'AD', 'AS']):
             print("Dealer's face-up card is an Ace!")
