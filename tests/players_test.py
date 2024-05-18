@@ -6,7 +6,6 @@ Author: Alexander Bulanov
 # Global Imports #
 import msvcrt
 import pytest
-#from msvcrt import getch
 
 # Local Imports #
 import lib.blackjack_players as bjp
@@ -36,8 +35,11 @@ class TestPlayerCreation:
         assert list(test_dealer.occupied_seats.keys()) == ['right_seat', 'center_seat', 'left_seat']
         for dealer_attr in tri_seat_player_attributes:
             assert getattr(test_dealer, dealer_attr)['right_seat'] == None
-            assert getattr(test_dealer, dealer_attr)['center_seat'] == None
             assert getattr(test_dealer, dealer_attr)['left_seat'] == None
+            if dealer_attr == 'occupied_seats':
+                assert getattr(test_dealer, dealer_attr)['center_seat'] == 8 # casino dealer is always in 'center_seat' #8 at the table
+            else:
+                assert getattr(test_dealer, dealer_attr)['center_seat'] == None
         assert test_dealer.action == None
 
     def test_new_player_created_correctly_from_template(self):

@@ -121,7 +121,7 @@ class Player:
         Dealer.hole_card_face_down = True
         Dealer.occupied_seats = {
             'right_seat': None,
-            'center_seat': None,
+            'center_seat': 8,
             'left_seat': None
         }
         Dealer.main_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count

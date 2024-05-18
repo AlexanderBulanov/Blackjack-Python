@@ -182,16 +182,31 @@ class BlackjackStateMachine:
             print("The following cards are missing -", missing_cards)
             print("*  *  *  *  *")
 
-    def print_all_hands(self):
+    def print_all_hands(self): # Update to work /w players having multiple hands
         print("*  *  *  *  *")
-        print(self.dealer.name, "has a hand of", self.dealer.current_hands[0])
+        dealer_seat_name = 'center_seat'
+        print(f"{self.dealer.name} has a hand of {self.dealer.hands[dealer_seat_name]}")
         for player in self.seated_players.values():
-            if player != None:
-                if len(player.current_hands) <= 1:
-                    print(player.name, "has a hand of", player.current_hands[0])
-                else:
-                    print(player.name, "has the following hands:", player.current_hands)
+            if (player != None):
+                for seat_name, seat_number in player.occupied_seats.items():
+                    if (seat_number != None):
+                        print(f"{player.name} has a hand of {player.hands[seat_name]}")
+                    else:
+                        # Handle verbose flag 'v' here
+                        pass
         print("*  *  *  *  *")
+
+        for player in self.seated_players.values():
+                if (player != None):
+                    for seat_name, seat_number in player.occupied_seats.items():
+                        if (seat_number != None):
+                            self.handle_front_cut_card() # Slide 'front_cut_card' to discard if encountered mid-shoe
+                            if (player.hands[seat_name] == None):
+                                player.hands[seat_name] = []
+                            player.hands[seat_name].extend([self.shoe.pop(0)])
+
+
+
 
     def print_all_players_with_natural_blackjack_hands(self):
         for player in self.current_round_natural_blackjacks.keys():
@@ -498,21 +513,23 @@ class BlackjackStateMachine:
 
 
     def deal(self):
+        # Repeat the following twice:
         for x in range(0, 2):
-            # Deal a card to each player, then dealer, repeat once
-            # Todo AB: Update deal() to work with players having multiple seats
+            # Deal a card from shoe to each player
             for player in self.seated_players.values():
                 if (player != None):
-                    # Slide 'front_cut_card' to discard if encountered mid-shoe
-                    self.handle_front_cut_card()
-                    if len(player.current_hands) == 0:
-                        player.current_hands.append([])
-                    player.current_hands[0].extend([self.shoe.pop(0)])
-            # Slide 'front_cut_card' to discard if encountered mid-shoe
-            self.handle_front_cut_card()
-            if len(self.dealer.current_hands) == 0:
-                self.dealer.current_hands.append([])
-            self.dealer.current_hands[0].extend([self.shoe.pop(0)])
+                    for seat_name, seat_number in player.occupied_seats.items():
+                        if (seat_number != None):
+                            self.handle_front_cut_card() # Slide 'front_cut_card' to discard if encountered mid-shoe
+                            if (player.hands[seat_name] == None):
+                                player.hands[seat_name] = []
+                            player.hands[seat_name].extend([self.shoe.pop(0)])
+            # Deal a card from shoe to dealer
+            self.handle_front_cut_card() # Slide 'front_cut_card' to discard if encountered mid-shoe
+            dealer_seat_name = 'center_seat'
+            if (self.dealer.hands[dealer_seat_name] == None):
+                self.dealer.hands[dealer_seat_name] = []
+            self.dealer.hands[dealer_seat_name].extend([self.shoe.pop(0)])
         # Print debug info on players hands and % of shoe dealt
         """
         # DEBUG
@@ -521,8 +538,8 @@ class BlackjackStateMachine:
             player.print_player_stats()
         """
         self.print_all_hands()
-        print(str(int(round(100-(100*(len(self.shoe)/(2+self.num_of_decks*52))), 0)))+"%"+" of the shoe dealt "
-            +"(reshuffling at round end past "+str(self.pen)+"%"+")")
+        percentage_of_shoe_dealt = int(round(100-(100*(len(self.shoe)/(2+self.num_of_decks*52))), 0))
+        print(f"{percentage_of_shoe_dealt}% of the shoe dealt (reshuffling at round end past {str(self.pen)}%)")
         self.transition(GameState.INITIAL_SCORING)
 
 
@@ -641,7 +658,7 @@ class BlackjackStateMachine:
             case GameState.BETTING:
                 self.get_all_players_bets() # Todo AB: update get_all_players_bets() to work with players having multiple seats
             case GameState.DEALING:
-                self.deal()
+                self.deal() # Todo AB: Update deal() to work with players having multiple seats
             case GameState.INITIAL_SCORING:
                 self.score_all_hands_in_play()
                 self.check_for_and_handle_dealer_blackjack()
