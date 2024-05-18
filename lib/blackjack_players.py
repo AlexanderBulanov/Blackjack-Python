@@ -521,7 +521,7 @@ class Player:
         self.main_bets[seat_name] = empty_bet
         self.main_bet_amounts[seat_name] = 0
 
-    def get_player_bets(self, min_bet, max_bet):
+    def get_bets_from_all_one_player_occupied_seats(self, min_bet, max_bet):
         for seat_name, seat_pos in self.occupied_seats.items():
             if (seat_pos != None): # Get each player's bets from up to 3 seats they can occupy
                 self.init_seat_main_bet_fields(seat_name)

@@ -33,11 +33,11 @@ class TestPlayerCreation:
         assert (list(test_dealer.chips.keys()) == bjo.chip_names) and (list(test_dealer.chips.values()) == 9*[1000])
         assert test_dealer.chip_pool_balance == 6643500
         assert test_dealer.hole_card_face_down == True
-        assert list(test_dealer.occupied_seats.keys()) == ['left_seat', 'center_seat', 'right_seat']
+        assert list(test_dealer.occupied_seats.keys()) == ['right_seat', 'center_seat', 'left_seat']
         for dealer_attr in tri_seat_player_attributes:
-            assert getattr(test_dealer, dealer_attr)['left_seat'] == None
-            assert getattr(test_dealer, dealer_attr)['center_seat'] == None
             assert getattr(test_dealer, dealer_attr)['right_seat'] == None
+            assert getattr(test_dealer, dealer_attr)['center_seat'] == None
+            assert getattr(test_dealer, dealer_attr)['left_seat'] == None
         assert test_dealer.action == None
 
     def test_new_player_created_correctly_from_template(self):
@@ -63,10 +63,10 @@ class TestPlayerCreation:
                 (list(test_player.chips.values()) == expected_test_player_chip_pool))
         assert test_player.chip_pool_balance == 500
         assert test_player.hole_card_face_down == False
-        assert list(test_player.occupied_seats.keys()) == ['left_seat', 'center_seat', 'right_seat']
+        assert list(test_player.occupied_seats.keys()) == ['right_seat', 'center_seat', 'left_seat']
         for player_attr in tri_seat_player_attributes:
-            assert getattr(test_player, player_attr)['left_seat'] == None
             assert getattr(test_player, player_attr)['right_seat'] == None
+            assert getattr(test_player, player_attr)['left_seat'] == None
             if player_attr == 'occupied_seats':
                 assert getattr(test_player, player_attr)['center_seat'] == 1
             else:

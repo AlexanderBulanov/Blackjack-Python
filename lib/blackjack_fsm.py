@@ -325,15 +325,12 @@ class BlackjackStateMachine:
 
     
 
-    def get_primary_player_bets(self): # Todo AB: Use threading package provided by Python
-        player_responses = {player: None for player in self.seated_players.values()}
-        #Poll players continously until you receive a response from each
-        while None in player_responses.values():
-            # Valid chip bet responses - bets using any combination of chips except for odd number of Pink ones
-            # Other valid responses - bet using cash (???)
-            # Other valid responses - skip, leave
-            pass
-
+    def get_all_players_bets(self):
+        for seated_player in self.seated_players.values():
+            if (seated_player != None):
+                seated_player.get_bets_from_all_one_player_occupied_seats(self.min_bet, self.max_bet)
+                #self.active_player.print_player_stats()
+        self.transition(GameState.DEALING)
 
 
     def handle_front_cut_card(self):
@@ -503,8 +500,9 @@ class BlackjackStateMachine:
     def deal(self):
         for x in range(0, 2):
             # Deal a card to each player, then dealer, repeat once
+            # Todo AB: Update deal() to work with players having multiple seats
             for player in self.seated_players.values():
-                if player != None:
+                if (player != None):
                     # Slide 'front_cut_card' to discard if encountered mid-shoe
                     self.handle_front_cut_card()
                     if len(player.current_hands) == 0:
@@ -641,16 +639,7 @@ class BlackjackStateMachine:
             case GameState.SHUFFLING:
                 self.shuffle_cut_and_burn(None) # Todo AB: pen % is different upon each reshuffle in a single session, need it fixed?
             case GameState.BETTING:
-                """
-                for seat_number, seated_player in self.seated_players.items():
-
-                    # get_player_bets() from each player, accounting for the fact that each player
-                    # may have multiple seats
-                    if (seated_player != None):
-                """
-                self.active_player.get_player_bets(self.min_bet, self.max_bet)
-                self.active_player.print_player_stats()
-                self.transition(GameState.DEALING) # Todo AB: substitute in self.get_primary_player_bets()
+                self.get_all_players_bets() # Todo AB: update get_all_players_bets() to work with players having multiple seats
             case GameState.DEALING:
                 self.deal()
             case GameState.INITIAL_SCORING:
