@@ -4,11 +4,15 @@ Author: Alexander Bulanov
 """
 
 # Global Imports #
-#from msvcrt import getch
 import msvcrt
+import logging
 
 # Local Imports #
 from . import blackjack_game_objects as bjo
+
+# Configuration for Logging #
+logging.basicConfig(level=logging.INFO, format='%(message)s')
+logger = logging.getLogger(__name__)
 
 # Global-scope reference objects #
 key_to_chip_default_bindings = {
@@ -321,13 +325,12 @@ class Player:
                     print(f"{key}: {value}")
         print("*  *  *  *  *")
 
-    def display_player_chip_pool(self):
-        print(f"{self.name}'s ${self.chip_pool_balance} chip pool - ", end='')
+    def get_player_chip_pool_message(self):
         displayed_bet = {}
         for chip_color, chip_count in self.chips.items():
             if (chip_count > 0):
                 displayed_bet[chip_color] = chip_count
-        print(displayed_bet)
+        return f"{self.name}'s ${self.chip_pool_balance} chip pool - {displayed_bet}"
 
     # Helper methods
     def clean_up_fractions(self, seat):
@@ -351,9 +354,9 @@ class Player:
         chip_color = key_to_chip_default_bindings[key]
         player_bet = self.main_bets[seat]
         if (self.chips[chip_color] == 0):
-            print(f"Cannot add {chip_color} (${bjo.chips[chip_color]}) chip - not enough chips of this type in {self.name}'s chip pool!")
-            self.display_player_chip_pool()
-            print(f"Press 'g' to change cash to chips, 'c' to convert smaller chips into bigger ones, or 'b' to convert bigger chips into smaller ones")
+            logger.error(f"Cannot add {chip_color} (${bjo.chips[chip_color]}) chip - not enough chips of this type in {self.name}'s chip pool!")
+            logger.info(self.get_player_chip_pool_message())
+            logger.info(f"Press 'g' to change cash to chips, 'c' to convert smaller chips into bigger ones, or 'b' to convert bigger chips into smaller ones")
         else:
             self.chips[chip_color] -= 1
             player_bet[chip_color] += 1
@@ -430,7 +433,7 @@ class Player:
             case 'v':
                 self.view_betting_interface()
             case 'd':
-                self.display_player_chip_pool()
+                logger.info(self.get_player_chip_pool_message())
             case 'p':
                 self.print_current_bet(seat)
             case 'r':
@@ -450,11 +453,11 @@ class Player:
                 self.skip_bet(seat)
             case '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9':
                 self.increase_current_bet(seat, key)
-                #self.display_player_chip_pool()
+                #logger.info(self.get_player_chip_pool_message())
                 #self.print_current_bet()
             case '!' | '@' | '#' | '$' | '%' | '^' | '&' | '*' | '(':
                 self.decrease_current_bet(seat, key)
-                #self.display_player_chip_pool()
+                #logger.info(self.get_player_chip_pool_message())
                 #self.print_current_bet()
             case 'g' | 'c' | 'b' | 'm' | 'a' | 'l':
                 match key:
@@ -527,7 +530,7 @@ class Player:
                 self.init_main_seat_bet_fields(seat_name)
                 print(f"Player '{self.name}' betting at Seat #{seat_pos} (their '{seat_name}')")
                 self.view_betting_interface()
-                self.display_player_chip_pool()
+                logger.info(self.get_player_chip_pool_message())
                 while True: # Using this format instead of try-except and custom exception ExitBettingInterface, to pass tests
                     if self.get_bet_input_character(min_bet, max_bet, seat_name): 
                         print("Exiting betting interface...")
