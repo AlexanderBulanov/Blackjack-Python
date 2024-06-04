@@ -6,9 +6,9 @@ Author: Alexander Bulanov
 # Global Imports #
 import random
 import math
+import msvcrt
 #import time
 from enum import Enum
-from msvcrt import getch
 
 # Local Imports #
 from . import blackjack_game_logic as bjl
@@ -250,6 +250,7 @@ class BlackjackStateMachine:
                 print(f"Only one seat available! Assigning seat {remaining_seats[0]} to player {new_player_username}")
                 new_player_chosen_seat = remaining_seats[0]
                 self.seated_players[new_player_chosen_seat] = bjp.Player.create_new_player_from_template(new_player_username, new_player_chosen_seat)
+                remaining_seats.pop(0) # All seats are now occupied
             else:
                 switch_to_next_player_flag = False # Flag to signal termination of while loop
                 while (switch_to_next_player_flag == False):
@@ -264,11 +265,15 @@ class BlackjackStateMachine:
                             switch_to_next_player_flag = True # Update the flag to get next player's input
                     except ValueError:
                         print(f"Non-integer seat number '{seat_number_input}' provided. Please input an integer between 1 and 7")
-            print("Press 'p' to pass the keyboard to the next player or 's' to start the game with the following currently seated players:")
-            self.print_blackjack_table()
-            switch_to_next_player_flag = False # Flag to signal termination of while loop
+            if (len(remaining_seats) > 0):
+                print("Press 'p' to pass the keyboard to the next player or 's' to start the game with the following currently seated players:")
+                self.print_blackjack_table()
+                switch_to_next_player_flag = False # Flag to signal termination of while loop
+            else:
+                self.print_blackjack_table()
+                start_flag = 's'
             while (switch_to_next_player_flag == False):
-                key = getch().decode('utf-8') # Get a key (as a byte string) and decode it
+                key = msvcrt.getch().decode('utf-8') # Get a key (as a byte string) and decode it
                 match key:
                     case 'p':
                         switch_to_next_player_flag = True
@@ -653,6 +658,9 @@ class BlackjackStateMachine:
             case GameState.WAITING:
                 self.wait_for_players_to_join()
             case GameState.STARTING:
+                for player in self.seated_players.values():
+                    if (player != None):
+                        player.print_player_stats()
                 self.start_game()
             case GameState.SHUFFLING:
                 self.shuffle_cut_and_burn(None) # Todo AB: pen % is different upon each reshuffle in a single session, need it fixed?
@@ -663,7 +671,7 @@ class BlackjackStateMachine:
             case GameState.INITIAL_SCORING:
                 self.score_all_hands_in_play()
                 self.check_for_and_handle_dealer_blackjack()
-                if (self.dealer.current_hands != []):
+                if (self.dealer.hands['center_seat'] != []): # Todo AB: Check if comparison is w.r.t. [] or None
                     self.check_for_and_handle_players_blackjacks()
             case GameState.PLAYER_PLAYING:
                 self.player_plays()

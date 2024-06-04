@@ -14,21 +14,90 @@ import lib.blackjack_game_objects as bjo
 
 
 class Test_WAITING:
+    def test_blackjack_state_machine_beginning_state_is_WAITING(self):
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        assert test_machine.state == bjfsm.GameState.WAITING
+
+    def test_game_transitions_to_STARTING_correctly_with_player_Alex_in_seat_2(self, monkeypatch):
+        # Setup
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        # Test
+        simulated_input_values = ['Alex', '2']
+        iterable_simulated_input_values = iter(simulated_input_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: b's')
+        test_machine.step()
+        assert test_machine.seated_players[2].name == 'Alex'
+        assert test_machine.state == bjfsm.GameState.STARTING
+
+    def test_second_player_Jim_tries_to_sit_in_Alex_occupied_seat_2_then_chooses_seat_3_is_seated_correctly(self, monkeypatch):
+        # Setup
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        # Test
+        simulated_input_values = ['Alex', '2', 'Jim', '2', '3']
+        iterable_simulated_input_values = iter(simulated_input_values)
+        simulated_char_values = [b'p', b's']
+        iterable_simulated_char_values = iter(simulated_char_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_values))
+        test_machine.step()
+        assert test_machine.seated_players[2].name == 'Alex'
+        assert test_machine.seated_players[3].name == 'Jim'
+        assert test_machine.state == bjfsm.GameState.STARTING
+
+    def test_Alex_Jim_John_correctly_seated_in_seats_2_3_7_respectively(self, monkeypatch):
+        # Setup
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        # Test
+        simulated_input_values = ['Alex', '2', 'Jim', '2', '3', 'John', '7']
+        iterable_simulated_input_values = iter(simulated_input_values)
+        simulated_char_values = [b'p', b'p', b's']
+        iterable_simulated_char_values = iter(simulated_char_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_values))
+        test_machine.step()
+        assert test_machine.seated_players[2].name == 'Alex'
+        assert test_machine.seated_players[3].name == 'Jim'
+        assert test_machine.seated_players[7].name == 'John'
+        assert test_machine.state == bjfsm.GameState.STARTING
     
-    
-    def test_betting_single_pink_chip_does_not_continue_to_DEALING(self):
-        pass
+    def test_all_seats_assigned_correctly_to_seven_joined_players(self, monkeypatch):
+        # Setup
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        # Test
+        simulated_input_values = ['Alex', '2', 'Jim', '3', 'John', '7', 'Mike', '1', 'Kim', '4', 'Jane', '5', 'Bob']
+        iterable_simulated_input_values = iter(simulated_input_values)
+        simulated_char_values = [b'p'] * 6
+        iterable_simulated_char_values = iter(simulated_char_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_values))
+        test_machine.step()
+        assert test_machine.seated_players[1].name == 'Mike'
+        assert test_machine.seated_players[2].name == 'Alex'
+        assert test_machine.seated_players[3].name == 'Jim'
+        assert test_machine.seated_players[4].name == 'Kim'
+        assert test_machine.seated_players[5].name == 'Jane'
+        assert test_machine.seated_players[6].name == 'Bob'
+        assert test_machine.seated_players[7].name == 'John'
+        assert test_machine.state == bjfsm.GameState.STARTING
 
 
+"""
+        simulated_char_inputs = [b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9',
+                                 b'(', b'*', b'&', b'^', b'%', b'$', b'#', b'@', b'f']
+        iterable_simulated_char_inputs = iter(simulated_char_inputs)
+        for i in range(0, len(simulated_char_inputs)):
+            monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
+"""
     
 
 
 class Test_STARTING:
-    def test_blackjack_state_machine_beginning_state_is_STARTING(self):
-        num_of_decks = 1
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        assert test_machine.state == bjfsm.GameState.STARTING
-
     def test_blackjack_state_machine_transitions_to_SHUFFLING_from_STARTING(self):
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
