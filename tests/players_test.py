@@ -4,8 +4,7 @@ Author: Alexander Bulanov
 """
 
 # Global Imports #
-import msvcrt
-import pytest
+
 
 # Local Imports #
 import lib.blackjack_players as bjp
@@ -111,7 +110,7 @@ class TestPlayerBetting:
             assert getattr(test_player, player_attr)['left_seat'] == None
             assert getattr(test_player, player_attr)['center_seat'] == None
             assert getattr(test_player, player_attr)['right_seat'] == None
-        
+
     def test_single_seat_adding_one_Pink_chip_prints_error_message(self, monkeypatch, capfd):
         # Setup
         test_username = 'abulanov'
@@ -125,12 +124,10 @@ class TestPlayerBetting:
         for i in range(0, len(simulated_char_inputs)):
             monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
             test_player.get_bet_input_character(table_min, table_max, 'center_seat')
-
-        captured = capfd.readouterr()
+        # Test
+        captured_stream = capfd.readouterr()
         expected_output = "Invalid (fractional) bet amount of $2.5 - please resubmit a bet /w an even number of Pink chips!\n"
-        print(repr(captured.out))  # Print the captured output for debugging purposes
-        assert captured.out == expected_output
-
+        assert captured_stream.err == expected_output
 
     def test_single_seat_adding_one_of_each_White_Red_Blue_Green_chips_handled_correctly(self, monkeypatch):
         # Setup
@@ -367,4 +364,3 @@ class TestPlayerBetting:
         # Verify center_seat spot of test_player has main_bet value of $25 and is an int() datatype
         assert test_player.main_bet_amounts['center_seat'] == 25
         assert type(test_player.main_bet_amounts['center_seat']) == int
-

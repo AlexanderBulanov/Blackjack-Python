@@ -5,14 +5,10 @@ Author: Alexander Bulanov
 
 # Global Imports #
 import msvcrt
-import logging
+import sys
 
 # Local Imports #
 from . import blackjack_game_objects as bjo
-
-# Configuration for Logging #
-logging.basicConfig(level=logging.INFO, format='%(message)s')
-logger = logging.getLogger(__name__)
 
 # Global-scope reference objects #
 key_to_chip_default_bindings = {
@@ -325,12 +321,12 @@ class Player:
                     print(f"{key}: {value}")
         print("*  *  *  *  *")
 
-    def print_player_chip_pool(self): # uses logger
+    def print_player_chip_pool(self):
         displayed_bet = {}
         for chip_color, chip_count in self.chips.items():
             if (chip_count > 0):
                 displayed_bet[chip_color] = chip_count
-        logger.info(f"{self.name}'s ${self.chip_pool_balance} chip pool - {displayed_bet}")
+        print(f"{self.name}'s ${self.chip_pool_balance} chip pool - {displayed_bet}")
 
     # Helper methods
     def clean_up_fractions(self, seat):
@@ -341,21 +337,21 @@ class Player:
         if (chip_pool_balance_fraction == 0):
             self.chip_pool_balance = int(self.chip_pool_balance)
 
-    def print_current_bet(self, seat): # uses logger
+    def print_current_bet(self, seat):
         player_bet = self.main_bets[seat]
         displayed_bet = {}
         for chip_color, chip_count in player_bet.items():
             if (chip_count > 0):
                 displayed_bet[chip_color] = chip_count
-        logger.info(f"{self.name}'s ${self.main_bet_amounts[seat]} bet - {displayed_bet}")
+        print(f"{self.name}'s ${self.main_bet_amounts[seat]} bet - {displayed_bet}")
 
     def increase_current_bet(self, seat, key):
         chip_color = key_to_chip_default_bindings[key]
         player_bet = self.main_bets[seat]
         if (self.chips[chip_color] == 0):
-            logger.error(f"Cannot add {chip_color} (${bjo.chips[chip_color]}) chip - not enough chips of this type in {self.name}'s chip pool!")
+            sys.stderr.write(f"Cannot add {chip_color} (${bjo.chips[chip_color]}) chip - not enough chips of this type in {self.name}'s chip pool!\n")
             self.print_player_chip_pool()
-            logger.info(f"Press 'g' to change cash to chips, 'c' to convert smaller chips into bigger ones, or 'b' to convert bigger chips into smaller ones")
+            print(f"Press 'g' to change cash to chips, 'c' to convert smaller chips into bigger ones, or 'b' to convert bigger chips into smaller ones")
         else:
             self.chips[chip_color] -= 1
             player_bet[chip_color] += 1
@@ -389,7 +385,7 @@ class Player:
             player_bet[chip_color] = 0
             player_bet_values[seat] = 0
         self.clean_up_fractions(seat)
-        logger.info(f"Reset {self.name}'s bet to ${self.main_bet_amounts[seat]}!")
+        print(f"Reset {self.name}'s bet to ${self.main_bet_amounts[seat]}!")
 
     def get_chips(self):
         pass
@@ -441,11 +437,11 @@ class Player:
                 player_bet_value = self.main_bet_amounts[seat]
                 fraction = player_bet_value % 1
                 if (fraction != 0):
-                    logger.error(f"Invalid (fractional) bet amount of ${player_bet_value} - please resubmit a bet /w an even number of Pink chips!")
+                    sys.stderr.write(f"Invalid (fractional) bet amount of ${player_bet_value} - please resubmit a bet /w an even number of Pink chips!\n")
                 elif (player_bet_value < min_bet):
-                    logger.error(f"{self.name}'s ${player_bet_value} bet is below table minimum, please submit a bet between inclusive bounds of ${min_bet} and ${max_bet}")
+                    sys.stderr.write(f"{self.name}'s ${player_bet_value} bet is below table minimum, please submit a bet between inclusive bounds of ${min_bet} and ${max_bet}\n")
                 elif (player_bet_value > max_bet):
-                    logger.error(f"{self.name}'s ${player_bet_value} bet is above table maximum, please submit a bet between inclusive bounds of ${min_bet} and ${max_bet}")
+                    sys.stderr.write(f"{self.name}'s ${player_bet_value} bet is above table maximum, please submit a bet between inclusive bounds of ${min_bet} and ${max_bet}\n")
                 else:
                     return True # finalize bet for current seat
             case 's':
@@ -473,8 +469,8 @@ class Player:
                     case 'l':
                         self.leave_seat() # Todo AB: implement leave_table()
             case other:
-                logger.info(f"Invalid input '{key}'")
-                logger.info("Provide a valid key or press 'v' to see valid key input options")
+                sys.stderr.write(f"Invalid input '{key}'\n")
+                print("Provide a valid key or press 'v' to see valid key input options")
 
 
     def print_betting_interface_padding(self, chip_color):
@@ -527,10 +523,10 @@ class Player:
         for seat_name, seat_pos in self.occupied_seats.items():
             if (seat_pos != None): # Get each player's bets from up to 3 seats they can occupy
                 self.init_main_seat_bet_fields(seat_name)
-                logger.info(f"Player '{self.name}' betting at Seat #{seat_pos} (their '{seat_name}')")
+                print(f"Player '{self.name}' betting at Seat #{seat_pos} (their '{seat_name}')")
                 self.view_betting_interface()
                 self.print_player_chip_pool()
                 while True: # Using this format instead of try-except and custom exception ExitBettingInterface, to pass tests
                     if self.get_bet_input_character(min_bet, max_bet, seat_name): 
-                        logger.info("Exiting betting interface...")
+                        print("Exiting betting interface...")
                         break
