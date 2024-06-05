@@ -19,7 +19,19 @@ class Test_WAITING:
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
         assert test_machine.state == bjfsm.GameState.WAITING
 
-    def test_game_transitions_to_STARTING_correctly_with_player_Alex_in_seat_2(self, monkeypatch):
+    def test_blackjack_state_machine_transitions_to_STARTING_from_WAITING_after_one_player_starts_game(self, monkeypatch):
+        # Setup
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        # Test
+        simulated_input_values = ['Alex', '2']
+        iterable_simulated_input_values = iter(simulated_input_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: b's')
+        test_machine.step()
+        assert test_machine.state == bjfsm.GameState.STARTING
+
+    def test_first_player_Alex_correctly_assigned_to_seat_2(self, monkeypatch):
         # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
@@ -30,7 +42,6 @@ class Test_WAITING:
         monkeypatch.setattr('msvcrt.getch', lambda: b's')
         test_machine.step()
         assert test_machine.seated_players[2].name == 'Alex'
-        assert test_machine.state == bjfsm.GameState.STARTING
 
     def test_second_player_Jim_tries_to_sit_in_Alex_occupied_seat_2_then_chooses_seat_3_is_seated_correctly(self, monkeypatch):
         # Setup
