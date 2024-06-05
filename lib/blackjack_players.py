@@ -325,12 +325,12 @@ class Player:
                     print(f"{key}: {value}")
         print("*  *  *  *  *")
 
-    def get_player_chip_pool_message(self):
+    def print_player_chip_pool(self): # uses logger
         displayed_bet = {}
         for chip_color, chip_count in self.chips.items():
             if (chip_count > 0):
                 displayed_bet[chip_color] = chip_count
-        return f"{self.name}'s ${self.chip_pool_balance} chip pool - {displayed_bet}"
+        logger.info(f"{self.name}'s ${self.chip_pool_balance} chip pool - {displayed_bet}")
 
     # Helper methods
     def clean_up_fractions(self, seat):
@@ -341,21 +341,20 @@ class Player:
         if (chip_pool_balance_fraction == 0):
             self.chip_pool_balance = int(self.chip_pool_balance)
 
-    def print_current_bet(self, seat):
-        print(f"{self.name}'s ${self.main_bet_amounts[seat]} bet - ", end='')
+    def print_current_bet(self, seat): # uses logger
         player_bet = self.main_bets[seat]
         displayed_bet = {}
         for chip_color, chip_count in player_bet.items():
             if (chip_count > 0):
                 displayed_bet[chip_color] = chip_count
-        print(displayed_bet)
+        logger.info(f"{self.name}'s ${self.main_bet_amounts[seat]} bet - {displayed_bet}")
 
     def increase_current_bet(self, seat, key):
         chip_color = key_to_chip_default_bindings[key]
         player_bet = self.main_bets[seat]
         if (self.chips[chip_color] == 0):
             logger.error(f"Cannot add {chip_color} (${bjo.chips[chip_color]}) chip - not enough chips of this type in {self.name}'s chip pool!")
-            logger.info(self.get_player_chip_pool_message())
+            self.print_player_chip_pool()
             logger.info(f"Press 'g' to change cash to chips, 'c' to convert smaller chips into bigger ones, or 'b' to convert bigger chips into smaller ones")
         else:
             self.chips[chip_color] -= 1
@@ -390,7 +389,7 @@ class Player:
             player_bet[chip_color] = 0
             player_bet_values[seat] = 0
         self.clean_up_fractions(seat)
-        print(f"Reset {self.name}'s bet to ${self.main_bet_amounts[seat]}!")
+        logger.info(f"Reset {self.name}'s bet to ${self.main_bet_amounts[seat]}!")
 
     def get_chips(self):
         pass
@@ -433,7 +432,7 @@ class Player:
             case 'v':
                 self.view_betting_interface()
             case 'd':
-                logger.info(self.get_player_chip_pool_message())
+                self.print_player_chip_pool()
             case 'p':
                 self.print_current_bet(seat)
             case 'r':
@@ -442,22 +441,22 @@ class Player:
                 player_bet_value = self.main_bet_amounts[seat]
                 fraction = player_bet_value % 1
                 if (fraction != 0):
-                    print(f"Invalid (fractional) bet amount of ${player_bet_value} - please resubmit a bet /w an even number of Pink chips!")
+                    logger.error(f"Invalid (fractional) bet amount of ${player_bet_value} - please resubmit a bet /w an even number of Pink chips!")
                 elif (player_bet_value < min_bet):
-                    print(f"{self.name}'s ${player_bet_value} bet is below table minimum, please submit a bet between inclusive bounds of ${min_bet} and ${max_bet}")
+                    logger.error(f"{self.name}'s ${player_bet_value} bet is below table minimum, please submit a bet between inclusive bounds of ${min_bet} and ${max_bet}")
                 elif (player_bet_value > max_bet):
-                    print(f"{self.name}'s ${player_bet_value} bet is above table maximum, please submit a bet between inclusive bounds of ${min_bet} and ${max_bet}")
+                    logger.error(f"{self.name}'s ${player_bet_value} bet is above table maximum, please submit a bet between inclusive bounds of ${min_bet} and ${max_bet}")
                 else:
                     return True # finalize bet for current seat
             case 's':
                 self.skip_bet(seat)
             case '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9':
                 self.increase_current_bet(seat, key)
-                #logger.info(self.get_player_chip_pool_message())
+                #self.print_player_chip_pool()
                 #self.print_current_bet()
             case '!' | '@' | '#' | '$' | '%' | '^' | '&' | '*' | '(':
                 self.decrease_current_bet(seat, key)
-                #logger.info(self.get_player_chip_pool_message())
+                #self.print_player_chip_pool()
                 #self.print_current_bet()
             case 'g' | 'c' | 'b' | 'm' | 'a' | 'l':
                 match key:
@@ -474,8 +473,8 @@ class Player:
                     case 'l':
                         self.leave_seat() # Todo AB: implement leave_table()
             case other:
-                print(f"Invalid input '{key}'")
-                print("Provide a valid key or press 'v' to see valid key input options")
+                logger.info(f"Invalid input '{key}'")
+                logger.info("Provide a valid key or press 'v' to see valid key input options")
 
 
     def print_betting_interface_padding(self, chip_color):
@@ -528,10 +527,10 @@ class Player:
         for seat_name, seat_pos in self.occupied_seats.items():
             if (seat_pos != None): # Get each player's bets from up to 3 seats they can occupy
                 self.init_main_seat_bet_fields(seat_name)
-                print(f"Player '{self.name}' betting at Seat #{seat_pos} (their '{seat_name}')")
+                logger.info(f"Player '{self.name}' betting at Seat #{seat_pos} (their '{seat_name}')")
                 self.view_betting_interface()
-                logger.info(self.get_player_chip_pool_message())
+                self.print_player_chip_pool()
                 while True: # Using this format instead of try-except and custom exception ExitBettingInterface, to pass tests
                     if self.get_bet_input_character(min_bet, max_bet, seat_name): 
-                        print("Exiting betting interface...")
+                        logger.info("Exiting betting interface...")
                         break
