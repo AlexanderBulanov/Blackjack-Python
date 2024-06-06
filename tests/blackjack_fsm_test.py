@@ -203,16 +203,22 @@ class Test_SHUFFLING:
         monkeypatch.setattr('msvcrt.getch', lambda: b's')
         test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
         test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
+        # Test
         test_machine.step() # executes shuffle_cut_and_burn() in SHUFFLING and transitions to BETTING
         assert test_machine.state == bjfsm.GameState.BETTING
 
-    def test_starting_single_deck_shoe_is_shuffle_cut_and_burned_correctly_at_randomly_chosen_pen_in_SHUFFLING(self):
+    def test_starting_single_deck_shoe_is_shuffle_cut_and_burned_correctly_at_randomly_chosen_pen_in_SHUFFLING(self, monkeypatch):
         ## Setup ##
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes start_game() in STARTING
-        test_machine.step() # execute shuffle_cut_and_burn() in SHUFFLING
-        ## Checking Shoe Integrity ##
+        simulated_input_values = ['Alex', '2']
+        iterable_simulated_input_values = iter(simulated_input_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: b's')
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
+        test_machine.step() # executes shuffle_cut_and_burn() in SHUFFLING and transitions to BETTING
+        ## Shoe Integrity Test ##
         # Verify deck size and pen percentage is in-bounds for a single deck shoe
         assert len(test_machine.shoe) == 1+52*1
         assert test_machine.pen in range(50, 71)
@@ -229,13 +235,18 @@ class Test_SHUFFLING:
             #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
             assert card_occurrence_counts[card] == 1
 
-    def test_starting_eight_deck_shoe_is_shuffle_cut_and_burned_correctly_at_randomly_chosen_pen_in_SHUFFLING(self):
+    def test_starting_eight_deck_shoe_is_shuffle_cut_and_burned_correctly_at_randomly_chosen_pen_in_SHUFFLING(self, monkeypatch):
         ## Setup ##
         num_of_decks = 8
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes start_game() in STARTING
-        test_machine.step() # execute shuffle_cut_and_burn() in SHUFFLING
-        ## Checking Shoe Integrity ##
+        simulated_input_values = ['Alex', '2']
+        iterable_simulated_input_values = iter(simulated_input_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: b's')
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
+        test_machine.step() # executes shuffle_cut_and_burn() in SHUFFLING and transitions to BETTING
+        ## Shoe Integrity Test ##
         # Verify deck size and pen percentage is in-bounds for an eight-deck shoe
         assert len(test_machine.shoe) == 1+52*8
         assert test_machine.pen in range(70, 91)
@@ -252,14 +263,19 @@ class Test_SHUFFLING:
             #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
             assert card_occurrence_counts[card] == 8
 
-    def test_one_deck_shoe_is_shuffle_cut_and_burned_correctly_at_min_pen_of_50_percent_in_SHUFFLING(self):
+    def test_one_deck_shoe_is_shuffle_cut_and_burned_correctly_at_min_pen_of_50_percent_in_SHUFFLING(self, monkeypatch):
         ## Setup ##
         num_of_decks = 1
         min_cut_percentage_one_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][0]
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes start_game() in STARTING
-        test_machine.shuffle_cut_and_burn(min_cut_percentage_one_deck_shoe) # manually execute SHUFFLING /w 50% pen
-        ## Checking Shoe Integrity ##
+        simulated_input_values = ['Alex', '2']
+        iterable_simulated_input_values = iter(simulated_input_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: b's')
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
+        test_machine.shuffle_cut_and_burn(min_cut_percentage_one_deck_shoe) # manually executes SHUFFLING /w 50% pen
+        ## Shoe Integrity Test ##
         # Verify deck size and minimum (50%) pen percentage for a one-deck shoe
         assert len(test_machine.shoe) == 1+52*1
         assert test_machine.pen == 50
@@ -276,14 +292,19 @@ class Test_SHUFFLING:
             #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
             assert card_occurrence_counts[card] == 1
 
-    def test_one_deck_shoe_is_shuffle_cut_and_burned_correctly_at_max_pen_of_70_percent_in_SHUFFLING(self):
+    def test_one_deck_shoe_is_shuffle_cut_and_burned_correctly_at_max_pen_of_70_percent_in_SHUFFLING(self, monkeypatch):
         ## Setup ##
         num_of_decks = 1
         min_cut_percentage_one_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][1]
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes start_game() in STARTING
+        simulated_input_values = ['Alex', '2']
+        iterable_simulated_input_values = iter(simulated_input_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: b's')
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
         test_machine.shuffle_cut_and_burn(min_cut_percentage_one_deck_shoe) # manually execute SHUFFLING /w 70% pen
-        ## Checking Shoe Integrity ##
+        ## Shoe Integrity Test ##
         # Verify deck size and maximum (70%) pen percentage for a one-deck shoe
         assert len(test_machine.shoe) == 1+52*1
         assert test_machine.pen == 70
@@ -300,14 +321,19 @@ class Test_SHUFFLING:
             #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
             assert card_occurrence_counts[card] == 1
 
-    def test_two_deck_shoe_is_shuffle_cut_and_burned_correctly_at_min_pen_of_55_percent_in_SHUFFLING(self):
+    def test_two_deck_shoe_is_shuffle_cut_and_burned_correctly_at_min_pen_of_55_percent_in_SHUFFLING(self, monkeypatch):
         ## Setup ##
         num_of_decks = 2
         min_cut_percentage_two_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][0]
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes start_game() in STARTING
+        simulated_input_values = ['Alex', '2']
+        iterable_simulated_input_values = iter(simulated_input_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: b's')
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
         test_machine.shuffle_cut_and_burn(min_cut_percentage_two_deck_shoe) # manually execute SHUFFLING /w 55% pen
-        ## Checking Shoe Integrity ##
+        ## Shoe Integrity Test ##
         # Verify deck size and minimum (55%) pen percentage for a two-deck shoe
         assert len(test_machine.shoe) == 1+52*2
         assert test_machine.pen == 55
@@ -324,14 +350,19 @@ class Test_SHUFFLING:
             #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
             assert card_occurrence_counts[card] == 2
 
-    def test_two_deck_shoe_is_shuffle_cut_and_burned_correctly_at_max_pen_of_75_percent_in_SHUFFLING(self):
+    def test_two_deck_shoe_is_shuffle_cut_and_burned_correctly_at_max_pen_of_75_percent_in_SHUFFLING(self, monkeypatch):
         ## Setup ##
         num_of_decks = 2
         min_cut_percentage_two_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][1]
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes start_game() in STARTING
+        simulated_input_values = ['Alex', '2']
+        iterable_simulated_input_values = iter(simulated_input_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: b's')
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
         test_machine.shuffle_cut_and_burn(min_cut_percentage_two_deck_shoe) # manually execute SHUFFLING /w 75% pen
-        ## Checking Shoe Integrity ##
+        ## Shoe Integrity Test ##
         # Verify deck size and maximum (75%) pen percentage for a two-deck shoe
         assert len(test_machine.shoe) == 1+52*2
         assert test_machine.pen == 75
@@ -348,14 +379,19 @@ class Test_SHUFFLING:
             #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
             assert card_occurrence_counts[card] == 2
 
-    def test_four_deck_shoe_is_shuffle_cut_and_burned_correctly_at_min_pen_of_60_percent_in_SHUFFLING(self):
+    def test_four_deck_shoe_is_shuffle_cut_and_burned_correctly_at_min_pen_of_60_percent_in_SHUFFLING(self, monkeypatch):
         ## Setup ##
         num_of_decks = 4
         min_cut_percentage_four_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][0]
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes start_game() in STARTING
+        simulated_input_values = ['Alex', '2']
+        iterable_simulated_input_values = iter(simulated_input_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: b's')
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
         test_machine.shuffle_cut_and_burn(min_cut_percentage_four_deck_shoe) # manually execute SHUFFLING /w 60% pen
-        ## Checking Shoe Integrity ##
+        ## Shoe Integrity Test ##
         # Verify deck size and minimum (60%) pen percentage for a four-deck shoe
         assert len(test_machine.shoe) == 1+52*4
         assert test_machine.pen == 60
@@ -372,14 +408,19 @@ class Test_SHUFFLING:
             #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
             assert card_occurrence_counts[card] == 4
 
-    def test_four_deck_shoe_is_shuffle_cut_and_burned_correctly_at_max_pen_of_80_percent_in_SHUFFLING(self):
+    def test_four_deck_shoe_is_shuffle_cut_and_burned_correctly_at_max_pen_of_80_percent_in_SHUFFLING(self, monkeypatch):
         ## Setup ##
         num_of_decks = 4
         min_cut_percentage_four_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][1]
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes start_game() in STARTING
+        simulated_input_values = ['Alex', '2']
+        iterable_simulated_input_values = iter(simulated_input_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: b's')
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
         test_machine.shuffle_cut_and_burn(min_cut_percentage_four_deck_shoe) # manually execute SHUFFLING /w 80% pen
-        ## Checking Shoe Integrity ##
+        ## Shoe Integrity Test ##
         # Verify deck size and maximum (80%) pen percentage for a four-deck shoe
         assert len(test_machine.shoe) == 1+52*4
         assert test_machine.pen == 80
@@ -396,14 +437,19 @@ class Test_SHUFFLING:
             #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
             assert card_occurrence_counts[card] == 4
 
-    def test_six_deck_shoe_is_shuffle_cut_and_burned_correctly_at_min_pen_of_65_percent_in_SHUFFLING(self):
+    def test_six_deck_shoe_is_shuffle_cut_and_burned_correctly_at_min_pen_of_65_percent_in_SHUFFLING(self, monkeypatch):
         ## Setup ##
         num_of_decks = 6
         min_cut_percentage_six_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][0]
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes start_game() in STARTING
+        simulated_input_values = ['Alex', '2']
+        iterable_simulated_input_values = iter(simulated_input_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: b's')
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
         test_machine.shuffle_cut_and_burn(min_cut_percentage_six_deck_shoe) # manually execute SHUFFLING /w 65% pen
-        ## Checking Shoe Integrity ##
+        ## Shoe Integrity Test ##
         # Verify deck size and minimum (65%) pen percentage for a six-deck shoe
         assert len(test_machine.shoe) == 1+52*6
         assert test_machine.pen == 65
@@ -420,14 +466,19 @@ class Test_SHUFFLING:
             #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
             assert card_occurrence_counts[card] == 6
 
-    def test_six_deck_shoe_is_shuffle_cut_and_burned_correctly_at_max_pen_of_85_percent_in_SHUFFLING(self):
+    def test_six_deck_shoe_is_shuffle_cut_and_burned_correctly_at_max_pen_of_85_percent_in_SHUFFLING(self, monkeypatch):
         ## Setup ##
         num_of_decks = 6
         min_cut_percentage_six_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][1]
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes start_game() in STARTING
+        simulated_input_values = ['Alex', '2']
+        iterable_simulated_input_values = iter(simulated_input_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: b's')
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
         test_machine.shuffle_cut_and_burn(min_cut_percentage_six_deck_shoe) # manually execute SHUFFLING /w 85% pen
-        ## Checking Shoe Integrity ##
+        ## Shoe Integrity Test ##
         # Verify deck size and maximum (85%) pen percentage for a six-deck shoe
         assert len(test_machine.shoe) == 1+52*6
         assert test_machine.pen == 85
@@ -444,14 +495,19 @@ class Test_SHUFFLING:
             #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
             assert card_occurrence_counts[card] == 6
 
-    def test_eight_deck_shoe_is_shuffle_cut_and_burned_correctly_at_min_pen_of_70_percent_in_SHUFFLING(self):
+    def test_eight_deck_shoe_is_shuffle_cut_and_burned_correctly_at_min_pen_of_70_percent_in_SHUFFLING(self, monkeypatch):
         ## Setup ##
         num_of_decks = 8
         min_cut_percentage_eight_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][0]
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes start_game() in STARTING
+        simulated_input_values = ['Alex', '2']
+        iterable_simulated_input_values = iter(simulated_input_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: b's')
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
         test_machine.shuffle_cut_and_burn(min_cut_percentage_eight_deck_shoe) # manually execute SHUFFLING /w 70% pen
-        ## Checking Shoe Integrity ##
+        ## Shoe Integrity Test ##
         # Verify deck size and minimum (70%) pen percentage for an eight-deck shoe
         assert len(test_machine.shoe) == 1+52*8
         assert test_machine.pen == 70
@@ -468,14 +524,19 @@ class Test_SHUFFLING:
             #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
             assert card_occurrence_counts[card] == 8
 
-    def test_eight_deck_shoe_is_shuffle_cut_and_burned_correctly_at_max_pen_of_90_percent_in_SHUFFLING(self):
+    def test_eight_deck_shoe_is_shuffle_cut_and_burned_correctly_at_max_pen_of_90_percent_in_SHUFFLING(self, monkeypatch):
         ## Setup ##
         num_of_decks = 8
         min_cut_percentage_eight_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][1]
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes start_game() in STARTING
+        simulated_input_values = ['Alex', '2']
+        iterable_simulated_input_values = iter(simulated_input_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: b's')
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
         test_machine.shuffle_cut_and_burn(min_cut_percentage_eight_deck_shoe) # manually execute SHUFFLING /w 90% pen
-        ## Checking Shoe Integrity ##
+        ## Shoe Integrity Test ##
         # Verify deck size and maximum (90%) pen percentage for an eight-deck shoe
         assert len(test_machine.shoe) == 1+52*8
         assert test_machine.pen == 90
@@ -491,7 +552,6 @@ class Test_SHUFFLING:
         for card in card_occurrence_counts:
             #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
             assert card_occurrence_counts[card] == 8
-
 
 class Test_BETTING:
     def test_empty_bet_handled_appropriately(self, monkeypatch):
