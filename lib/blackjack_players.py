@@ -514,7 +514,7 @@ class Player:
             print(f"{chip_decrement_keybind}: -${bjo.chips[chip_color]} ({chip_color})", end='')
             self.print_letter_keybinding(chip_keybind, chip_color)
 
-    def init_main_seat_bet_fields(self, seat_name):
+    def init_main_seat_main_bet_fields(self, seat_name):
         empty_bet = dict.fromkeys(bjo.chip_names, 0)
         self.main_bets[seat_name] = empty_bet
         self.main_bet_amounts[seat_name] = 0
@@ -522,7 +522,7 @@ class Player:
     def get_bets_from_all_one_player_occupied_seats(self, min_bet, max_bet):
         for seat_name, seat_pos in self.occupied_seats.items():
             if (seat_pos != None): # Get each player's bets from up to 3 seats they can occupy
-                self.init_main_seat_bet_fields(seat_name)
+                self.init_main_seat_main_bet_fields(seat_name)
                 print(f"Player '{self.name}' betting at Seat #{seat_pos} (their '{seat_name}')")
                 self.view_betting_interface()
                 self.print_player_chip_pool()

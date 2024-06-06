@@ -554,7 +554,29 @@ class Test_SHUFFLING:
             assert card_occurrence_counts[card] == 8
 
 class Test_BETTING:
+    def test_blackjack_state_machine_transitions_to_DEALING_from_BETTING(self, monkeypatch):
+        # Setup
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        simulated_input_values = ['Alex', '2']
+        iterable_simulated_input_values = iter(simulated_input_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: b's')
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
+        test_machine.step() # executes shuffle_cut_and_burn() in SHUFFLING and transitions to BETTING
+        # Test
+
+        
+        test_machine.step() # executes get_all_players_bets() in BETTING and transitions to DEALING
+        assert test_machine.state == bjfsm.GameState.BETTING
+
+
     def test_empty_bet_handled_appropriately(self, monkeypatch):
+
+
+
+
         # Monkeypatch an input of 'f'
         pass
 

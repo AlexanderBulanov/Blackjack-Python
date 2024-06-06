@@ -92,7 +92,6 @@ class TestPlayerCreation:
         assert test_player.player_has_no_side_bets_in_play()
         assert test_player.player_has_no_cards_in_play()
 
-
 class TestPlayerBetting:
     def test_initial_bet_is_empty(self):
         # Setup
@@ -120,7 +119,7 @@ class TestPlayerBetting:
         table_max = 100
         simulated_char_inputs = [b'2', b'f']
         iterable_simulated_char_inputs = iter(simulated_char_inputs)
-        test_player.init_main_seat_bet_fields('center_seat')
+        test_player.init_main_seat_main_bet_fields('center_seat')
         for i in range(0, len(simulated_char_inputs)):
             monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
             test_player.get_bet_input_character(table_min, table_max, 'center_seat')
@@ -138,7 +137,7 @@ class TestPlayerBetting:
         table_max = 100      
         simulated_char_inputs = [b'1', b'3', b'4', b'5', b'f']
         iterable_simulated_char_inputs = iter(simulated_char_inputs)
-        test_player.init_main_seat_bet_fields('center_seat')
+        test_player.init_main_seat_main_bet_fields('center_seat')
         for i in range(0, len(simulated_char_inputs)):
             monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
             test_player.get_bet_input_character(table_min, table_max, 'center_seat')
@@ -181,7 +180,7 @@ class TestPlayerBetting:
         table_max = 100      
         simulated_char_inputs = [b'1', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'f']
         iterable_simulated_char_inputs = iter(simulated_char_inputs)
-        test_player.init_main_seat_bet_fields('center_seat')
+        test_player.init_main_seat_main_bet_fields('center_seat')
         for i in range(0, len(simulated_char_inputs)):
             monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
             test_player.get_bet_input_character(table_min, table_max, 'center_seat')
@@ -225,7 +224,7 @@ class TestPlayerBetting:
         simulated_char_inputs = [b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9',
                                  b'(', b'*', b'&', b'^', b'%', b'$', b'#', b'@', b'f']
         iterable_simulated_char_inputs = iter(simulated_char_inputs)
-        test_player.init_main_seat_bet_fields('center_seat')
+        test_player.init_main_seat_main_bet_fields('center_seat')
         for i in range(0, len(simulated_char_inputs)):
             monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
             test_player.get_bet_input_character(table_min, table_max, 'center_seat')
@@ -268,7 +267,7 @@ class TestPlayerBetting:
         table_max = 100      
         simulated_char_inputs = [b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'r', b'5', b'5', b'f']
         iterable_simulated_char_inputs = iter(simulated_char_inputs)
-        test_player.init_main_seat_bet_fields('center_seat')
+        test_player.init_main_seat_main_bet_fields('center_seat')
         for i in range(0, len(simulated_char_inputs)):
             monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
             test_player.get_bet_input_character(table_min, table_max, 'center_seat')
@@ -311,7 +310,7 @@ class TestPlayerBetting:
         table_max = 100      
         simulated_char_inputs = [b'3', b'2', b'2', b'f']
         iterable_simulated_char_inputs = iter(simulated_char_inputs)
-        test_player.init_main_seat_bet_fields('center_seat')
+        test_player.init_main_seat_main_bet_fields('center_seat')
         for i in range(0, len(simulated_char_inputs)):
             monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
             test_player.get_bet_input_character(table_min, table_max, 'center_seat')
@@ -332,7 +331,7 @@ class TestPlayerBetting:
         table_max = 100      
         simulated_char_inputs = [b'4', b'5', b'2', b'@', b'f']
         iterable_simulated_char_inputs = iter(simulated_char_inputs)
-        test_player.init_main_seat_bet_fields('center_seat')
+        test_player.init_main_seat_main_bet_fields('center_seat')
         for i in range(0, len(simulated_char_inputs)):
             monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
             test_player.get_bet_input_character(table_min, table_max, 'center_seat')
@@ -353,7 +352,7 @@ class TestPlayerBetting:
         table_max = 100      
         simulated_char_inputs = [b'4', b'5', b'2', b'r', b'5', b'f']
         iterable_simulated_char_inputs = iter(simulated_char_inputs)
-        test_player.init_main_seat_bet_fields('center_seat')
+        test_player.init_main_seat_main_bet_fields('center_seat')
         for i in range(0, len(simulated_char_inputs)):
             monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
             test_player.get_bet_input_character(table_min, table_max, 'center_seat')
