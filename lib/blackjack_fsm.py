@@ -7,6 +7,7 @@ Author: Alexander Bulanov
 import random
 import math
 import msvcrt
+import sys
 #import time
 from enum import Enum
 
@@ -242,48 +243,53 @@ class BlackjackStateMachine:
         self.print_blackjack_table()
         print("Please enter your username and preferred seat out of those available above.")
         start_flag = False
+        table_player_names = []
         remaining_seats = list(self.seated_players.keys())
         while (start_flag != 's'):
             new_player_username = input("Username: ")
             new_player_chosen_seat = None
-            if (len(remaining_seats) == 1):
-                print(f"Only one seat available! Assigning seat {remaining_seats[0]} to player {new_player_username}")
-                new_player_chosen_seat = remaining_seats[0]
-                self.seated_players[new_player_chosen_seat] = bjp.Player.create_new_player_from_template(new_player_username, new_player_chosen_seat)
-                remaining_seats.pop(0) # All seats are now occupied
+            if new_player_username in table_player_names:
+                sys.stderr.write(f"Name '{new_player_username}' has already been chosen by another player. Please enter a different username.\n")
             else:
-                switch_to_next_player_flag = False # Flag to signal termination of while loop
+                table_player_names.append(new_player_username)
+                if (len(remaining_seats) == 1):
+                    print(f"Only one seat available! Assigning seat {remaining_seats[0]} to player '{new_player_username}'")
+                    new_player_chosen_seat = remaining_seats[0]
+                    self.seated_players[new_player_chosen_seat] = bjp.Player.create_new_player_from_template(new_player_username, new_player_chosen_seat)
+                    remaining_seats.pop(0) # All seats are now occupied
+                else:
+                    switch_to_next_player_flag = False # Flag to signal termination of while loop
+                    while (switch_to_next_player_flag == False):
+                        try:
+                            seat_number_input = input("Preferred seat number: ")
+                            new_player_chosen_seat = int(seat_number_input)
+                            if new_player_chosen_seat not in remaining_seats:
+                                print(f"Seat {new_player_chosen_seat} is already occupied by '{self.seated_players[new_player_chosen_seat].name}'. Please choose a different seat.")
+                            else:
+                                self.seated_players[new_player_chosen_seat] = bjp.Player.create_new_player_from_template(new_player_username, new_player_chosen_seat)
+                                remaining_seats.pop(remaining_seats.index(new_player_chosen_seat))
+                                switch_to_next_player_flag = True # Update the flag to get next player's input
+                        except ValueError:
+                            sys.stderr.write(f"Non-integer seat number '{seat_number_input}' provided. Please input an integer between 1 and 7\n")
+                if (len(remaining_seats) > 0):
+                    print("Press 'p' to pass the keyboard to the next player or 's' to start the game with the following currently seated players:")
+                    self.print_blackjack_table()
+                    switch_to_next_player_flag = False # Flag to signal termination of while loop
+                else:
+                    self.print_blackjack_table()
+                    start_flag = 's'
                 while (switch_to_next_player_flag == False):
-                    try:
-                        seat_number_input = input("Preferred seat number: ")
-                        new_player_chosen_seat = int(seat_number_input)
-                        if new_player_chosen_seat not in remaining_seats:
-                            print(f"Seat {new_player_chosen_seat} is already occupied by '{self.seated_players[new_player_chosen_seat].name}'. Please choose a different seat.")
-                        else:
-                            self.seated_players[new_player_chosen_seat] = bjp.Player.create_new_player_from_template(new_player_username, new_player_chosen_seat)
-                            remaining_seats.pop(remaining_seats.index(new_player_chosen_seat))
-                            switch_to_next_player_flag = True # Update the flag to get next player's input
-                    except ValueError:
-                        print(f"Non-integer seat number '{seat_number_input}' provided. Please input an integer between 1 and 7")
-            if (len(remaining_seats) > 0):
-                print("Press 'p' to pass the keyboard to the next player or 's' to start the game with the following currently seated players:")
-                self.print_blackjack_table()
-                switch_to_next_player_flag = False # Flag to signal termination of while loop
-            else:
-                self.print_blackjack_table()
-                start_flag = 's'
-            while (switch_to_next_player_flag == False):
-                key = msvcrt.getch().decode('utf-8') # Get a key (as a byte string) and decode it
-                match key:
-                    case 'p':
-                        switch_to_next_player_flag = True
-                        print("Please enter your username and preferred seat out of those available above.")
-                    case 's':
-                        switch_to_next_player_flag = True
-                        start_flag = 's'
-                    case other:
-                        print(f"Invalid input '{key}'")
-                        print("Press 'p' to pass the keyboard to the next player or 's' to start the game with currently seated players")
+                    key = msvcrt.getch().decode('utf-8') # Get a key (as a byte string) and decode it
+                    match key:
+                        case 'p':
+                            switch_to_next_player_flag = True
+                            print("Please enter your username and preferred seat out of those available above.")
+                        case 's':
+                            switch_to_next_player_flag = True
+                            start_flag = 's'
+                        case other:
+                            sys.stderr.write(f"Invalid input '{key}'\n")
+                            print("Press 'p' to pass the keyboard to the next player or 's' to start the game with currently seated players")
         self.transition(GameState.STARTING)
 
 
