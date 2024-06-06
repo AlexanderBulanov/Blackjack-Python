@@ -6,8 +6,8 @@ Author: Alexander Bulanov
 # Global Imports #
 import random
 import math
-import msvcrt
-import sys
+import msvcrt # used to get single character input from stdin
+import sys # used for writing messages to stderr
 #import time
 from enum import Enum
 
@@ -308,14 +308,6 @@ class BlackjackStateMachine:
             if seated_player != None:
                 if seated_player not in self.known_players:
                     self.known_players.append(seated_player)
-
-            """
-            if given_player == None:
-                continue
-            else:
-                if given_player not in self.known_players:
-                    self.known_players.append(given_player)
-            """
         """
         # DEBUG
         self.dealer.print_player_stats()
@@ -564,8 +556,8 @@ class BlackjackStateMachine:
         self.active_player.action = input("Enter an action: ").strip().lower()
         # Check that active player action is valid
         if self.active_player.action not in self.player_turn_actions:
-            print("Unknown action", repr(self.active_player.action), "from player", self.active_player.name,
-                  "entered, please enter one of the following without quotes:")
+            sys.stderr.write("Unknown action", repr(self.active_player.action), "from player", self.active_player.name,
+                  "entered, please enter one of the following without quotes:\n")
             print(list(self.player_turn_actions.keys()))
         else:
             print("Executing Player "+self.active_player.name+"'s action "+repr(self.active_player.action))
@@ -686,7 +678,7 @@ class BlackjackStateMachine:
             case GameState.ROUND_ENDING:
                 self.round_end_cleanup()
             case other:
-                print("Invalid state!")
+                sys.stderr.write("Invalid state!\n")
                 raise NameError
 
     def run(self):
