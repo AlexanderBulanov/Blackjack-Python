@@ -28,7 +28,7 @@ class Test_WAITING:
         iterable_simulated_input_values = iter(simulated_input_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
         monkeypatch.setattr('msvcrt.getch', lambda: b's')
-        test_machine.step() # run wait_for_players_to_join() and transition to STARTING
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
         assert test_machine.state == bjfsm.GameState.STARTING
 
     def test_first_player_Alex_correctly_assigned_to_seat_2(self, monkeypatch):
@@ -40,7 +40,7 @@ class Test_WAITING:
         iterable_simulated_input_values = iter(simulated_input_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
         monkeypatch.setattr('msvcrt.getch', lambda: b's')
-        test_machine.step() # run wait_for_players_to_join() and transition to STARTING
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
         assert test_machine.seated_players[2].name == 'Alex'
 
     def test_second_player_Jim_tries_to_sit_in_Alex_occupied_seat_2_then_chooses_seat_3_is_seated_correctly(self, monkeypatch):
@@ -54,7 +54,7 @@ class Test_WAITING:
         iterable_simulated_char_values = iter(simulated_char_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
         monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_values))
-        test_machine.step() # run wait_for_players_to_join() and transition to STARTING
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
         assert test_machine.seated_players[2].name == 'Alex'
         assert test_machine.seated_players[3].name == 'Jim'
         assert test_machine.state == bjfsm.GameState.STARTING
@@ -70,7 +70,7 @@ class Test_WAITING:
         iterable_simulated_char_values = iter(simulated_char_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
         monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_values))
-        test_machine.step() # run wait_for_players_to_join() and transition to STARTING
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
         assert test_machine.seated_players[2].name == 'Alex'
         assert test_machine.seated_players[3].name == 'Jim'
         assert test_machine.seated_players[7].name == 'John'
@@ -87,7 +87,7 @@ class Test_WAITING:
         iterable_simulated_char_values = iter(simulated_char_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
         monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_values))
-        test_machine.step() # run wait_for_players_to_join() and transition to STARTING
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
         assert test_machine.seated_players[1].name == 'Mike'
         assert test_machine.seated_players[2].name == 'Alex'
         assert test_machine.seated_players[3].name == 'Jim'
@@ -96,14 +96,6 @@ class Test_WAITING:
         assert test_machine.seated_players[6].name == 'Bob'
         assert test_machine.seated_players[7].name == 'John'
         assert test_machine.state == bjfsm.GameState.STARTING
-
-"""
-        simulated_char_inputs = [b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9',
-                                 b'(', b'*', b'&', b'^', b'%', b'$', b'#', b'@', b'f']
-        iterable_simulated_char_inputs = iter(simulated_char_inputs)
-        for i in range(0, len(simulated_char_inputs)):
-            monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
-"""
 
 class Test_STARTING:
     def test_blackjack_state_machine_transitions_to_SHUFFLING_from_STARTING(self, monkeypatch):
@@ -114,9 +106,9 @@ class Test_STARTING:
         iterable_simulated_input_values = iter(simulated_input_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
         monkeypatch.setattr('msvcrt.getch', lambda: b's')
-        test_machine.step() # run wait_for_players_to_join() and transition to STARTING
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
         # Test
-        test_machine.step() # execute start_game() and transition to SHUFFLING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
         assert test_machine.state == bjfsm.GameState.SHUFFLING
     
     def test_only_joined_player_Alex_in_seat_2_set_to_active_in_STARTING(self, monkeypatch):
@@ -127,9 +119,9 @@ class Test_STARTING:
         iterable_simulated_input_values = iter(simulated_input_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
         monkeypatch.setattr('msvcrt.getch', lambda: b's')
-        test_machine.step() # run wait_for_players_to_join() and transition to STARTING
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
         # Test
-        test_machine.step() # execute start_game() and transition to SHUFFLING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
         assert test_machine.seated_players[2].name == 'Alex'
         assert test_machine.active_player == test_machine.seated_players[2]
 
@@ -143,9 +135,9 @@ class Test_STARTING:
         iterable_simulated_char_values = iter(simulated_char_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
         monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_values))
-        test_machine.step() # run wait_for_players_to_join() and transition to STARTING
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
         # Test
-        test_machine.step() # execute start_game() and transition to SHUFFLING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
         assert test_machine.seated_players[1].name == 'Ahmed'
         assert test_machine.seated_players[2].name == 'Alex'
         assert test_machine.active_player == test_machine.seated_players[1]
@@ -158,9 +150,9 @@ class Test_STARTING:
         iterable_simulated_input_values = iter(simulated_input_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
         monkeypatch.setattr('msvcrt.getch', lambda: b's')
-        test_machine.step() # run wait_for_players_to_join() and transition to STARTING
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING and transitions to STARTING
         # Test
-        test_machine.step() # execute start_game() and transition to SHUFFLING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
         assert test_machine.seated_players[2].name == 'Alex'
         assert len(test_machine.known_players) == 1
         assert test_machine.seated_players[2] in test_machine.known_players
@@ -175,9 +167,9 @@ class Test_STARTING:
         iterable_simulated_char_values = iter(simulated_char_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
         monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_values))
-        test_machine.step() # run wait_for_players_to_join() and transition to STARTING
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
         # Test
-        test_machine.step() # execute start_game() and transition to SHUFFLING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
         assert test_machine.seated_players[1].name == 'Ahmed'
         assert test_machine.seated_players[2].name == 'Alex'
         assert len(test_machine.known_players) == 2
@@ -193,20 +185,25 @@ class Test_STARTING:
         iterable_simulated_input_values = iter(simulated_input_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
         monkeypatch.setattr('msvcrt.getch', lambda: b's')
-        test_machine.step() # run wait_for_players_to_join() and transition to STARTING
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
         # Test
-        test_machine.step() # execute start_game() and transition to SHUFFLING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
         # WRITE TEST TO VERIFY NEW PLAYER OBJECT ISN'T CREATED WHEN PLAYER REJOINS TABLE AFTER LEAVING
         ### Test Code Here ###
     """
 
-
 class Test_SHUFFLING:
-    def test_blackjack_state_machine_transitions_to_BETTING_from_SHUFFLING(self):
+    def test_blackjack_state_machine_transitions_to_BETTING_from_SHUFFLING(self, monkeypatch):
+        # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes start_game() in STARTING
-        test_machine.step() # execute shuffle_cut_and_burn() in SHUFFLING
+        simulated_input_values = ['Alex', '2']
+        iterable_simulated_input_values = iter(simulated_input_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: b's')
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
+        test_machine.step() # executes shuffle_cut_and_burn() in SHUFFLING and transitions to BETTING
         assert test_machine.state == bjfsm.GameState.BETTING
 
     def test_starting_single_deck_shoe_is_shuffle_cut_and_burned_correctly_at_randomly_chosen_pen_in_SHUFFLING(self):
