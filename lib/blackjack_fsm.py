@@ -407,9 +407,10 @@ class BlackjackStateMachine:
                     # Remove player's leftmost hand score
                     player.current_hand_scores.pop(0)
 
-    def reset_dealer_hand(self):
-        self.discard.extend(self.dealer.current_hands.pop(0))
-        self.dealer.current_hand_scores.clear()
+    def reset_dealer_hand_and_hand_score(self):
+        self.discard.extend(self.dealer.hands['center_seat'].pop(0))
+        self.discard.extend(self.dealer.hands['center_seat'].pop(0))
+        self.dealer.hand_scores['center_seat'].clear()
 
     def handle_losing_side_bet_hands(self):
         # Go through losing side bet hands left-to-right and collect bets
@@ -420,7 +421,7 @@ class BlackjackStateMachine:
         pass
 
 
-    def check_for_and_handle_dealer_blackjack(self):
+    def check_for_and_handle_dealer_blackjack_if_present(self):
         dealer_face_up_card = self.dealer.hands['center_seat'][0]
         dealer_face_up_card_value = bjo.cards[dealer_face_up_card[:-1]][0]
         dealer_hole_card = self.dealer.hands['center_seat'][1]
@@ -434,7 +435,7 @@ class BlackjackStateMachine:
                 self.handle_winning_side_bet_hands() # Todo AB: Add functionality to pay out winning side bet hands
                 self.handle_initial_blackjack_hand_pushes()
                 self.handle_losing_primary_bet_hands()
-                self.reset_dealer_hand()
+                self.reset_dealer_hand_and_hand_score()
                 print("ROUND END")
                 self.transition(GameState.BETTING)
             else:
@@ -447,7 +448,7 @@ class BlackjackStateMachine:
                 self.reveal_dealer_hand()
                 self.handle_initial_blackjack_hand_pushes()
                 self.handle_losing_primary_bet_hands()
-                self.reset_dealer_hand()
+                self.reset_dealer_hand_and_hand_score()
                 print("ROUND END")
                 self.transition(GameState.BETTING)
             else:
@@ -458,7 +459,7 @@ class BlackjackStateMachine:
             self.transition(GameState.PLAYER_PLAYING)
 
 
-    def check_for_and_handle_players_blackjacks(self):
+    def check_for_and_handle_players_blackjacks_if_any_present(self):
         if (len(self.current_round_natural_blackjacks.keys()) == 0):
             print("No players have natural Blackjack.")
             self.transition(GameState.PLAYER_PLAYING)
@@ -489,9 +490,12 @@ class BlackjackStateMachine:
             remaining_hands = 0
             for player in self.seated_players.values():
                 if player != None:
-                    remaining_hands += len(player.current_hands)
+                    for seat_name, seat_number in player.occupied_seats.items():
+                        if seat_number != None:
+                            if len(player.hands[seat_name]) == 2:
+                                remaining_hands += 1
             if remaining_hands == 0:
-                self.reset_dealer_hand()
+                self.reset_dealer_hand_and_hand_score()
                 print("ROUND END")
                 self.transition(GameState.BETTING)
             else:
@@ -628,10 +632,8 @@ class BlackjackStateMachine:
                     self.discard.extend(player.current_hands.pop(0))    
                 # Reset all players' scores
                 player.current_hand_scores.clear()
-        # Empty dealer hand by putting it into discard
-        self.discard.extend(self.dealer.current_hands.pop(0))
-        # Reset dealer hand score
-        self.dealer.current_hand_scores.clear()
+        # Reset dealer's hand and hand score
+        self.reset_dealer_hand_and_hand_score()
         # Reshuffle at round end if 'front_cut_card' was reached
         if 'front_cut_card' in self.discard:
             print("SHOE END, reshuffling!")
@@ -653,14 +655,14 @@ class BlackjackStateMachine:
             case GameState.SHUFFLING:
                 self.shuffle_cut_and_burn(None) # Todo AB: pen % is different upon each reshuffle in a single session, need it fixed?
             case GameState.BETTING:
-                self.get_all_players_bets() # Todo AB: update get_all_players_bets() to work with players having multiple seats
+                self.get_all_players_bets() # Todo AB: update get_all_players_bets() to work with players occupying multiple seats
             case GameState.DEALING:
-                self.deal() # Todo AB: Update deal() to work with players having multiple seats
+                self.deal() # Todo AB: Update deal() to work with players occupying multiple seats
             case GameState.INITIAL_SCORING:
                 self.score_all_hands_in_play()
-                self.check_for_and_handle_dealer_blackjack()
+                self.check_for_and_handle_dealer_blackjack_if_present()
                 if (self.dealer.hands['center_seat'] != []): # Todo AB: Check if comparison is w.r.t. [] or None
-                    self.check_for_and_handle_players_blackjacks()
+                    self.check_for_and_handle_players_blackjacks_if_any_present()
             case GameState.PLAYER_PLAYING:
                 self.player_plays()
             case GameState.DEALER_PLAYING:
