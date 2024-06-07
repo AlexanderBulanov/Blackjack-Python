@@ -566,10 +566,12 @@ class Test_BETTING:
         test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
         test_machine.step() # executes shuffle_cut_and_burn() in SHUFFLING and transitions to BETTING
         # Test
-
-        
+        #simulated_char_inputs = [b'1', b'3', b'4', b'5', b'f']
+        simulated_char_inputs = [b'1', b'f'] # provides a bet of 1 White chip
+        iterable_simulated_char_inputs = iter(simulated_char_inputs)
+        monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
         test_machine.step() # executes get_all_players_bets() in BETTING and transitions to DEALING
-        assert test_machine.state == bjfsm.GameState.BETTING
+        assert test_machine.state == bjfsm.GameState.DEALING
 
 
     def test_empty_bet_handled_appropriately(self, monkeypatch):

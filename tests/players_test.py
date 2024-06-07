@@ -110,7 +110,40 @@ class TestPlayerBetting:
             assert getattr(test_player, player_attr)['center_seat'] == None
             assert getattr(test_player, player_attr)['right_seat'] == None
 
-    def test_single_seat_adding_one_Pink_chip_prints_error_message(self, monkeypatch, capfd):
+    def test_single_seat_empty_bet_prints_below_table_minimum_error_message(self, monkeypatch, capfd):
+        # Setup
+        test_username = 'abulanov'
+        test_seat = 1
+        test_player = bjp.Player.create_new_player_from_template(test_username, test_seat)
+        table_min = 1
+        table_max = 100
+        test_player.init_main_seat_main_bet_fields('center_seat')
+        monkeypatch.setattr('msvcrt.getch', lambda: b'f')
+        # Test
+        test_player.get_bet_input_character(table_min, table_max, 'center_seat')
+        captured_stream = capfd.readouterr()
+        expected_output = f"abulanov's $0 bet is below table minimum, please submit a bet between inclusive bounds of ${table_min} and ${table_max}\n"
+        assert captured_stream.err == expected_output
+
+    def test_single_seat_100_usd_bet_limit_table_101_usd_bet_prints_above_table_maximum_error_message(self, monkeypatch, capfd):
+        # Setup
+        test_username = 'abulanov'
+        test_seat = 1
+        test_player = bjp.Player.create_new_player_from_template(test_username, test_seat)
+        table_min = 1
+        table_max = 100
+        simulated_char_inputs = [b'1', b'5', b'5', b'5', b'5', b'f']
+        iterable_simulated_char_inputs = iter(simulated_char_inputs)
+        test_player.init_main_seat_main_bet_fields('center_seat')
+        # Test
+        for i in range(0, len(simulated_char_inputs)):
+            monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
+            test_player.get_bet_input_character(table_min, table_max, 'center_seat')
+        captured_stream = capfd.readouterr()
+        expected_output = f"abulanov's $101 bet is above table maximum, please submit a bet between inclusive bounds of ${table_min} and ${table_max}\n"
+        assert captured_stream.err == expected_output
+
+    def test_single_seat_adding_one_Pink_chip_prints_fractional_bet_error_message(self, monkeypatch, capfd):
         # Setup
         test_username = 'abulanov'
         test_seat = 1
@@ -120,10 +153,10 @@ class TestPlayerBetting:
         simulated_char_inputs = [b'2', b'f']
         iterable_simulated_char_inputs = iter(simulated_char_inputs)
         test_player.init_main_seat_main_bet_fields('center_seat')
+        # Test
         for i in range(0, len(simulated_char_inputs)):
             monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
             test_player.get_bet_input_character(table_min, table_max, 'center_seat')
-        # Test
         captured_stream = capfd.readouterr()
         expected_output = "Invalid (fractional) bet amount of $2.5 - please resubmit a bet /w an even number of Pink chips!\n"
         assert captured_stream.err == expected_output
