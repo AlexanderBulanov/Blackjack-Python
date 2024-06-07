@@ -197,17 +197,6 @@ class BlackjackStateMachine:
                         pass
         print("*  *  *  *  *")
 
-        for player in self.seated_players.values():
-                if (player != None):
-                    for seat_name, seat_number in player.occupied_seats.items():
-                        if (seat_number != None):
-                            self.handle_front_cut_card() # Slide 'front_cut_card' to discard if encountered mid-shoe
-                            if (player.hands[seat_name] == None):
-                                player.hands[seat_name] = []
-                            player.hands[seat_name].extend([self.shoe.pop(0)])
-
-
-
 
     def print_all_players_with_natural_blackjack_hands(self):
         for player in self.current_round_natural_blackjacks.keys():
@@ -527,13 +516,17 @@ class BlackjackStateMachine:
                             self.handle_front_cut_card() # Slide 'front_cut_card' to discard if encountered mid-shoe
                             if (player.hands[seat_name] == None):
                                 player.hands[seat_name] = []
-                            player.hands[seat_name].extend([self.shoe.pop(0)])
+                            player.hands[seat_name].append(self.shoe.pop(0))
+
+        # LOGIC ABOVE WORKS BUT DOESN'T MIMIC HOW EACH PLAYER IS DEALT 1 CARD THEN DEALER, THEN REPEAT PROCESS
+
+
             # Deal a card from shoe to dealer
             self.handle_front_cut_card() # Slide 'front_cut_card' to discard if encountered mid-shoe
             dealer_seat_name = 'center_seat'
             if (self.dealer.hands[dealer_seat_name] == None):
                 self.dealer.hands[dealer_seat_name] = []
-            self.dealer.hands[dealer_seat_name].extend([self.shoe.pop(0)])
+            self.dealer.hands[dealer_seat_name].append(self.shoe.pop(0))
         # Print debug info on players hands and % of shoe dealt
         """
         # DEBUG

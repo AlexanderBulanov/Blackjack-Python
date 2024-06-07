@@ -567,7 +567,7 @@ class Test_BETTING:
         test_machine.step() # executes shuffle_cut_and_burn() in SHUFFLING and transitions to BETTING
         # Test
         #simulated_char_inputs = [b'1', b'3', b'4', b'5', b'f']
-        simulated_char_inputs = [b'1', b'f'] # provides a bet of 1 White chip
+        simulated_char_inputs = [b'1', b'f'] # player Alex in seat 2 makes a bet of 1 White chip
         iterable_simulated_char_inputs = iter(simulated_char_inputs)
         monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
         test_machine.step() # executes get_all_players_bets() in BETTING and transitions to DEALING
@@ -649,23 +649,45 @@ class Test_BETTING:
         assert player_Kim.chips['Blue'] == 13
 
 class Test_DEALING:
-    def test_blackjack_state_machine_transitions_to_INITIAL_SCORING_from_DEALING(self):
+    def test_blackjack_state_machine_transitions_to_INITIAL_SCORING_from_DEALING(self, monkeypatch):
+        # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes start_game() in STARTING
-        test_machine.step() # execute shuffle_cut_and_burn() in SHUFFLING
-        test_machine.step() # Todo AB: handle BETTING state properly instead of just skipping over it
+        simulated_input_values = ['Alex', '2']
+        iterable_simulated_input_values = iter(simulated_input_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: b's')
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
+        test_machine.step() # executes shuffle_cut_and_burn() in SHUFFLING and transitions to BETTING
+        simulated_char_inputs = [b'1', b'f'] # player Alex in seat 2 makes a bet of 1 White chip
+        iterable_simulated_char_inputs = iter(simulated_char_inputs)
+        monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
+        test_machine.step() # executes get_all_players_bets() in BETTING and transitions to DEALING
+        # Test
         test_machine.step() # executes deal() in DEALING
         assert test_machine.state == bjfsm.GameState.INITIAL_SCORING
 
-    def test_first_player_has_one_hand_dealt_in_DEALING(self):
+
+    def test_first_player_has_one_hand_dealt_in_DEALING(self, monkeypatch):
+        # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes start_game() in STARTING
-        test_machine.step() # executes shuffle_cut_and_burn(None) in SHUFFLING
-        test_machine.step() # Todo AB: handle BETTING state properly instead of just skipping over it
+        simulated_input_values = ['Alex', '2']
+        iterable_simulated_input_values = iter(simulated_input_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: b's')
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
+        test_machine.step() # executes shuffle_cut_and_burn() in SHUFFLING and transitions to BETTING
+        simulated_char_inputs = [b'1', b'f'] # player Alex in seat 2 makes a bet of 1 White chip
+        iterable_simulated_char_inputs = iter(simulated_char_inputs)
+        monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
+        test_machine.step() # executes get_all_players_bets() in BETTING and transitions to DEALING
+        # Test
         test_machine.step() # executes deal() in DEALING
-        assert len(test_machine.joined_players[2].current_hands) == 1 # BlackjackStateMachine currently manually sets up 1 player at table seat 2
+        playerAlex = test_machine.seated_players[2]
+        assert len(playerAlex.hands['center_seat']) == 2
 
     def test_dealer_has_one_hand_dealt_in_DEALING(self):
         num_of_decks = 1
