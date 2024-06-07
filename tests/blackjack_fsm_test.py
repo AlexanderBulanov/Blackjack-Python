@@ -573,19 +573,81 @@ class Test_BETTING:
         test_machine.step() # executes get_all_players_bets() in BETTING and transitions to DEALING
         assert test_machine.state == bjfsm.GameState.DEALING
 
-    def test_single_player_betting_two_pink_chips_continues_to_DEALING(self):
-        pass
+    def test_bet_of_5_by_player_Alex_in_seat_2_handled_correctly(self, monkeypatch):
+        # Setup
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        simulated_player_init_input_values = ['Alex', '2']
+        iterable_simulated_player_init_input_values = iter(simulated_player_init_input_values)
+        simulated_player_init_char_values = [b's']
+        iterable_simulated_player_init_char_values = iter(simulated_player_init_char_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_player_init_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_player_init_char_values))
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
+        test_machine.step() # executes shuffle_cut_and_burn() in SHUFFLING and transitions to BETTING
+        # Test
+        simulated_player_bet_char_inputs = [b'1']*50 + [b'f']
+        iterable_simulated_player_bet_char_inputs = iter(simulated_player_bet_char_inputs)
+        monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_player_bet_char_inputs))
+        test_machine.step() # executes get_all_players_bets() in BETTING and transitions to DEALING
+        player_Alex = test_machine.seated_players[2]
+        assert player_Alex.chip_pool_balance == 500-50
+        assert player_Alex.chips['White'] == 0
 
-    def test_betting_fifty_one_white_chips_out_of_fifty_in_chip_pool_makes_for_a_fifty_dollar_bet(self, monkeypatch):
-        pass
+    def test_bets_of_5_and_10_in_Reds_by_players_Ahmed_and_Alex_in_seats_1_and_2_handled_correctly(self, monkeypatch):
+        # Setup
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        simulated_player_init_input_values = ['Alex', '2', 'Ahmed', '1']
+        iterable_simulated_player_init_input_values = iter(simulated_player_init_input_values)
+        simulated_player_init_char_values = [b'p', b's']
+        iterable_simulated_player_init_char_values = iter(simulated_player_init_char_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_player_init_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_player_init_char_values))
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
+        test_machine.step() # executes shuffle_cut_and_burn() in SHUFFLING and transitions to BETTING
+        # Test
+        simulated_player_bet_char_inputs = [b'3', b'f', b'3', b'3', b'f']
+        iterable_simulated_player_bet_char_inputs = iter(simulated_player_bet_char_inputs)
+        monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_player_bet_char_inputs))
+        test_machine.step() # executes get_all_players_bets() in BETTING and transitions to DEALING
+        player_Ahmed = test_machine.seated_players[1]
+        player_Alex = test_machine.seated_players[2]
+        assert player_Ahmed.chip_pool_balance == 500-5
+        assert player_Alex.chip_pool_balance == 500-10
+        assert player_Ahmed.chips['Red'] == 19
+        assert player_Alex.chips['Red'] == 18
 
-    def test_chip_pool_balance_plus_main_bet_amount_adds_to_five_hundred_for_template_player_after_BETTING(self, monkeypatch):
-        pass
+    def test_bets_of_10_30_20_in_Blues_by_players_Ahmed_Alex_Kim_in_seats_1_2_7_handled_correctly(self, monkeypatch):
+        # Setup
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        simulated_player_init_input_values = ['Alex', '2', 'Ahmed', '1', 'Kim', '7']
+        iterable_simulated_player_init_input_values = iter(simulated_player_init_input_values)
+        simulated_player_init_char_values = [b'p', b'p', b's']
+        iterable_simulated_player_init_char_values = iter(simulated_player_init_char_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_player_init_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_player_init_char_values))
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
+        test_machine.step() # executes shuffle_cut_and_burn() in SHUFFLING and transitions to BETTING
+        # Test
+        simulated_player_bet_char_inputs = [b'4']*1 + [b'f'] + [b'4']*3 + [b'f'] + [b'4']*2 + [b'f']
+        iterable_simulated_player_bet_char_inputs = iter(simulated_player_bet_char_inputs)
+        monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_player_bet_char_inputs))
+        test_machine.step() # executes get_all_players_bets() in BETTING and transitions to DEALING
+        player_Ahmed = test_machine.seated_players[1]
+        player_Alex = test_machine.seated_players[2]
+        player_Kim = test_machine.seated_players[7]
+        assert player_Ahmed.chip_pool_balance == 500-10
+        assert player_Alex.chip_pool_balance == 500-30
+        assert player_Kim.chip_pool_balance == 500-20
+        assert player_Ahmed.chips['Blue'] == 14
+        assert player_Alex.chips['Blue'] == 12
+        assert player_Kim.chips['Blue'] == 13
 
-    def test_one_of_each_chip_placed_by_player_stored_correctly_at_table_seat(self, monkeypatch):
-        pass
-
-    
 class Test_DEALING:
     def test_blackjack_state_machine_transitions_to_INITIAL_SCORING_from_DEALING(self):
         num_of_decks = 1
