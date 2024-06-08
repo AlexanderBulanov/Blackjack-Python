@@ -518,10 +518,6 @@ class BlackjackStateMachine:
                             if (player.hands[seat_name] == None):
                                 player.hands[seat_name] = []
                             player.hands[seat_name].append(self.shoe.pop(0))
-
-        # LOGIC ABOVE WORKS BUT DOESN'T MIMIC HOW EACH PLAYER IS DEALT 1 CARD THEN DEALER, THEN REPEAT PROCESS
-
-
             # Deal a card from shoe to dealer
             self.handle_front_cut_card() # Slide 'front_cut_card' to discard if encountered mid-shoe
             if (self.dealer.hands['center_seat'] == None):
