@@ -28,8 +28,7 @@ class GameState(Enum):
     INITIAL_SCORING = 5
     PLAYER_PLAYING = 6
     DEALER_PLAYING = 7
-    RESCORING = 8
-    ROUND_ENDING = 9
+    FINAL_SCORING = 8
 
 
 class BlackjackStateMachine:
@@ -421,7 +420,7 @@ class BlackjackStateMachine:
         pass
 
 
-    def check_for_and_handle_dealer_blackjack_if_present(self):
+    def check_for_and_handle_initial_dealer_blackjack_if_present(self):
         dealer_face_up_card = self.dealer.hands['center_seat'][0]
         dealer_face_up_card_value = bjo.cards[dealer_face_up_card[:-1]][0]
         dealer_hole_card = self.dealer.hands['center_seat'][1]
@@ -459,7 +458,7 @@ class BlackjackStateMachine:
             #self.transition(GameState.PLAYER_PLAYING)
 
 
-    def check_for_and_handle_players_blackjacks_if_any_present(self):
+    def check_for_and_handle_initial_players_blackjacks_if_any_present(self):
         if (len(self.current_round_natural_blackjacks.keys()) == 0):
             print("No players have natural Blackjack.")
             self.transition(GameState.PLAYER_PLAYING)
@@ -617,6 +616,14 @@ class BlackjackStateMachine:
             sys.stderr.write("[ERROR] Seventeen rule syntax not recognized\n")
 
 
+    def check_for_and_handle_final_dealer_blackjack_if_present():
+        pass
+
+
+    def check_for_and_handle_final_players_blackjacks_if_any_present():
+        pass
+
+
     def round_end_cleanup(self):
         print("Paying all players who beat the dealer")
         print("Pushing against all players who match the dealer")
@@ -660,15 +667,17 @@ class BlackjackStateMachine:
                 self.deal() # Todo AB: Update deal() to work with players occupying multiple seats
             case GameState.INITIAL_SCORING:
                 self.score_all_hands_in_play()
-                self.check_for_and_handle_dealer_blackjack_if_present()
+                self.check_for_and_handle_initial_dealer_blackjack_if_present()
                 if (self.dealer.hands['center_seat'] != []): # Todo AB: Check if comparison is w.r.t. [] or None
-                    self.check_for_and_handle_players_blackjacks_if_any_present()
+                    self.check_for_and_handle_initial_players_blackjacks_if_any_present()
             case GameState.PLAYER_PLAYING:
                 self.player_plays()
             case GameState.DEALER_PLAYING:
                 self.dealer_plays()
-            case GameState.ROUND_ENDING:
-                self.round_end_cleanup()
+            case GameState.FINAL_SCORING:
+                self.check_for_and_handle_final_dealer_blackjack_if_present()
+                if (self.dealer.hands['center_seat'] != []): # Todo AB: Check if comparison is w.r.t. [] or None
+                    self.check_for_and_handle_final_players_blackjacks_if_any_present()
             case other:
                 sys.stderr.write("Invalid state!\n")
                 raise NameError
