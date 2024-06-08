@@ -927,7 +927,7 @@ class Test_INITIAL_SCORING_State_Transitions:
         test_machine.step() # executes deal() in DEALING and transitions to INITIAL_SCORING
         assert test_machine.state == bjfsm.GameState.INITIAL_SCORING
 
-class Test_INITIAL_SCORING_Hand_Scoring:
+class Test_INITIAL_SCORING_No_Dealer_Blackjack:
     def test_player_Alex_hand_KD_QH_dealer_hand_JH_9C_scored_correctly(self, monkeypatch):
         ## Setup ##
         num_of_decks = 1
@@ -1052,6 +1052,25 @@ class Test_INITIAL_SCORING_Hand_Scoring:
         assert playerDealer.hand_scores['left_seat'] == None
         assert playerDealer.hand_scores['right_seat'] == None
         assert playerDealer.hand_scores['center_seat'] == 19
+
+class Test_INITIAL_SCORING_Dealer_Blackjack:
+    def test_one_player_table_both_dealer_and_player_blackjack_results_in_push(self, monkeypatch):
+        pass
+
+    def test_one_player_table_only_dealer_has_blackjack_player_loss_handled_correctly(self, monkeypatch):
+        pass
+
+    def test_one_player_table_only_player_has_blackjack_player_win_handled_correctly(self, monkeypatch):
+        pass
+
+    def test_two_player_table_dealer_and_two_players_all_have_blackjack_results_in_pushes(self, monkeypatch):
+        pass
+
+    def test_two_player_table_dealer_and_one_player_blackjack_another_player_loss_handled_correctly(self, monkeypatch):
+        pass
+
+    def test_at_two_player_table_only_dealer_has_blackjack(self, monkeypatch):
+        pass
 
 
 class Test_INITIAL_SCORING_Tracking_Natural_Blackjacks:

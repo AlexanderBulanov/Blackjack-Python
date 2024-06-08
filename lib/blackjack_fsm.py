@@ -441,7 +441,7 @@ class BlackjackStateMachine:
             else:
                 print("Dealer checks hole card - not a ten, doesn't have Blackjack.")
                 self.handle_losing_side_bet_hands() # Todo AB: Add functionality to collect losing side bet hands
-                self.transition(GameState.PLAYER_PLAYING)
+                #self.transition(GameState.PLAYER_PLAYING)
         elif (dealer_face_up_card_value == 10):
             print("Dealer's face-up card is a ten!")
             if (dealer_hole_card in ['AH', 'AC', 'AD', 'AS']):
@@ -453,10 +453,10 @@ class BlackjackStateMachine:
                 self.transition(GameState.BETTING)
             else:
                 print("Dealer checks hole card - not an Ace, doesn't have Blackjack.")
-                self.transition(GameState.PLAYER_PLAYING)
+                #self.transition(GameState.PLAYER_PLAYING)
         else:
             print("Dealer can't have Blackjack.")
-            self.transition(GameState.PLAYER_PLAYING)
+            #self.transition(GameState.PLAYER_PLAYING)
 
 
     def check_for_and_handle_players_blackjacks_if_any_present(self):
