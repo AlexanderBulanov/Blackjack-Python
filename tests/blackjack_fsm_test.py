@@ -553,7 +553,8 @@ class Test_SHUFFLING:
             #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
             assert card_occurrence_counts[card] == 8
 
-class Test_BETTING:
+
+class Test_BETTING_One_Hand_per_Player:
     def test_blackjack_state_machine_transitions_to_DEALING_from_BETTING(self, monkeypatch):
         # Setup
         num_of_decks = 1
@@ -573,7 +574,7 @@ class Test_BETTING:
         test_machine.step() # executes get_all_players_bets() in BETTING and transitions to DEALING
         assert test_machine.state == bjfsm.GameState.DEALING
 
-    def test_bet_of_5_by_player_Alex_in_seat_2_handled_correctly(self, monkeypatch):
+    def test_one_hand_bet_of_5_by_player_Alex_in_seat_2_handled_correctly(self, monkeypatch):
         # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
@@ -595,7 +596,7 @@ class Test_BETTING:
         assert player_Alex.chip_pool_balance == 500-50
         assert player_Alex.chips['White'] == 0
 
-    def test_bets_of_5_and_10_in_Reds_by_players_Ahmed_and_Alex_in_seats_1_and_2_handled_correctly(self, monkeypatch):
+    def test_one_hand_bets_of_5_and_10_in_Reds_by_players_Ahmed_and_Alex_in_seats_1_and_2_handled_correctly(self, monkeypatch):
         # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
@@ -620,7 +621,7 @@ class Test_BETTING:
         assert player_Ahmed.chips['Red'] == 19
         assert player_Alex.chips['Red'] == 18
 
-    def test_bets_of_10_30_20_in_Blues_by_players_Ahmed_Alex_Kim_in_seats_1_2_7_handled_correctly(self, monkeypatch):
+    def test_one_hand_bets_of_10_30_20_in_Blues_by_players_Ahmed_Alex_Kim_in_seats_1_2_7_handled_correctly(self, monkeypatch):
         # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
@@ -648,7 +649,12 @@ class Test_BETTING:
         assert player_Alex.chips['Blue'] == 12
         assert player_Kim.chips['Blue'] == 13
 
-class Test_DEALING:
+class Test_BETTING_Multiple_Hands_per_Player:
+    def test_two_hand_bet_of_5_and_10_in_Reds_by_player_Alex_in_seats_2_and_3_handled_correctly(self, monkeypatch):
+        pass
+
+
+class Test_DEALING_One_Hand_per_Player:
     def test_blackjack_state_machine_transitions_to_INITIAL_SCORING_from_DEALING(self, monkeypatch):
         # Setup
         num_of_decks = 1
@@ -691,7 +697,7 @@ class Test_DEALING:
         assert playerAlex.hands['center_seat'][0] in bjo.base_deck
         assert playerAlex.hands['center_seat'][1] in bjo.base_deck
 
-    def test_hands_dealt_correctly_to_players_Ahmed_and_Alex_in_seats_1_and_2(self, monkeypatch):
+    def test_single_hands_dealt_correctly_to_players_Ahmed_and_Alex_in_seats_1_and_2(self, monkeypatch):
         # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
@@ -719,7 +725,7 @@ class Test_DEALING:
         assert playerAlex.hands['center_seat'][0] in bjo.base_deck
         assert playerAlex.hands['center_seat'][1] in bjo.base_deck
 
-    def test_dealers_hand_dealt_correctly_with_one_player_Alex_at_the_table(self, monkeypatch):
+    def test_dealers_hand_dealt_correctly_with_one_player_Alex_one_hand_at_the_table(self, monkeypatch):
         # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
@@ -743,7 +749,7 @@ class Test_DEALING:
         assert playerDealer.hands['center_seat'][0] in bjo.base_deck
         assert playerDealer.hands['center_seat'][1] in bjo.base_deck
 
-    def test_dealers_hand_dealt_correctly_with_two_players_Ahmed_Alex_at_the_table(self, monkeypatch):
+    def test_dealers_hand_dealt_correctly_with_two_players_Ahmed_Alex_single_hands_at_the_table(self, monkeypatch):
         # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
@@ -769,7 +775,7 @@ class Test_DEALING:
         assert playerDealer.hands['center_seat'][0] in bjo.base_deck
         assert playerDealer.hands['center_seat'][1] in bjo.base_deck
 
-    def test_one_deck_shoe_has_49_cards_left_after_one_player_and_dealer_are_dealt_hands(self, monkeypatch):
+    def test_one_deck_shoe_has_49_cards_left_after_one_player_and_dealer_are_dealt_one_hand_each(self, monkeypatch):
         # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
@@ -788,7 +794,7 @@ class Test_DEALING:
         test_machine.step() # executes deal() in DEALING and transitions to INITIAL_SCORING
         assert len(test_machine.shoe) == 49
 
-    def test_one_deck_shoe_has_47_cards_left_after_two_players_and_dealer_are_dealt_hands(self, monkeypatch):
+    def test_one_deck_shoe_has_47_cards_left_after_two_players_and_dealer_are_dealt_one_hand_each(self, monkeypatch):
         # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
@@ -809,7 +815,7 @@ class Test_DEALING:
         test_machine.step() # executes deal() in DEALING and transitions to INITIAL_SCORING
         assert len(test_machine.shoe) == 47
 
-    def test_eight_deck_shoe_has_413_cards_left_after_one_player_and_dealer_are_dealt_hands(self, monkeypatch):
+    def test_eight_deck_shoe_has_413_cards_left_after_one_player_and_dealer_are_dealt_one_hand_each(self, monkeypatch):
         # Setup
         num_of_decks = 8
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
@@ -828,7 +834,7 @@ class Test_DEALING:
         test_machine.step() # executes deal() in DEALING and transitions to INITIAL_SCORING
         assert len(test_machine.shoe) == 413
 
-    def test_eight_deck_shoe_has_411_cards_left_after_two_players_and_dealer_are_dealt_hands(self, monkeypatch):
+    def test_eight_deck_shoe_has_411_cards_left_after_two_players_and_dealer_are_dealt_one_hand_each(self, monkeypatch):
         # Setup
         num_of_decks = 8
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
@@ -849,8 +855,17 @@ class Test_DEALING:
         test_machine.step() # executes deal() in DEALING and transitions to INITIAL_SCORING
         assert len(test_machine.shoe) == 411
 
+class Test_DEALING_Multiple_Hands_per_Player:
+    def test_player_Alex_in_seats_2_and_3_is_dealt_two_hands_correctly(self, monkeypatch):
+        pass
 
-class Test_INITIAL_SCORING_One_Player_Table_Score_Results:
+    def test_one_hand_dealt_to_Ahmed_in_seat_1_and_two_hands_dealt_to_Alex_in_seats_2_and_3_correctly(self, monkeypatch):
+        pass
+
+
+
+
+class Test_INITIAL_SCORING_One_Hand_per_Player_Score_Results:
     def test_one_player_table_nobody_has_blackjack_case_scored_correctly(self, monkeypatch):
         ## Setup ##
         num_of_decks = 1
@@ -896,7 +911,7 @@ class Test_INITIAL_SCORING_One_Player_Table_Score_Results:
         playerDealer.hands['center_seat'] = manual_dealer_hand
         test_machine.transition(bjfsm.GameState.INITIAL_SCORING) # manually transition to INITIAL_SCORING
         ## Test ##
-        test_machine.step() # executes score_all_hands_in_play() and other methods in INITIAL_SCORING
+        test_machine.score_all_hands_in_play() # executes just scoring out of the three methods in INITIAL_SCORING
         assert playerAlex.hand_scores['left_seat'] == None
         assert playerAlex.hand_scores['right_seat'] == None
         assert playerAlex.hand_scores['center_seat'] == 20
@@ -949,7 +964,7 @@ class Test_INITIAL_SCORING_One_Player_Table_Score_Results:
         playerDealer.hands['center_seat'] = manual_dealer_hand
         test_machine.transition(bjfsm.GameState.INITIAL_SCORING) # manually transition to INITIAL_SCORING
         ## Test ##
-        test_machine.step() # executes score_all_hands_in_play() and other methods in INITIAL_SCORING
+        test_machine.score_all_hands_in_play() # executes just scoring out of the three methods in INITIAL_SCORING
         assert playerAlex.hand_scores['left_seat'] == None
         assert playerAlex.hand_scores['right_seat'] == None
         assert playerAlex.hand_scores['center_seat'] == 20
@@ -957,7 +972,7 @@ class Test_INITIAL_SCORING_One_Player_Table_Score_Results:
         assert playerDealer.hand_scores['right_seat'] == None
         assert playerDealer.hand_scores['center_seat'] == 21
 
-    def test_one_player_table_only_player_blackjack_case_scored_correctly(self, monkeypatch):
+    def test_one_player_table_only_player_has_blackjack_case_scored_correctly(self, monkeypatch):
         ## Setup ##
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
@@ -1063,8 +1078,6 @@ class Test_INITIAL_SCORING_One_Player_Table_Score_Results:
         assert playerDealer.hand_scores['right_seat'] == None
         assert playerDealer.hand_scores['center_seat'] == 21
 
-
-class Test_INITIAL_SCORING_Two_Player_Table_Score_Results:
     def test_two_player_table_nobody_has_blackjack_case_scored_correctly(self, monkeypatch):
         ## Setup ##
         num_of_decks = 1
@@ -1152,17 +1165,13 @@ class Test_INITIAL_SCORING_Two_Player_Table_Score_Results:
     def test_two_player_table_both_players_have_blackjack_dealer_has_blackjack_case_scored_correctly(self, monkeypatch):
         pass
 
-
-class Test_INITIAL_SCORING_One_Player_Table_Bet_Results:
+class Test_INITIAL_SCORING_Multiple_Hands_per_Player_Score_Results:
     pass
 
 
-class Test_INITIAL_SCORING_Two_Player_Table_Bet_Results:
-    pass
 
-
-class Test_INITIAL_SCORING_One_Player_Table_Transitions:
-    def test_one_player_table_no_blackjacks_has_state_machine_transition_to_PLAYER_PLAYING(self, monkeypatch):
+class Test_INITIAL_SCORING_One_Hand_per_Player_Tracking_Natural_Blackjacks:
+    def test_one_player_table_only_player_has_one_blackjack_hand_tracked_correctly(self, monkeypatch):
         ## Setup ##
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
@@ -1177,8 +1186,8 @@ class Test_INITIAL_SCORING_One_Player_Table_Transitions:
         iterable_simulated_char_inputs = iter(simulated_char_inputs)
         monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
         test_machine.step() # executes get_all_players_bets() in BETTING and transitions to DEALING
-        # Manually deal a hand of ['KD', 'QH'] to player Alex in seat 2
-        manual_player_hand = ['KD', 'QH']
+        # Manually deal a hand of ['KD', 'AH'] to player Alex in seat 2
+        manual_player_hand = ['KD', 'AH']
         if manual_player_hand[0] in test_machine.discard:
             test_machine.discard.pop()
             test_machine.discard.extend(test_machine.shoe.pop(0))
@@ -1207,12 +1216,13 @@ class Test_INITIAL_SCORING_One_Player_Table_Transitions:
         playerDealer.hands['center_seat'] = manual_dealer_hand
         test_machine.transition(bjfsm.GameState.INITIAL_SCORING) # manually transition to INITIAL_SCORING
         ## Test ##
-        test_machine.step() # executes score_all_hands_in_play() and other methods in INITIAL_SCORING
-        assert test_machine.state == bjfsm.GameState.PLAYER_PLAYING
+        test_machine.score_all_hands_in_play() # executes just scoring out of the three methods in INITIAL_SCORING
+        #print(test_machine.current_round_natural_blackjacks.keys())
+        #print(test_machine.current_round_natural_blackjacks.values())
+        assert len(test_machine.current_round_natural_blackjacks[playerAlex]) == 1
+        assert manual_player_hand in test_machine.current_round_natural_blackjacks[playerAlex]
 
-
-class Test_INITIAL_SCORING_Two_Player_Table_Transitions:
-    def test_two_player_table_no_blackjacks_has_state_machine_transition_to_PLAYER_PLAYING(self, monkeypatch):
+    def test_two_player_table_each_player_has_one_blackjack_hand_tracked_correctly(self, monkeypatch):
         ## Setup ##
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
@@ -1225,38 +1235,38 @@ class Test_INITIAL_SCORING_Two_Player_Table_Transitions:
         test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
         test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
         test_machine.step() # executes shuffle_cut_and_burn() in SHUFFLING and transitions to BETTING
-        simulated_char_inputs = [b'1', b'f', b'1', b'f'] # Players Ahmed and Alex both make bets of 1 White chip
-        iterable_simulated_char_inputs = iter(simulated_char_inputs)
-        monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
+        simulated_player_bet_char_inputs = [b'1', b'f', b'1', b'f'] # players Alex and Ahmed bet 1 White chip each
+        iterable_simulated_player_bet_char_inputs = iter(simulated_player_bet_char_inputs)
+        monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_player_bet_char_inputs))
         test_machine.step() # executes get_all_players_bets() in BETTING and transitions to DEALING
-        # Manually deal a hand of ['4S', '10S'] to player Ahmed in seat 1
-        manual_player_hand_one = ['4S', '10S']
-        if manual_player_hand_one[0] in test_machine.discard:
+        # Manually deal a hand of ['KD', 'AH'] to player Ahmed in seat 1
+        first_player_hand = ['KC', 'AS']
+        if first_player_hand[0] in test_machine.discard:
             test_machine.discard.pop()
             test_machine.discard.extend(test_machine.shoe.pop(0))
         else:
-            test_machine.shoe.pop(test_machine.shoe.index(manual_player_hand_one[0]))
-        if manual_player_hand_one[1] in test_machine.discard:
+            test_machine.shoe.pop(test_machine.shoe.index(first_player_hand[0]))
+        if first_player_hand[1] in test_machine.discard:
             test_machine.discard.pop()
             test_machine.discard.extend(test_machine.shoe.pop(0))
         else:
-            test_machine.shoe.pop(test_machine.shoe.index(manual_player_hand_one[1]))
+            test_machine.shoe.pop(test_machine.shoe.index(first_player_hand[1]))
         playerAhmed = test_machine.seated_players[1]
-        playerAhmed.hands['center_seat'] = manual_player_hand_one
-        # Manually deal a hand of ['KD', 'QH'] to player Alex in seat 2
-        manual_player_hand_two = ['KD', 'QH']
-        if manual_player_hand_two[0] in test_machine.discard:
+        playerAhmed.hands['center_seat'] = first_player_hand
+        # Manually deal a hand of ['KD', 'AH'] to player Alex in seat 2
+        second_player_hand = ['KD', 'AH']
+        if second_player_hand[0] in test_machine.discard:
             test_machine.discard.pop()
             test_machine.discard.extend(test_machine.shoe.pop(0))
         else:
-            test_machine.shoe.pop(test_machine.shoe.index(manual_player_hand_two[0]))
-        if manual_player_hand_two[1] in test_machine.discard:
+            test_machine.shoe.pop(test_machine.shoe.index(second_player_hand[0]))
+        if second_player_hand[1] in test_machine.discard:
             test_machine.discard.pop()
             test_machine.discard.extend(test_machine.shoe.pop(0))
         else:
-            test_machine.shoe.pop(test_machine.shoe.index(manual_player_hand_two[1]))
+            test_machine.shoe.pop(test_machine.shoe.index(second_player_hand[1]))
         playerAlex = test_machine.seated_players[2]
-        playerAlex.hands['center_seat'] = manual_player_hand_two
+        playerAlex.hands['center_seat'] = second_player_hand
         # Manually deal a hand of ['JH', '9C'] to dealer
         manual_dealer_hand = ['JH', '9C']
         if manual_dealer_hand[0] in test_machine.discard:
@@ -1273,37 +1283,38 @@ class Test_INITIAL_SCORING_Two_Player_Table_Transitions:
         playerDealer.hands['center_seat'] = manual_dealer_hand
         test_machine.transition(bjfsm.GameState.INITIAL_SCORING) # manually transition to INITIAL_SCORING
         ## Test ##
-        test_machine.step() # executes score_all_hands_in_play() and other methods in INITIAL_SCORING
-        assert test_machine.state == bjfsm.GameState.PLAYER_PLAYING
+        test_machine.score_all_hands_in_play() # executes just scoring out of the three methods in INITIAL_SCORING
+        #print(test_machine.current_round_natural_blackjacks.keys())
+        #print(test_machine.current_round_natural_blackjacks.values())
+        assert len(test_machine.current_round_natural_blackjacks.keys()) == 2
+        assert len(test_machine.current_round_natural_blackjacks[playerAhmed]) == 1
+        assert first_player_hand in test_machine.current_round_natural_blackjacks[playerAhmed]
+        assert len(test_machine.current_round_natural_blackjacks[playerAlex]) == 1
+        assert second_player_hand in test_machine.current_round_natural_blackjacks[playerAlex]
 
-    "Made skeleton for 6 classes of tests for INITIAL_SCORING state, 2 for testing score results, 2 for"
+class Test_INITIAL_SCORING_Multiple_Hands_per_Player_Tracking_Natural_Blackjacks:
+    def test_one_player_table_only_player_has_two_blackjack_hands_and_they_are_tracked_correctly(self, monkeypatch):
+        pass
+
+    def test_two_player_table_each_player_has_two_hands_with_one_blackjack_hand_tracked_correctly(self, monkeypatch):
+        pass
+
+    def test_two_player_table_each_player_has_two_blackjack_hands_tracked_correctly(self, monkeypatch):
+        pass
+
+    def test_one_player_table_only_player_has_three_blackjack_hands_tracked_correctly(self, monkeypatch):
+        pass
+
+    def test_two_player_table_each_player_has_three_hands_with_two_blackjack_hands_tracked_correctly(self, monkeypatch):
+        pass
+
+    def test_two_player_table_each_player_has_three_blackjack_hands_tracked_correctly(self, monkeypatch):
+        pass
+    
 
 
 
 
-class Test_INITIAL_SCORING_Tracking_Natural_Blackjacks:
-    def test_first_player_with_one_blackjack_hand_has_it_tracked_correctly_in_INITIAL_SCORING(self):
-        ## Setup ##
-        num_of_decks = 1
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes start_game() in STARTING
-        test_machine.step() # execute shuffle_cut_and_burn() in SHUFFLING
-        # Manually deal a blackjack hand to first player
-        blackjack_hand = ['AH', 'QD']
-        first_player = test_machine.joined_players[0]
-        first_player.current_hands.append(blackjack_hand)
-        # Manually deal a random hand to dealer for score_all_hands_in_play() to work
-        dealer_hand = ['8H', 'JC']
-        test_machine.dealer.current_hands.append(dealer_hand)
-        # Add each player and their respective blackjack hands to a dictionary inside score_all_hands_in_play()
-        test_machine.score_all_hands_in_play()
-        ## Test ##
-        # Verify first player has only 1 blackjack hand
-        first_player_tracked_blackjack_hands = test_machine.current_round_natural_blackjacks[first_player]
-        assert len(first_player_tracked_blackjack_hands) == 1
-        # Verify that tracked blackjack hand is the one that has been dealt
-        first_player_tracked_blackjack_hand = test_machine.current_round_natural_blackjacks[first_player][0]
-        assert first_player_tracked_blackjack_hand == blackjack_hand
     
     def test_first_player_with_two_blackjack_hands_has_them_tracked_correctly_in_INITIAL_SCORING(self):
         ## Setup ##
@@ -1428,6 +1439,133 @@ class Test_INITIAL_SCORING_Tracking_Natural_Blackjacks:
 
 
 
+class Test_INITIAL_SCORING_One_Hand_per_Player_Bet_Results:
+    pass
+
+class Test_INITIAL_SCORING_Multiple_Hands_per_Player_Bet_Results:
+    pass
+
+
+
+class Test_INITIAL_SCORING_One_Hand_per_Player_State_Transitions:
+    def test_one_player_table_no_blackjacks_has_state_machine_transition_to_PLAYER_PLAYING(self, monkeypatch):
+        ## Setup ##
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        simulated_input_values = ['Alex', '2']
+        iterable_simulated_input_values = iter(simulated_input_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: b's')
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
+        test_machine.step() # executes shuffle_cut_and_burn() in SHUFFLING and transitions to BETTING
+        simulated_char_inputs = [b'1', b'f'] # Player Alex makes a bet of 1 White chip
+        iterable_simulated_char_inputs = iter(simulated_char_inputs)
+        monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
+        test_machine.step() # executes get_all_players_bets() in BETTING and transitions to DEALING
+        # Manually deal a hand of ['KD', 'QH'] to player Alex in seat 2
+        manual_player_hand = ['KD', 'QH']
+        if manual_player_hand[0] in test_machine.discard:
+            test_machine.discard.pop()
+            test_machine.discard.extend(test_machine.shoe.pop(0))
+        else:
+            test_machine.shoe.pop(test_machine.shoe.index(manual_player_hand[0]))
+        if manual_player_hand[1] in test_machine.discard:
+            test_machine.discard.pop()
+            test_machine.discard.extend(test_machine.shoe.pop(0))
+        else:
+            test_machine.shoe.pop(test_machine.shoe.index(manual_player_hand[1]))
+        playerAlex = test_machine.seated_players[2]
+        playerAlex.hands['center_seat'] = manual_player_hand
+        # Manually deal a hand of ['JH', '9C'] to dealer
+        manual_dealer_hand = ['JH', '9C']
+        if manual_dealer_hand[0] in test_machine.discard:
+            test_machine.discard.pop()
+            test_machine.discard.extend(test_machine.shoe.pop(0))
+        else:
+            test_machine.shoe.pop(test_machine.shoe.index(manual_dealer_hand[0]))
+        if manual_dealer_hand[1] in test_machine.discard:
+            test_machine.discard.pop()
+            test_machine.discard.extend(test_machine.shoe.pop(0))
+        else:
+            test_machine.shoe.pop(test_machine.shoe.index(manual_dealer_hand[1]))
+        playerDealer = test_machine.dealer
+        playerDealer.hands['center_seat'] = manual_dealer_hand
+        test_machine.transition(bjfsm.GameState.INITIAL_SCORING) # manually transition to INITIAL_SCORING
+        ## Test ##
+        test_machine.step() # executes score_all_hands_in_play() and other methods in INITIAL_SCORING
+        assert test_machine.state == bjfsm.GameState.PLAYER_PLAYING
+
+    def test_two_player_table_no_blackjacks_has_state_machine_transition_to_PLAYER_PLAYING(self, monkeypatch):
+        ## Setup ##
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        simulated_player_init_input_values = ['Alex', '2', 'Ahmed', '1']
+        iterable_simulated_player_init_input_values = iter(simulated_player_init_input_values)
+        simulated_player_init_char_values = [b'p', b's']
+        iterable_simulated_player_init_char_values = iter(simulated_player_init_char_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_player_init_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_player_init_char_values))
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
+        test_machine.step() # executes shuffle_cut_and_burn() in SHUFFLING and transitions to BETTING
+        simulated_char_inputs = [b'1', b'f', b'1', b'f'] # Players Ahmed and Alex both make bets of 1 White chip
+        iterable_simulated_char_inputs = iter(simulated_char_inputs)
+        monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
+        test_machine.step() # executes get_all_players_bets() in BETTING and transitions to DEALING
+        # Manually deal a hand of ['4S', '10S'] to player Ahmed in seat 1
+        manual_player_hand_one = ['4S', '10S']
+        if manual_player_hand_one[0] in test_machine.discard:
+            test_machine.discard.pop()
+            test_machine.discard.extend(test_machine.shoe.pop(0))
+        else:
+            test_machine.shoe.pop(test_machine.shoe.index(manual_player_hand_one[0]))
+        if manual_player_hand_one[1] in test_machine.discard:
+            test_machine.discard.pop()
+            test_machine.discard.extend(test_machine.shoe.pop(0))
+        else:
+            test_machine.shoe.pop(test_machine.shoe.index(manual_player_hand_one[1]))
+        playerAhmed = test_machine.seated_players[1]
+        playerAhmed.hands['center_seat'] = manual_player_hand_one
+        # Manually deal a hand of ['KD', 'QH'] to player Alex in seat 2
+        manual_player_hand_two = ['KD', 'QH']
+        if manual_player_hand_two[0] in test_machine.discard:
+            test_machine.discard.pop()
+            test_machine.discard.extend(test_machine.shoe.pop(0))
+        else:
+            test_machine.shoe.pop(test_machine.shoe.index(manual_player_hand_two[0]))
+        if manual_player_hand_two[1] in test_machine.discard:
+            test_machine.discard.pop()
+            test_machine.discard.extend(test_machine.shoe.pop(0))
+        else:
+            test_machine.shoe.pop(test_machine.shoe.index(manual_player_hand_two[1]))
+        playerAlex = test_machine.seated_players[2]
+        playerAlex.hands['center_seat'] = manual_player_hand_two
+        # Manually deal a hand of ['JH', '9C'] to dealer
+        manual_dealer_hand = ['JH', '9C']
+        if manual_dealer_hand[0] in test_machine.discard:
+            test_machine.discard.pop()
+            test_machine.discard.extend(test_machine.shoe.pop(0))
+        else:
+            test_machine.shoe.pop(test_machine.shoe.index(manual_dealer_hand[0]))
+        if manual_dealer_hand[1] in test_machine.discard:
+            test_machine.discard.pop()
+            test_machine.discard.extend(test_machine.shoe.pop(0))
+        else:
+            test_machine.shoe.pop(test_machine.shoe.index(manual_dealer_hand[1]))
+        playerDealer = test_machine.dealer
+        playerDealer.hands['center_seat'] = manual_dealer_hand
+        test_machine.transition(bjfsm.GameState.INITIAL_SCORING) # manually transition to INITIAL_SCORING
+        ## Test ##
+        test_machine.step() # executes score_all_hands_in_play() and other methods in INITIAL_SCORING
+        assert test_machine.state == bjfsm.GameState.PLAYER_PLAYING
+
+class Test_INITIAL_SCORING_Multiple_Hands_per_Player_State_Transitions:
+    pass
+
+
+
+
 
 class TestNaturalBlackjacks_INITIAL_SCORING:
     def test_dealer_face_up_card_ace_has_blackjack_first_player_with_blackjack_hand_pushes_correctly_single_deck(self):
@@ -1545,24 +1683,6 @@ class TestMiscellaneous:
         test_machine.transition(BadState.InvalidState)
         with pytest.raises(NameError):
             test_machine.step()
-
-    """
-    def test_player_hand_is_dealt_in_DEALING(self):
-        num_of_decks = 1
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.transition(bjfsm.GameState.DEALING)
-        test_machine.step() # execute deal()
-        assert len(test_machine.hand) == 2
-
-    def test_starting_player_hand_is_scored_in_SCORING(self):
-        num_of_decks = 1
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.transition(bjfsm.GameState.DEALING)
-        test_machine.step() # execute deal() and transition to SCORING
-        test_machine.step() # execute score()
-        assert (test_machine.score >= 4) and (test_machine.score <= 21)
-    """
-
 
 
 class TestReshuffling:

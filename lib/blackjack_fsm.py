@@ -284,7 +284,7 @@ class BlackjackStateMachine:
         print("STARTING GAME WITH THE FOLLOWING PLAYERS:")
         for table_seat, seated_player in self.seated_players.items():
             if seated_player != None:
-                print(seated_player.name, "in seat", table_seat)
+                print(f"'{seated_player.name}' in seat #{table_seat}")
         # Initialize first player (sitting leftmost w.r.t. dealer) to be active
         for seated_player in self.seated_players.values():
             if seated_player != None:
@@ -422,9 +422,9 @@ class BlackjackStateMachine:
 
     def check_for_and_handle_initial_dealer_blackjack_if_present(self):
         dealer_face_up_card = self.dealer.hands['center_seat'][0]
-        dealer_face_up_card_value = bjo.cards[dealer_face_up_card[:-1]][0]
         dealer_hole_card = self.dealer.hands['center_seat'][1]
-        dealer_hole_card_value = bjo.cards[dealer_hole_card[:-1]][0]
+        dealer_face_up_card_value = bjo.cards[dealer_face_up_card[:-1]][0] # Used only to check if face card is 10/face
+        dealer_hole_card_value = bjo.cards[dealer_hole_card[:-1]][0] # Used only to check if hole card is 10/face
         if (dealer_face_up_card in ['AH', 'AC', 'AD', 'AS']):
             print("Dealer's face-up card is an Ace!")
             print("Offering 'insurance' and 'even money' side bets:")
@@ -440,7 +440,6 @@ class BlackjackStateMachine:
             else:
                 print("Dealer checks hole card - not a ten, doesn't have Blackjack.")
                 self.handle_losing_side_bet_hands() # Todo AB: Add functionality to collect losing side bet hands
-                #self.transition(GameState.PLAYER_PLAYING)
         elif (dealer_face_up_card_value == 10):
             print("Dealer's face-up card is a ten!")
             if (dealer_hole_card in ['AH', 'AC', 'AD', 'AS']):
@@ -452,10 +451,8 @@ class BlackjackStateMachine:
                 self.transition(GameState.BETTING)
             else:
                 print("Dealer checks hole card - not an Ace, doesn't have Blackjack.")
-                #self.transition(GameState.PLAYER_PLAYING)
         else:
             print("Dealer can't have Blackjack.")
-            #self.transition(GameState.PLAYER_PLAYING)
 
 
     def check_for_and_handle_initial_players_blackjacks_if_any_present(self):
