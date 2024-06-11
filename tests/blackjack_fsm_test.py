@@ -1146,7 +1146,7 @@ class Test_INITIAL_SCORING_Tracking_Natural_Blackjacks:
 
 class Test_INITIAL_SCORING_One_Hand_per_Player_Bet_Outcomes:
     # One player table tests #
-    def test_one_player_table_no_blackjacks_case_handled_correctly(self, monkeypatch):
+    def test_one_player_table_no_blackjacks_transitions_to_PLAYER_PLAYING(self, monkeypatch):
         ## Setup ##
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
@@ -1194,9 +1194,7 @@ class Test_INITIAL_SCORING_One_Hand_per_Player_Bet_Outcomes:
         test_machine.step() # executes score_all_hands_in_play() and blackjack handling methods in INITIAL_SCORING
         assert test_machine.state == bjfsm.GameState.PLAYER_PLAYING
 
-
-
-    def test_one_player_table_only_dealer_has_blackjack_case_scored_correctly(self, monkeypatch):
+    def test_one_player_table_only_dealer_has_blackjack_player_loss_handled_correctly(self, monkeypatch):
         ## Setup ##
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
@@ -1242,6 +1240,9 @@ class Test_INITIAL_SCORING_One_Hand_per_Player_Bet_Outcomes:
         test_machine.transition(bjfsm.GameState.INITIAL_SCORING) # manually transition to INITIAL_SCORING
         ## Test ##
         test_machine.step() # executes score_all_hands_in_play() and blackjack handling methods in INITIAL_SCORING
+
+
+        
         assert test_machine.state == bjfsm.GameState.BETTING
         
 

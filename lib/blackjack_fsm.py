@@ -366,52 +366,48 @@ class BlackjackStateMachine:
     def reveal_dealer_hand(self):
         print(f"Dealer hand is {self.dealer.hands['center_seat']}")
 
-    def handle_winning_side_bet_hands(self):
+    def pay_winning_side_bets(self):
         # Go through winning side bet hands left-to-right and pay winnings
         pass
 
-    def handle_initial_blackjack_hand_pushes(self):
+    def reset_natural_blackjacks_upon_hand_pushes(self): # Removes all natural player blackjacks from being tracked this round
         for player in self.current_round_natural_blackjacks.keys():
             for hand_count in range(0, len(self.current_round_natural_blackjacks[player])):
                 hand = self.current_round_natural_blackjacks[player][0]
                 print("Dealer pushes against player", player.name, "with natural blackjack of", hand)
-                # Remove player's leftmost blackjack hand from dictionary of natural blackjacks
                 self.current_round_natural_blackjacks[player].remove(hand)
-                # Push against player's bet
-                
-                # Todo AB: Iterate over player.current_primary_bets
 
-                # USE A DICTIONARY TO STORE EACH BET
-                # STORE ALL OF THE DICTIONARIES IN A LIST
-
-
-
-                # Put player's leftmost blackjack hand into discard from hand
-                self.discard.extend(player.current_hands.pop(player.current_hands.index(hand)))
-                # Remove player's leftmost discarded blackjack hand score
-                player.current_hand_scores.remove(21)
-
-    def handle_losing_primary_bet_hands(self):
-        # Go through losing primary bet hands left-to-right - collect bets, discard hands and reset their scores
+    def collect_losing_main_bets(self):
+        # Go through main bet hands left-to-right from dealer's POV and collect losing main bets
+        # Note: Player model is structured in order from rightmost to leftmost player hand, allowing to simply iterate over occupied_seats
         for player in self.seated_players.values():
             if player != None:
-                for hand_count in range(0, len(player.current_hands)):
-                    hand = player.current_hands[0]
-                    dealer_blackjack = self.dealer.hands['center_seat']
-                    print(player.name, "loses with hand of", hand, "to Dealer's Blackjack of", dealer_blackjack)
-                    # Todo AB: Collect player's leftmost hand bet
+                for seat_name, seat_number in player.occupied_seats.items():
+                    if seat_number != None:
+                        print(f"Player '{player.name}' loses with hand of {player.hands[seat_name]} to Dealer's Blackjack of {self.dealer.hands['center_seat']}")
+                        # Move all of the chips from player's bet at seat_name to dealer.chips
+                        for chip_color, chip_count in player.main_bets[seat_name].items():
+                            self.dealer.chips[chip_color] += chip_count
+                            player.main_bets[seat_name][chip_color] -= chip_count
+                        # Update dealer.chip_pool_balance
+                        self.dealer.chip_pool_balance += player.main_bet_amounts[seat_name]
+                        self.dealer.clean_up_fractions('center_seat')
+                        player.main_bet_amounts[seat_name] = 0
 
-                    # Put player's leftmost hand into discard from hand
-                    self.discard.extend(player.current_hands.pop(0))
-                    # Remove player's leftmost hand score
-                    player.current_hand_scores.pop(0)
 
-    def reset_dealer_hand_and_hand_score(self):
+    def discard_all_hands_in_play_and_reset_hand_scores(self):
+        for player in self.seated_players.values():
+            if player != None:
+                for seat_name, seat_number in player.occupied_seats.items():
+                    if seat_number != None:
+                        self.discard.extend(self.dealer.hands[seat_name].pop(0))
+                        self.discard.extend(self.dealer.hands[seat_name].pop(0))
+                        player.hand_scores[seat_name] = 0
         self.discard.extend(self.dealer.hands['center_seat'].pop(0))
         self.discard.extend(self.dealer.hands['center_seat'].pop(0))
-        self.dealer.hand_scores['center_seat'].clear()
+        self.dealer.hand_scores['center_seat'] = 0
 
-    def handle_losing_side_bet_hands(self):
+    def collect_losing_side_bets(self):
         # Go through losing side bet hands left-to-right and collect bets
         pass
 
@@ -436,24 +432,23 @@ class BlackjackStateMachine:
                 # 4. Collect bets from losing hands
                 # 5. Collect cards from all players left-to-right as well as dealer, resetting hands, hand scores, and natural blackjacks
 
-
                 self.reveal_dealer_hand()
-                self.handle_winning_side_bet_hands() # Todo AB: Add functionality to pay out winning side bet hands
-                self.handle_initial_blackjack_hand_pushes()
-                self.handle_losing_primary_bet_hands()
-                self.reset_dealer_hand_and_hand_score()
+                self.pay_winning_side_bets() # Todo AB: Add functionality to pay out winning side bet hands
+                self.reset_natural_blackjacks_upon_hand_pushes()
+                self.collect_losing_main_bets()
+                self.discard_all_hands_in_play_and_reset_hand_scores()
                 print("ROUND END")
                 self.transition(GameState.BETTING)
             else:
                 print("Dealer checks hole card - not a ten, doesn't have Blackjack.")
-                self.handle_losing_side_bet_hands() # Todo AB: Add functionality to collect losing side bet hands
+                self.collect_losing_side_bets() # Todo AB: Add functionality to collect losing side bets
         elif (dealer_face_up_card_value == 10):
             print("Dealer's face-up card is a ten!")
             if (dealer_hole_card in ['AH', 'AC', 'AD', 'AS']):
                 self.reveal_dealer_hand()
-                self.handle_initial_blackjack_hand_pushes()
-                self.handle_losing_primary_bet_hands()
-                self.reset_dealer_hand_and_hand_score()
+                self.reset_natural_blackjacks_upon_hand_pushes()
+                self.collect_losing_main_bets()
+                self.discard_all_hands_in_play_and_reset_hand_scores()
                 print("ROUND END")
                 self.transition(GameState.BETTING)
             else:
@@ -668,7 +663,7 @@ class BlackjackStateMachine:
             case GameState.INITIAL_SCORING:
                 self.score_all_hands_in_play()
                 self.check_for_and_handle_initial_dealer_blackjack_if_present()
-                if (self.dealer.hands['center_seat'] != []): # Todo AB: Check if comparison is w.r.t. [] or None
+                if (self.dealer.hands['center_seat'] != []): # Happens only when dealer doesn't have blackjack
                     self.check_for_and_handle_initial_players_blackjacks_if_any_present()
             case GameState.PLAYER_PLAYING:
                 self.player_plays()
@@ -676,10 +671,10 @@ class BlackjackStateMachine:
                 self.dealer_plays()
             case GameState.FINAL_SCORING:
                 self.check_for_and_handle_final_dealer_blackjack_if_present()
-                if (self.dealer.hands['center_seat'] != []): # Todo AB: Check if comparison is w.r.t. [] or None
+                if (self.dealer.hands['center_seat'] != []): # Happens only when dealer doesn't have blackjack
                     self.check_for_and_handle_final_players_blackjacks_if_any_present()
             case other:
-                sys.stderr.write("Invalid state!\n")
+                sys.stderr.write(f"Invalid state '{self.state}'!\n")
                 raise NameError
 
     def run(self):

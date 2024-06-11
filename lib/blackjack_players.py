@@ -330,10 +330,11 @@ class Player:
 
     # Helper methods
     def clean_up_fractions(self, seat):
-        bet_amount_fraction = self.main_bet_amounts[seat] % 1
+        if self.main_bet_amounts[seat] != None:
+            bet_amount_fraction = self.main_bet_amounts[seat] % 1
+            if (bet_amount_fraction == 0):
+                self.main_bet_amounts[seat] = int(self.main_bet_amounts[seat])
         chip_pool_balance_fraction = self.chip_pool_balance % 1
-        if (bet_amount_fraction == 0):
-            self.main_bet_amounts[seat] = int(self.main_bet_amounts[seat])
         if (chip_pool_balance_fraction == 0):
             self.chip_pool_balance = int(self.chip_pool_balance)
 
