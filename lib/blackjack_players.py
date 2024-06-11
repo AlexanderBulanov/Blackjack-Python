@@ -117,7 +117,7 @@ class Player:
         Dealer.is_dealer = True
         Dealer.cash_balance = 10000
         Dealer.chips = dict.fromkeys(bjo.chip_names, 1000)
-        Dealer.chip_pool_balance = 1000*(1+2.5+5+10+25+100+500+1000+5000)
+        Dealer.chip_pool_balance = 1000*(1+2.5+5+10+25+100+500+1000+5000) # $6,643,500.00
         Dealer.hole_card_face_down = True
         Dealer.occupied_seats = {
             'right_seat': None,

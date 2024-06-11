@@ -1205,7 +1205,7 @@ class Test_INITIAL_SCORING_One_Hand_per_Player_Bet_Outcomes:
         test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
         test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
         test_machine.step() # executes shuffle_cut_and_burn() in SHUFFLING and transitions to BETTING
-        simulated_char_inputs = [b'1', b'f'] # Player Alex makes a bet of 1 White chip
+        simulated_char_inputs = [b'1', b'f'] # Player Alex makes a bet of 1 White chip ($1)
         iterable_simulated_char_inputs = iter(simulated_char_inputs)
         monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
         test_machine.step() # executes get_all_players_bets() in BETTING and transitions to DEALING
@@ -1240,11 +1240,16 @@ class Test_INITIAL_SCORING_One_Hand_per_Player_Bet_Outcomes:
         test_machine.transition(bjfsm.GameState.INITIAL_SCORING) # manually transition to INITIAL_SCORING
         ## Test ##
         test_machine.step() # executes score_all_hands_in_play() and blackjack handling methods in INITIAL_SCORING
-
-
-        
+        assert playerAlex.chip_pool_balance == 499
+        assert playerAlex.chips['White'] == 49
+        assert playerDealer.chip_pool_balance == 6643501
+        assert playerDealer.chips['White'] == 1001
         assert test_machine.state == bjfsm.GameState.BETTING
-        
+
+    # Above tests branch when face-up card is a face/ten (insurance not offered)
+    
+    # Test a different branch - when face-up card is an Ace (insurance offered)
+
 
     def test_one_player_table_only_player_has_blackjack_case_scored_correctly(self, monkeypatch):
         ## Setup ##

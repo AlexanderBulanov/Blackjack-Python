@@ -400,11 +400,11 @@ class BlackjackStateMachine:
             if player != None:
                 for seat_name, seat_number in player.occupied_seats.items():
                     if seat_number != None:
-                        self.discard.extend(self.dealer.hands[seat_name].pop(0))
-                        self.discard.extend(self.dealer.hands[seat_name].pop(0))
+                        self.discard.extend(player.hands['center_seat'])
+                        player.hands['center_seat'].clear()
                         player.hand_scores[seat_name] = 0
-        self.discard.extend(self.dealer.hands['center_seat'].pop(0))
-        self.discard.extend(self.dealer.hands['center_seat'].pop(0))
+        self.discard.extend(self.dealer.hands['center_seat'])
+        self.dealer.hands['center_seat'].clear()
         self.dealer.hand_scores['center_seat'] = 0
 
     def collect_losing_side_bets(self):
@@ -426,12 +426,6 @@ class BlackjackStateMachine:
             print("Offering 'insurance' and 'even money' side bets:")
             self.offer_insurance_and_even_money_side_bets() # Todo AB: Add functionality to offer side bets
             if (dealer_hole_card_value == 10):
-                # 1. Reveal dealer hand
-                # 2. Pay out insurance and even money bets
-                # 3. Push against other players /w blackjack
-                # 4. Collect bets from losing hands
-                # 5. Collect cards from all players left-to-right as well as dealer, resetting hands, hand scores, and natural blackjacks
-
                 self.reveal_dealer_hand()
                 self.pay_winning_side_bets() # Todo AB: Add functionality to pay out winning side bet hands
                 self.reset_natural_blackjacks_upon_hand_pushes()
