@@ -423,13 +423,20 @@ class BlackjackStateMachine:
     def check_for_and_handle_initial_dealer_blackjack_if_present(self):
         dealer_face_up_card = self.dealer.hands['center_seat'][0]
         dealer_hole_card = self.dealer.hands['center_seat'][1]
-        dealer_face_up_card_value = bjo.cards[dealer_face_up_card[:-1]][0] # Used only to check if face card is 10/face
-        dealer_hole_card_value = bjo.cards[dealer_hole_card[:-1]][0] # Used only to check if hole card is 10/face
+        dealer_face_up_card_value = bjo.cards[dealer_face_up_card[:-1]][0] # Used only to check if face card is 10/face, gives incorrect Ace value on purpose
+        dealer_hole_card_value = bjo.cards[dealer_hole_card[:-1]][0] # Used only to check if hole card is 10/face, gives incorrect Ace value on purpose
         if (dealer_face_up_card in ['AH', 'AC', 'AD', 'AS']):
             print("Dealer's face-up card is an Ace!")
             print("Offering 'insurance' and 'even money' side bets:")
             self.offer_insurance_and_even_money_side_bets() # Todo AB: Add functionality to offer side bets
             if (dealer_hole_card_value == 10):
+                # 1. Reveal dealer hand
+                # 2. Pay out insurance and even money bets
+                # 3. Push against other players /w blackjack
+                # 4. Collect bets from losing hands
+                # 5. Collect cards from all players left-to-right as well as dealer, resetting hands, hand scores, and natural blackjacks
+
+
                 self.reveal_dealer_hand()
                 self.handle_winning_side_bet_hands() # Todo AB: Add functionality to pay out winning side bet hands
                 self.handle_initial_blackjack_hand_pushes()
