@@ -329,6 +329,11 @@ class Player:
         print(f"{self.name}'s ${self.chip_pool_balance} chip pool - {displayed_bet}")
 
     # Helper methods
+    def cast_whole_number_chip_pool_balance_to_int(self):
+        chip_pool_balance_fraction = self.chip_pool_balance % 1
+        if (chip_pool_balance_fraction == 0):
+            self.chip_pool_balance = int(self.chip_pool_balance)
+
     def clean_up_fractions(self, seat):
         if self.main_bet_amounts[seat] != None:
             bet_amount_fraction = self.main_bet_amounts[seat] % 1

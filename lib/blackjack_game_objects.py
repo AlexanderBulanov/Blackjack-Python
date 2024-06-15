@@ -11,7 +11,8 @@ import random
 # Chips and their values #
 chip_names = ['White', 'Pink', 'Red', 'Blue', 'Green', 'Black', 'Purple', 'Yellow', 'Brown']
 chip_values = [1, 2.5, 5, 10, 25, 100, 500, 1000, 5000]
-chips = dict(zip(chip_names,chip_values))
+chips = dict(zip(chip_names, chip_values))
+reverse_chips = dict(zip(reversed(chip_names), reversed(chip_values)))
 
 # Cards and their values #
 card_names = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
