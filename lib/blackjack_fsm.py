@@ -20,20 +20,21 @@ from . import cut_helper as cut
 
 ### Blackjack State Machine ###
 class GameState(Enum):
-    WAITING = 0
-    STARTING = 1
-    SHUFFLING = 2
-    BETTING = 3
-    DEALING = 4
-    INITIAL_SCORING = 5
-    PLAYER_PLAYING = 6
-    DEALER_PLAYING = 7
-    FINAL_SCORING = 8
+    INITIALIZING = 0
+    WAITING = 1
+    STARTING = 2
+    SHUFFLING = 3
+    BETTING = 4
+    DEALING = 5
+    INITIAL_SCORING = 6
+    PLAYER_PLAYING = 7
+    DEALER_PLAYING = 8
+    FINAL_SCORING = 9
 
 
 class BlackjackStateMachine:
     def __init__(self, num_of_decks):
-        self.state = GameState.WAITING
+        self.state = GameState.INITIALIZING
         self.num_of_decks = num_of_decks
         self.pen = None
         self.shoe = bjo.get_shoe_of_n_decks(self.num_of_decks)
@@ -43,6 +44,12 @@ class BlackjackStateMachine:
         self.min_bet = 1
         self.max_bet = 100
         self.blackjack_ratio = 3/2
+        self.offered_side_bets = [] # Each side bet is a 3-tuple of (side_bet_name, min_side_bet, max_side_bet)
+        # Side Bet fields:
+        ## side_bet_name
+        ## min_side_bet
+        ## max_side_bet
+        ## {'condition1': payout1, 'condition2': payout2, 'condition3': payout3}
         self.waiting_players = []
         self.seated_players = {1: None, 2: None, 3: None, 4: None, 5: None, 6: None, 7: None}
         self.known_players = [] # list of all players who have played a shoe, now or in the past
@@ -158,8 +165,8 @@ class BlackjackStateMachine:
 
     def dump_state_mode(self):
         pass
-    # Can use diff before/after a function call on generated text files
-    # How to toggle this automatically w/o manually adding conditionals before/after?
+        # Can use diff before/after a function call on generated text files
+        # How to toggle this automatically w/o manually adding conditionals before/after?
 
     def print_missing_cards_in_single_deck_shoe_if_any(self):
         missing_cards = list(set(bjo.base_deck).difference(set(self.shoe)))
@@ -187,12 +194,10 @@ class BlackjackStateMachine:
                         pass
         print("*  *  *  *  *")
 
-
     def print_all_players_with_natural_blackjack_hands(self):
         for player in self.current_round_natural_blackjacks.keys():
             for hand in self.current_round_natural_blackjacks[player]:
                 print(f"{player.name} has natural blackjack of {hand}")
-
 
     # State Machine Actions #
     def print_blackjack_table(self):
@@ -320,6 +325,22 @@ class BlackjackStateMachine:
         self.transition(GameState.BETTING)
 
 
+
+    def get_bets_from_all_one_player_occupied_seats(self, min_bet, max_bet):
+        for seat_name, seat_pos in self.occupied_seats.items():
+            if (seat_pos != None): # Get each player's main bets from up to 3 seats they can occupy
+                # Get player's main bet at their given seat
+                self.init_main_seat_main_bet_fields(seat_name)
+                print(f"Player '{self.name}' betting at Seat #{seat_pos} (their '{seat_name}')")
+                self.view_betting_interface()
+                self.print_player_chip_pool()
+                while True: # Using this format instead of try-except and custom exception ExitBettingInterface, to pass tests
+                    if self.get_bet_input_character(min_bet, max_bet, seat_name): 
+                        print("Exiting betting interface...")
+                        break
+                # Get player's side_bet at their given seat
+
+
     def get_all_players_bets(self):
         for seated_player in self.seated_players.values():
             if (seated_player != None):
@@ -358,9 +379,6 @@ class BlackjackStateMachine:
     def reveal_dealer_hand(self):
         print(f"Dealer hand is {self.dealer.hands['center_seat']}")
 
-    def pay_winning_side_bets(self):
-        # Go through winning side bet hands left-to-right and pay winnings
-        pass
 
     def reset_natural_blackjack_tracking(self): # Removes all natural player blackjacks from being tracked this round
         for player in self.current_round_natural_blackjacks.keys():
@@ -377,7 +395,7 @@ class BlackjackStateMachine:
             player_chip_bet = getattr(player, bets_name)[seat_name] # player.main_bets[seat_name] OR player.side_bets[seat_name]
             if player_chip_bet != None:
                 for chip_color, chip_count in player_chip_bet.items():
-                    # Move chips to dealer and update their balance
+                    # Move bet chips from Player to Dealer and update Dealer's balance
                     chip_value = bjo.chips[chip_color]
                     self.dealer.chips[chip_color] += chip_count
                     self.dealer.chip_pool_balance += chip_count*chip_value
@@ -386,7 +404,7 @@ class BlackjackStateMachine:
                 getattr(player, bets_name)[seat_name] = None # player.main_bets[seat_name] OR player.side_bets[seat_name]
                 bet_amounts_name = bet_type + '_bet_amounts'
                 getattr(player, bet_amounts_name)[seat_name] = None # player.main_bet_amounts[seat_name] OR player.side_bet_amounts[seat_name]
-                # No need to subtract chips and chip_pool_balance for player_one - already done when a bet is submitted
+                # No need to subtract chips and chip_pool_balance for Player - already done when a bet is submitted
             else:
                 sys.stderr.write(f"Player chip bet is {None}! Chip transfer from player '{player.name}' to Dealer cannot be completed.")
         else:
@@ -415,6 +433,11 @@ class BlackjackStateMachine:
                         self.collect_losing_player_bet(player, seat_name, 'side')
 
 
+    # Possible to follow similar structure to losing bets above?
+    def pay_winning_player_bet(self, player, seat_name, bet_type):
+        pass
+
+    # Todo AB: fix pay_winning_main_bets() to be functional and unit-test it
     def pay_winning_main_bets(self):
         # Go through main bet hands left-to-right from dealer's POV and pay winning main bets
         if self.state == GameState.INITIAL_SCORING:
@@ -474,6 +497,17 @@ class BlackjackStateMachine:
             pass
 
 
+    def pay_winning_side_bets(self):
+        # Go through side bet hands left-to-right from dealer's POV and collect losing side bets
+        # Note: Player model is structured in order from rightmost to leftmost player hand, allowing to simply iterate over occupied_seats
+        for player in self.seated_players.values():
+            if player != None:
+                for seat_name, seat_number in player.occupied_seats.items():
+                    if seat_number != None:
+                        print(f"Player '{player.name}' wins side bet of hand {player.hands[seat_name]} to Dealer")
+                        self.pay_winning_player_bet(player, seat_name, 'side')
+
+
     def discard_all_hands_in_play_and_reset_all_hand_scores(self):
         for player in self.seated_players.values():
             if player != None:
@@ -500,19 +534,19 @@ class BlackjackStateMachine:
                 self.reveal_dealer_hand()
                 self.pay_winning_side_bets() # Todo AB: Add functionality to pay out winning side bet hands
                 self.reset_natural_blackjack_tracking()
-                self.collect_losing_main_bets()
+                self.collect_losing_main_bets() # Todo AB: Test functionality of collecting losing main bets
                 self.discard_all_hands_in_play_and_reset_all_hand_scores()
                 print("ROUND END")
                 self.transition(GameState.BETTING)
             else:
                 print("Dealer checks hole card - not a ten, doesn't have Blackjack.")
-                self.collect_losing_side_bets() # Todo AB: Add functionality to collect losing side bets
+                self.collect_losing_side_bets() # Todo AB: Test functionality of collecting losing side bets
         elif (dealer_face_up_card_value == 10):
             print("Dealer's face card is a ten!")
             if (dealer_hole_card in ['AH', 'AC', 'AD', 'AS']):
                 self.reveal_dealer_hand()
                 self.reset_natural_blackjack_tracking()
-                self.collect_losing_main_bets()
+                self.collect_losing_main_bets() # Todo AB: Test functionality of collecting losing main bets
                 self.discard_all_hands_in_play_and_reset_all_hand_scores()
                 print("ROUND END")
                 self.transition(GameState.BETTING)
@@ -528,6 +562,7 @@ class BlackjackStateMachine:
             self.transition(GameState.PLAYER_PLAYING)
         else:
             print("Paying Blackjacks to each eligible player hand")
+            self.reveal_dealer_hand()
             self.pay_winning_main_bets()
             self.reset_natural_blackjack_tracking()
 
@@ -704,6 +739,10 @@ class BlackjackStateMachine:
     def step(self):
         print(f"Current state: {self.state}")
         match self.state:
+            case GameState.INITIALIZING:
+                # Parse through a JSON preset to "set the table" for players to start joining
+                # This is where additional side bets offered by the table are initialized
+                self.transition(GameState.WAITING)
             case GameState.WAITING:
                 self.wait_for_players_to_join()
             case GameState.STARTING:
@@ -714,7 +753,7 @@ class BlackjackStateMachine:
             case GameState.SHUFFLING:
                 self.shuffle_cut_and_burn(None) # Todo AB: pen % is different upon each reshuffle in a single session, need it fixed?
             case GameState.BETTING:
-                self.get_all_players_bets() # Todo AB: update get_all_players_bets() to work with players occupying multiple seats
+                self.get_all_players_bets() # Todo AB: update get_all_players_bets() to work /w players occupying multiple seats
             case GameState.DEALING:
                 self.deal() # Todo AB: Update deal() to work with players occupying multiple seats
             case GameState.INITIAL_SCORING:

@@ -74,6 +74,11 @@ class Player:
             'center_seat': None,
             'left_seat': None,
         }
+        self.placed_side_bet_names = { # each group of names is stored in a list in format of ['Perfect Pairs', 'Lucky Ladies', etc.]
+            'right_seat': None, # side_bet_names keeps track of which group of chips in side_bets is tied to which bet
+            'center_seat': None, # Side bet options - 'Perfect Pairs', 'Match the Dealer', 'Lucky Ladies', 'King's Bounty', 'Buster Blackjack', '21+3'
+            'left_seat': None
+        }
         self.side_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
             'right_seat': None,
             'center_seat': None,
@@ -134,6 +139,11 @@ class Player:
             'center_seat': None,
             'left_seat': None,
         }
+        Dealer.placed_side_bet_names = { # each group of names is stored in a list in format of ['Perfect Pairs', 'Lucky Ladies', etc.]
+            'right_seat': None, # side_bet_names keeps track of which group of chips in side_bets is tied to which bet
+            'center_seat': None, # Side bet options - 'Perfect Pairs', 'Match the Dealer', 'Lucky Ladies', 'King's Bounty', 'Buster Blackjack', '21+3'
+            'left_seat': None
+        }
         Dealer.side_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
             'right_seat': None,
             'center_seat': None,
@@ -184,6 +194,11 @@ class Player:
             'right_seat': None,
             'center_seat': None,
             'left_seat': None,
+        }
+        NewPlayer.placed_side_bet_names = { # each group of names is stored in a list in format of ['Perfect Pairs', 'Lucky Ladies', etc.]
+            'right_seat': None, # side_bet_names keeps track of which group of chips in side_bets is tied to which bet
+            'center_seat': None, # Side bet options - 'Perfect Pairs', 'Match the Dealer', 'Lucky Ladies', 'King's Bounty', 'Buster Blackjack', '21+3'
+            'left_seat': None
         }
         NewPlayer.side_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
             'right_seat': None,
@@ -426,7 +441,6 @@ class Player:
         print(char)
     """
 
-
     def get_bet_input_character(self, min_bet, max_bet, seat):
         # Todo AB: Make sure the above code scales with player making multiple hand bets
         key = msvcrt.getch().decode('utf-8') # Get a key (as a byte string) and decode it
@@ -478,7 +492,6 @@ class Player:
                 sys.stderr.write(f"Invalid input '{key}'\n")
                 print("Provide a valid key or press 'v' to see valid key input options")
 
-
     def print_betting_interface_padding(self, chip_color):
         padding_spaces = 14
         for char in str(bjo.chips[chip_color]):
@@ -487,7 +500,6 @@ class Player:
             padding_spaces -= 1
         for num in range(0, padding_spaces):
             print(" ", end='')
-
 
     def print_letter_keybinding(self, chip_keybind, chip_color):
         if ((int(chip_keybind)-1) < 6):
@@ -510,7 +522,6 @@ class Player:
         else:
             print("")
 
-
     def view_betting_interface(self):
         print("Press the following number keys to add chips, symbol keys to remove chips, and letter keys to execute special actions:")
         for chip_keybind, chip_color in key_to_chip_default_bindings.items():
@@ -520,19 +531,13 @@ class Player:
             print(f"{chip_decrement_keybind}: -${bjo.chips[chip_color]} ({chip_color})", end='')
             self.print_letter_keybinding(chip_keybind, chip_color)
 
-    def init_main_seat_main_bet_fields(self, seat_name):
+    def init_select_seat_main_bet_fields(self, seat_name): # Todo AB: Different internal structure from init_select_seat_side_bet_fields() - a problem?
         empty_bet = dict.fromkeys(bjo.chip_names, 0)
         self.main_bets[seat_name] = empty_bet
         self.main_bet_amounts[seat_name] = 0
 
-    def get_bets_from_all_one_player_occupied_seats(self, min_bet, max_bet):
-        for seat_name, seat_pos in self.occupied_seats.items():
-            if (seat_pos != None): # Get each player's main bets from up to 3 seats they can occupy
-                self.init_main_seat_main_bet_fields(seat_name)
-                print(f"Player '{self.name}' betting at Seat #{seat_pos} (their '{seat_name}')")
-                self.view_betting_interface()
-                self.print_player_chip_pool()
-                while True: # Using this format instead of try-except and custom exception ExitBettingInterface, to pass tests
-                    if self.get_bet_input_character(min_bet, max_bet, seat_name): 
-                        print("Exiting betting interface...")
-                        break
+    def init_select_seat_side_bet_fields(self, seat_name, side_bet_name):
+        self.placed_side_bet_names[seat_name] = [side_bet_name]
+        empty_bet = dict.fromkeys(bjo.chip_names, 0)
+        self.side_bets[seat_name] = [empty_bet]
+        self.side_bet_amounts[seat_name] = [0]

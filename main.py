@@ -10,26 +10,19 @@ Author: Alexander Bulanov
 import lib.blackjack_fsm as bjfsm
 
 ### Main Code ###
-"""
 BlackjackSM = bjfsm.BlackjackStateMachine(1)
 BlackjackSM.run()
-"""
+
 
 import lib.blackjack_game_objects as bjo
 import math
 
 
-# Algorithm Guidelines #
-# 1. Pays out least number of chips possible
-
 # Algo Flow
 # 1. Pay out 1 Pink chip if bet is fractional
 # 2. Pay out leftover non-Pink chips until bet is paid out
 
-
-
-
-
+"""
 remaining_payout = 13.5
 
 if (type(remaining_payout) == float):
@@ -56,7 +49,7 @@ if (remaining_payout != 0):
                 #print(f"{chip_name} is too large of a unit to pay out this bet, trying a smaller chip")
 else:
     print(f"Bet fully paid out!")
-
+"""
 
 """
 if type(remaining_payout) == int:
