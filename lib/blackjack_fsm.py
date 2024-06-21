@@ -16,6 +16,7 @@ from . import blackjack_game_logic as bjl
 from . import blackjack_game_objects as bjo
 from . import blackjack_players as bjp
 from . import cut_helper as cut
+from . import print_utils as prutils
 
 
 ### Blackjack State Machine ###
@@ -27,7 +28,7 @@ class GameState(Enum):
     BETTING = 4
     DEALING = 5
     INITIAL_SCORING = 6
-    PLAYER_PLAYING = 7
+    PLAYERS_PLAYING = 7
     DEALER_PLAYING = 8
     FINAL_SCORING = 9
 
@@ -91,7 +92,7 @@ class BlackjackStateMachine:
             if next_player != None:
                 next_player_present = True
                 self.active_player = next_player
-                self.transition(GameState.PLAYER_PLAYING)
+                self.transition(GameState.PLAYERS_PLAYING)
                 break
         # No next player at higher-indexed table seat --> set leftmost (w.r.t dealer) player to be active
         if next_player_present == False:
@@ -326,25 +327,40 @@ class BlackjackStateMachine:
 
 
 
-    def get_bets_from_all_one_player_occupied_seats(self, min_bet, max_bet):
-        for seat_name, seat_pos in self.occupied_seats.items():
+    # Todo AB: Get main and side bet for each given seat (max of 2 non-insurance side bets as those are offered only in INITIAL_SCORING)
+    def get_bets_from_all_one_player_occupied_seats(self, player, min_bet, max_bet):
+        for seat_name, seat_pos in player.occupied_seats.items():
             if (seat_pos != None): # Get each player's main bets from up to 3 seats they can occupy
                 # Get player's main bet at their given seat
-                self.init_main_seat_main_bet_fields(seat_name)
-                print(f"Player '{self.name}' betting at Seat #{seat_pos} (their '{seat_name}')")
-                self.view_betting_interface()
-                self.print_player_chip_pool()
+                player.init_main_bet_fields(seat_name)
+                print(f"Player '{player.name}' placing a main bet at Seat #{seat_pos} (their '{seat_name}')")
+                prutils.view_chip_betting_interface()
+                player.print_player_chip_pool()
                 while True: # Using this format instead of try-except and custom exception ExitBettingInterface, to pass tests
-                    if self.get_bet_input_character(min_bet, max_bet, seat_name): 
+                    if player.get_bet_input_character(min_bet, max_bet, seat_name):
                         print("Exiting betting interface...")
                         break
-                # Get player's side_bet at their given seat
+                # Get user input of which side bet they would like to make (limit 2) or press SKIP
+                
+                #print(f"Player '{player.name}' placing a side bet at Seat #{seat_pos} (their '{seat_name}')")
+                #prutils.view_side_bet_options_interface()
+
+                # Get player's side bets at their given seat (up to 2 per seat)
+                # PROMPT PLAYER TO PLACE A SIDE BET OUT OF OFFERED ONES (AND MENTION LIMIT IS 2) OR SKIP
+                
+                #self.init_side_bet_fields(seat_name)
+                
+                    # AFTER RESOLVING AN OFFERED SIDE BET, ASK IF PLAYER WANTS TO MAKE ANOTHER ONE (AND MENTION LIMIT IS 2) OR SKIP
+                
+
+
+
 
 
     def get_all_players_bets(self):
         for seated_player in self.seated_players.values():
             if (seated_player != None):
-                seated_player.get_bets_from_all_one_player_occupied_seats(self.min_bet, self.max_bet)
+                self.get_bets_from_all_one_player_occupied_seats(seated_player, self.min_bet, self.max_bet)
                 #self.active_player.print_player_stats()
         self.transition(GameState.DEALING)
 
@@ -559,7 +575,7 @@ class BlackjackStateMachine:
     def check_for_and_handle_initial_players_blackjacks_if_any_present(self):
         if (len(self.current_round_natural_blackjacks.keys()) == 0):
             print("No players have natural Blackjack.")
-            self.transition(GameState.PLAYER_PLAYING)
+            self.transition(GameState.PLAYERS_PLAYING)
         else:
             print("Paying Blackjacks to each eligible player hand")
             self.reveal_dealer_hand()
@@ -594,7 +610,7 @@ class BlackjackStateMachine:
                 print("ROUND END")
                 self.transition(GameState.BETTING)
             else:
-                self.transition(GameState.PLAYER_PLAYING)
+                self.transition(GameState.PLAYERS_PLAYING)
 
 
     def deal(self):
@@ -627,7 +643,20 @@ class BlackjackStateMachine:
         self.transition(GameState.INITIAL_SCORING)
 
 
-    def player_plays(self):
+    def play_all_remaining_players_hands(self):
+        for player in self.seated_players.values():
+            if (player != None):
+                for seat_name, seat_number in player.occupied_seats.items():
+                    if (seat_number != None):
+                        print(f"Player '{player.name}' chooses action at Seat #{seat_number} (their '{seat_name}')")
+                        self.play_player_hand(player, seat_name)
+
+    def play_player_hand(self, player, seat_name):
+        #print(f"{player.name} has a hand of {player.hands[seat_name]}")
+        pass
+
+
+    def active_player_plays_all_of_their_hands(self):
         """
         DEBUG
         """
@@ -736,12 +765,42 @@ class BlackjackStateMachine:
             self.transition(GameState.DEALING)
 
 
+    def view_game_launch_options(self):
+        pass
+
+    """
+    def get_game_option_input_character(self):
+        key = msvcrt.getch().decode('utf-8') # Get a key (as a byte string) and decode it
+        match key:
+            case 'v':
+                self.view_game_launch_options()
+            case 'd':
+                self.print_player_chip_pool()
+            case 'p':
+                self.print_current_bet(seat)
+            case 'r':
+                self.reset_current_bet(seat)
+            case other:
+                sys.stderr.write(f"Invalid input '{key}'\n")
+                print("Provide a valid key or press 'v' to see valid key input options")
+    """
+
+
     def step(self):
         print(f"Current state: {self.state}")
         match self.state:
             case GameState.INITIALIZING:
-                # Parse through a JSON preset to "set the table" for players to start joining
-                # This is where additional side bets offered by the table are initialized
+                print(f"Welcome to Blackjack! Please select game start options from the ones listed below.")
+                self.view_game_launch_options()
+                #game_launch_option = self.get_game_option_input_character()
+                
+                # 1a. Ask user if they want to run a default game (/w option to adjust settings and deviate from template)
+                # OR
+                # 1b. Ask user if they want to load a game preset JSON file (/w option to adjust settings and deviate from preset)
+                # OR
+                # 1c. Ask user to manually specify all game settings
+                # THEN
+                # 2. Create a Blackjack table /w specified settings
                 self.transition(GameState.WAITING)
             case GameState.WAITING:
                 self.wait_for_players_to_join()
@@ -761,8 +820,8 @@ class BlackjackStateMachine:
                 self.check_for_and_handle_initial_dealer_blackjack_if_present()
                 if (self.dealer.hands['center_seat'] != []): # Happens only when dealer doesn't have blackjack
                     self.check_for_and_handle_initial_players_blackjacks_if_any_present()
-            case GameState.PLAYER_PLAYING:
-                self.player_plays()
+            case GameState.PLAYERS_PLAYING:
+                self.play_all_remaining_players_hands()
             case GameState.DEALER_PLAYING:
                 self.dealer_plays()
             case GameState.FINAL_SCORING:

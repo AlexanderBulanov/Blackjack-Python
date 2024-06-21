@@ -9,46 +9,7 @@ import sys
 
 # Local Imports #
 from . import blackjack_game_objects as bjo
-
-# Global-scope reference objects #
-key_to_chip_default_bindings = {
-    '1': 'White',
-    '2': 'Pink',
-    '3': 'Red',
-    '4': 'Blue',
-    '5': 'Green',
-    '6': 'Black',
-    '7': 'Purple',
-    '8': 'Yellow',
-    '9': 'Brown',
-}
-
-key_to_chip_decrement_bindings = {
-    '!': 'White',
-    '@': 'Pink',
-    '#': 'Red',
-    '$': 'Blue',
-    '%': 'Green',
-    '^': 'Black',
-    '&': 'Purple',
-    '*': 'Yellow',
-    '(': 'Brown',
-}
-
-special_key_bindings = {
-    'v': 'view betting interface',
-    'd': 'display player chip pool',
-    'p': 'print current bet',
-    'r': 'reset current bet',
-    'f': 'finish current bet',
-    's': 'skip betting',
-    'g': 'get chips',
-    'c': 'color up',
-    'b': 'break down',
-    'm': 'move seat',
-    'a': 'add seat',
-    'l': 'leave seat',
-}
+from . import print_utils as prutils
 
 ### Defining Players for Tracking ###
 class Player:
@@ -76,7 +37,7 @@ class Player:
         }
         self.placed_side_bet_names = { # each group of names is stored in a list in format of ['Perfect Pairs', 'Lucky Ladies', etc.]
             'right_seat': None, # side_bet_names keeps track of which group of chips in side_bets is tied to which bet
-            'center_seat': None, # Side bet options - 'Perfect Pairs', 'Match the Dealer', 'Lucky Ladies', 'King's Bounty', 'Buster Blackjack', '21+3'
+            'center_seat': None, # Side bet options - 'Insurance', 'Perfect Pairs', 'Match the Dealer', 'Lucky Ladies', 'King's Bounty', 'Buster Blackjack', '21+3'
             'left_seat': None
         }
         self.side_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
@@ -247,6 +208,7 @@ class Player:
                 break
         return return_bool
 
+    # Player print methods
     def print_player_stats(self, flag=None):
         print("*  *  *  *  *")
         if self.name == 'Dealer':
@@ -281,7 +243,7 @@ class Player:
                     print("")
                 case 'main_bets' | 'side_bets':
                     print(f"{key}:", end='')
-                    bet_type = getattr(self, key) # self.main_bets or self.side_bets
+                    bet_type = getattr(self, key) # player.main_bets or player.side_bets
                     for seat, seat_number in self.occupied_seats.items():
                         if (flag == 'v'):
                             print(f"\n    '{seat}': {bet_type[seat]}", end='')
@@ -301,7 +263,7 @@ class Player:
                     print("")
                 case 'main_bet_amounts' | 'side_bet_amounts':
                     print(f"{key}:", end='')
-                    bet_type_amount = getattr(self, key) # self.main_bet_amounts or self.side_bet_amounts
+                    bet_type_amount = getattr(self, key) # player.main_bet_amounts or player.side_bet_amounts
                     for seat, seat_number in self.occupied_seats.items():
                         if (flag == 'v'):
                             if (bet_type_amount[seat] != None):
@@ -320,7 +282,7 @@ class Player:
                     print("")
                 case 'hands' | 'hand_scores':
                     print(f"{key}:", end='')
-                    key_type = getattr(self, key) # self.hands or self.hand_scores
+                    key_type = getattr(self, key) # player.hands or player.hand_scores
                     for seat, seat_number in self.occupied_seats.items():
                         if (flag == 'v'):
                             print(f"\n    '{seat}': {key_type[seat]}", end='')
@@ -343,7 +305,15 @@ class Player:
                 displayed_bet[chip_color] = chip_count
         print(f"{self.name}'s ${self.chip_pool_balance} chip pool - {displayed_bet}")
 
-    # Helper methods
+    def print_current_main_bet(self, seat):
+        player_bet = self.main_bets[seat]
+        displayed_bet = {}
+        for chip_color, chip_count in player_bet.items():
+            if (chip_count > 0):
+                displayed_bet[chip_color] = chip_count
+        print(f"{self.name}'s ${self.main_bet_amounts[seat]} bet - {displayed_bet}")
+
+    # Whole number float cleanup helper functions
     def cast_whole_number_chip_pool_balance_to_int(self):
         chip_pool_balance_fraction = self.chip_pool_balance % 1
         if (chip_pool_balance_fraction == 0):
@@ -358,16 +328,21 @@ class Player:
         if (chip_pool_balance_fraction == 0):
             self.chip_pool_balance = int(self.chip_pool_balance)
 
-    def print_current_bet(self, seat):
-        player_bet = self.main_bets[seat]
-        displayed_bet = {}
-        for chip_color, chip_count in player_bet.items():
-            if (chip_count > 0):
-                displayed_bet[chip_color] = chip_count
-        print(f"{self.name}'s ${self.main_bet_amounts[seat]} bet - {displayed_bet}")
+    # Bet initialization helper functions
+    def init_main_bet_fields(self, seat_name):
+        empty_bet = dict.fromkeys(bjo.chip_names, 0)
+        self.main_bets[seat_name] = empty_bet # Note - different format from side bet fields
+        self.main_bet_amounts[seat_name] = 0 # Note - different format from side bet fields
 
+    def init_side_bet_fields(self, seat_name, side_bet_name):
+        self.placed_side_bet_names[seat_name] = [side_bet_name]
+        empty_bet = dict.fromkeys(bjo.chip_names, 0)
+        self.side_bets[seat_name] = [empty_bet]
+        self.side_bet_amounts[seat_name] = [0]
+
+    # Bet manipulation helper functions
     def increase_current_bet(self, seat, key):
-        chip_color = key_to_chip_default_bindings[key]
+        chip_color = prutils.key_to_chip_default_bindings[key]
         player_bet = self.main_bets[seat]
         if (self.chips[chip_color] == 0):
             sys.stderr.write(f"Cannot add {chip_color} (${bjo.chips[chip_color]}) chip - not enough chips of this type in {self.name}'s chip pool!\n")
@@ -380,10 +355,10 @@ class Player:
             self.main_bet_amounts[seat] += chip_worth
             self.chip_pool_balance -= chip_worth
             self.clean_up_fractions(seat)
-            self.print_current_bet(seat)
+            self.print_current_main_bet(seat)
 
     def decrease_current_bet(self, seat, key):
-        chip_color = key_to_chip_decrement_bindings[key]
+        chip_color = prutils.key_to_chip_decrement_bindings[key]
         player_bet = self.main_bets[seat]
         if player_bet[chip_color] > 0:
             player_bet[chip_color] -= 1
@@ -392,7 +367,7 @@ class Player:
             self.main_bet_amounts[seat] -= chip_worth
             self.chip_pool_balance += chip_worth
             self.clean_up_fractions(seat)
-            self.print_current_bet(seat)
+            self.print_current_main_bet(seat)
     
     def reset_current_bet(self, seat):
         player_bet = self.main_bets[seat]
@@ -446,11 +421,11 @@ class Player:
         key = msvcrt.getch().decode('utf-8') # Get a key (as a byte string) and decode it
         match key:
             case 'v':
-                self.view_betting_interface()
+                prutils.view_chip_betting_interface()
             case 'd':
                 self.print_player_chip_pool()
             case 'p':
-                self.print_current_bet(seat)
+                self.print_current_main_bet(seat)
             case 'r':
                 self.reset_current_bet(seat)
             case 'f':
@@ -468,12 +443,12 @@ class Player:
                 self.skip_bet(seat)
             case '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9':
                 self.increase_current_bet(seat, key)
-                #self.print_player_chip_pool()
-                #self.print_current_bet()
+                #prutils.print_player_chip_pool()
+                #self.print_current_main_bet()
             case '!' | '@' | '#' | '$' | '%' | '^' | '&' | '*' | '(':
                 self.decrease_current_bet(seat, key)
-                #self.print_player_chip_pool()
-                #self.print_current_bet()
+                #prutils.print_player_chip_pool()
+                #self.print_current_main_bet()
             case 'g' | 'c' | 'b' | 'm' | 'a' | 'l':
                 match key:
                     case 'g':
@@ -491,53 +466,3 @@ class Player:
             case other:
                 sys.stderr.write(f"Invalid input '{key}'\n")
                 print("Provide a valid key or press 'v' to see valid key input options")
-
-    def print_betting_interface_padding(self, chip_color):
-        padding_spaces = 14
-        for char in str(bjo.chips[chip_color]):
-            padding_spaces -= 1
-        for char in chip_color:
-            padding_spaces -= 1
-        for num in range(0, padding_spaces):
-            print(" ", end='')
-
-    def print_letter_keybinding(self, chip_keybind, chip_color):
-        if ((int(chip_keybind)-1) < 6):
-            other_keybindings_list = list(special_key_bindings.keys())
-            # Print 6 keybindings in one column, then 6 more in the padded one to the right
-            self.print_betting_interface_padding(chip_color)
-            other_keybind_col_one = other_keybindings_list[int(chip_keybind)-1]
-            print(f"{other_keybind_col_one}: {special_key_bindings[other_keybind_col_one]}", end='')
-            padding_spaces = 28
-            other_keybinding_names = list(special_key_bindings.values())
-            other_keybinding_name = other_keybinding_names[int(chip_keybind)-1]
-            #print(repr(other_keybinding_name))
-            for char in other_keybinding_name:
-                padding_spaces -= 1
-            #print(padding_spaces, end='')
-            for num in range(0, padding_spaces):
-                print(" ", end='')
-            other_keybind_col_two = other_keybindings_list[int(chip_keybind)-1+6]
-            print(f"{other_keybind_col_two}: {special_key_bindings[other_keybind_col_two]}")
-        else:
-            print("")
-
-    def view_betting_interface(self):
-        print("Press the following number keys to add chips, symbol keys to remove chips, and letter keys to execute special actions:")
-        for chip_keybind, chip_color in key_to_chip_default_bindings.items():
-            print(f"{chip_keybind}: +${bjo.chips[chip_color]} ({chip_color})", end='')
-            self.print_betting_interface_padding(chip_color)
-            chip_decrement_keybind = list(key_to_chip_decrement_bindings.keys())[int(chip_keybind)-1]
-            print(f"{chip_decrement_keybind}: -${bjo.chips[chip_color]} ({chip_color})", end='')
-            self.print_letter_keybinding(chip_keybind, chip_color)
-
-    def init_select_seat_main_bet_fields(self, seat_name): # Todo AB: Different internal structure from init_select_seat_side_bet_fields() - a problem?
-        empty_bet = dict.fromkeys(bjo.chip_names, 0)
-        self.main_bets[seat_name] = empty_bet
-        self.main_bet_amounts[seat_name] = 0
-
-    def init_select_seat_side_bet_fields(self, seat_name, side_bet_name):
-        self.placed_side_bet_names[seat_name] = [side_bet_name]
-        empty_bet = dict.fromkeys(bjo.chip_names, 0)
-        self.side_bets[seat_name] = [empty_bet]
-        self.side_bet_amounts[seat_name] = [0]
