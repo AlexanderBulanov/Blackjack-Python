@@ -43,8 +43,8 @@ class BlackjackStateMachine:
         self.min_bet = 1 # Options - 1 to 100
         self.max_bet = 100 # Options - 100 to 10000 (usually 100x the min_bet)
         self.blackjack_ratio = 3/2 # Options - 3/2, 6/5
-        self.seventeen_rule = 'S17' # Options - 'S17', 'H17'
-        self.surrender_rule = None # Options - None, 'ES', 'ES10', 'LS'
+        self.seventeen_rule = 'H17' # Options - 'S17', 'H17'
+        self.surrender_rule = 'NS' # Options - 'NS', 'ES', 'ES10', 'LS'
         self.doubling_rule = 'DA2' # Options - 'DA2', 'D9', 'D10'
         self.double_after_split_rule = 'DAS' # Options - 'DAS', 'NDAS'
         self.splitting_rule = 'SP4' # Options - 'SP2', 'SP4'
@@ -90,11 +90,16 @@ class BlackjackStateMachine:
              '3 or 4 Cards': 2
             }
         ]
-        self.table_side_bet_names = [] # Names of up to 2 supported side bets copied over in INITIALIZING state
-        self.table_side_bet_limits = [] # Each side bet's limits are a tuple of (min_side_bet, max_side_bet); added in INITIALIZING state
-        self.table_side_bet_payout_tables = [] # Tables of up to 2 supported side bets copied over in INITIALIZING state (optionally updated)
-
-        self.joining_restriction = None # Options - None, 'NMSE'
+        self.table_side_bet_names = ['Perfect Pairs'] # Names of up to 2 supported side bets copied over in INITIALIZING state
+        self.table_side_bet_limits = [(1, 100)] # Each side bet's limits are a tuple of (min_side_bet, max_side_bet); added in INITIALIZING state
+        self.table_side_bet_payout_tables = [
+            {
+             'Perfect Pair': 25,
+             'Colored Pair': 12,
+             'Red/Black Pair': 6
+            }
+        ] # Tables of up to 2 supported side bets copied over in INITIALIZING state (optionally updated)
+        self.joining_restriction = 'NMSE' # Options - None, 'NMSE'
         self.dealer = bjp.Player.create_casino_dealer()
         self.waiting_players = []
         self.seated_players = {1: None, 2: None, 3: None, 4: None, 5: None, 6: None, 7: None}
