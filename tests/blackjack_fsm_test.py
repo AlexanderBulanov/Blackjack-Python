@@ -13,27 +13,17 @@ import lib.blackjack_game_settings as bjs
 import lib.blackjack_game_objects as bjo
 
 
-class Test_INITIALIZING:
-    def test_blackjack_state_machine_beginning_state_is_INITIALIZING(self):
+class Test_WAITING:
+    def test_blackjack_state_machine_beginning_state_is_WAITING(self):
         # Test
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        assert test_machine.state == bjfsm.GameState.INITIALIZING
-
-    def test_blackjack_state_machine_transitions_to_WAITING_from_INITIALIZING(self):
-        # Setup
-        num_of_decks = 1
-        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        # Test
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         assert test_machine.state == bjfsm.GameState.WAITING
 
-class Test_WAITING:
     def test_blackjack_state_machine_transitions_to_STARTING_from_WAITING_after_one_player_starts_game(self, monkeypatch):
         # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         # Test
         simulated_input_values = ['Alex', '2']
         iterable_simulated_input_values = iter(simulated_input_values)
@@ -46,7 +36,6 @@ class Test_WAITING:
         # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         # Test
         simulated_input_values = ['Alex', '2']
         iterable_simulated_input_values = iter(simulated_input_values)
@@ -59,7 +48,6 @@ class Test_WAITING:
         # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         # Test
         simulated_input_values = ['Alex', '2', 'Jim', '2', '3']
         iterable_simulated_input_values = iter(simulated_input_values)
@@ -76,7 +64,6 @@ class Test_WAITING:
         # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         # Test
         simulated_input_values = ['Alex', '2', 'Jim', '2', '3', 'John', '7']
         iterable_simulated_input_values = iter(simulated_input_values)
@@ -94,7 +81,6 @@ class Test_WAITING:
         # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         # Test
         simulated_input_values = ['Alex', '2', 'Jim', '3', 'John', '7', 'Mike', '1', 'Kim', '4', 'Jane', '5', 'Bob']
         iterable_simulated_input_values = iter(simulated_input_values)
@@ -112,13 +98,11 @@ class Test_WAITING:
         assert test_machine.seated_players[7].name == 'John'
         assert test_machine.state == bjfsm.GameState.STARTING
 
-
 class Test_STARTING:
     def test_blackjack_state_machine_transitions_to_SHUFFLING_from_STARTING(self, monkeypatch):
         # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         simulated_input_values = ['Alex', '2']
         iterable_simulated_input_values = iter(simulated_input_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
@@ -132,7 +116,6 @@ class Test_STARTING:
         # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         simulated_input_values = ['Alex', '2']
         iterable_simulated_input_values = iter(simulated_input_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
@@ -147,7 +130,6 @@ class Test_STARTING:
         # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         simulated_input_values = ['Alex', '2', 'Ahmed', '1']
         iterable_simulated_input_values = iter(simulated_input_values)
         simulated_char_values = [b'p', b's']
@@ -165,7 +147,6 @@ class Test_STARTING:
         # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         simulated_input_values = ['Alex', '2']
         iterable_simulated_input_values = iter(simulated_input_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
@@ -181,7 +162,6 @@ class Test_STARTING:
         # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         simulated_input_values = ['Alex', '2', 'Ahmed', '1']
         iterable_simulated_input_values = iter(simulated_input_values)
         simulated_char_values = [b'p', b's']
@@ -213,13 +193,11 @@ class Test_STARTING:
         ### Test Code Here ###
     """
 
-
 class Test_SHUFFLING:
     def test_blackjack_state_machine_transitions_to_BETTING_from_SHUFFLING(self, monkeypatch):
         # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         simulated_input_values = ['Alex', '2']
         iterable_simulated_input_values = iter(simulated_input_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
@@ -234,7 +212,6 @@ class Test_SHUFFLING:
         ## Setup ##
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         simulated_input_values = ['Alex', '2']
         iterable_simulated_input_values = iter(simulated_input_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
@@ -263,7 +240,6 @@ class Test_SHUFFLING:
         ## Setup ##
         num_of_decks = 8
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         simulated_input_values = ['Alex', '2']
         iterable_simulated_input_values = iter(simulated_input_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
@@ -293,7 +269,6 @@ class Test_SHUFFLING:
         num_of_decks = 1
         min_cut_percentage_one_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][0]
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         simulated_input_values = ['Alex', '2']
         iterable_simulated_input_values = iter(simulated_input_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
@@ -323,7 +298,6 @@ class Test_SHUFFLING:
         num_of_decks = 1
         min_cut_percentage_one_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][1]
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         simulated_input_values = ['Alex', '2']
         iterable_simulated_input_values = iter(simulated_input_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
@@ -353,7 +327,6 @@ class Test_SHUFFLING:
         num_of_decks = 2
         min_cut_percentage_two_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][0]
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         simulated_input_values = ['Alex', '2']
         iterable_simulated_input_values = iter(simulated_input_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
@@ -383,7 +356,6 @@ class Test_SHUFFLING:
         num_of_decks = 2
         min_cut_percentage_two_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][1]
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         simulated_input_values = ['Alex', '2']
         iterable_simulated_input_values = iter(simulated_input_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
@@ -413,7 +385,6 @@ class Test_SHUFFLING:
         num_of_decks = 4
         min_cut_percentage_four_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][0]
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         simulated_input_values = ['Alex', '2']
         iterable_simulated_input_values = iter(simulated_input_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
@@ -443,7 +414,6 @@ class Test_SHUFFLING:
         num_of_decks = 4
         min_cut_percentage_four_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][1]
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         simulated_input_values = ['Alex', '2']
         iterable_simulated_input_values = iter(simulated_input_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
@@ -473,7 +443,6 @@ class Test_SHUFFLING:
         num_of_decks = 6
         min_cut_percentage_six_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][0]
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         simulated_input_values = ['Alex', '2']
         iterable_simulated_input_values = iter(simulated_input_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
@@ -503,7 +472,6 @@ class Test_SHUFFLING:
         num_of_decks = 6
         min_cut_percentage_six_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][1]
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         simulated_input_values = ['Alex', '2']
         iterable_simulated_input_values = iter(simulated_input_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
@@ -533,7 +501,6 @@ class Test_SHUFFLING:
         num_of_decks = 8
         min_cut_percentage_eight_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][0]
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         simulated_input_values = ['Alex', '2']
         iterable_simulated_input_values = iter(simulated_input_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
@@ -563,7 +530,6 @@ class Test_SHUFFLING:
         num_of_decks = 8
         min_cut_percentage_eight_deck_shoe = bjs.casino_deck_pen_percentage_bounds[num_of_decks][1]
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
-        test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
         simulated_input_values = ['Alex', '2']
         iterable_simulated_input_values = iter(simulated_input_values)
         monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
@@ -588,8 +554,7 @@ class Test_SHUFFLING:
             #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
             assert card_occurrence_counts[card] == 8
 
-# Todo AB: Add the following line to every state test after this line due to new INITIALIZING first state:
-# test_machine.step() # executes methods inside INITIALIZING state and transitions to WAITING
+
 class Test_BETTING_One_Hand_per_Player:
     def test_blackjack_state_machine_transitions_to_DEALING_from_BETTING(self, monkeypatch):
         # Setup

@@ -21,21 +21,20 @@ from . import print_utils as prutils
 
 ### Blackjack State Machine ###
 class GameState(Enum):
-    INITIALIZING = 0
-    WAITING = 1
-    STARTING = 2
-    SHUFFLING = 3
-    BETTING = 4
-    DEALING = 5
-    INITIAL_SCORING = 6
-    PLAYERS_PLAYING = 7
-    DEALER_PLAYING = 8
-    FINAL_SCORING = 9
+    WAITING = 0
+    STARTING = 1
+    SHUFFLING = 2
+    BETTING = 3
+    DEALING = 4
+    INITIAL_SCORING = 5
+    PLAYERS_PLAYING = 6
+    DEALER_PLAYING = 7
+    FINAL_SCORING = 8
 
 
 class BlackjackStateMachine:
     def __init__(self, num_of_decks):
-        self.state = GameState.INITIALIZING
+        self.state = GameState.WAITING
         self.num_of_decks = num_of_decks
         self.pen = None # set in SHUFFLING within bounds specified for given num_of_decks
         self.shoe = bjo.get_shoe_of_n_decks(self.num_of_decks)
@@ -846,25 +845,6 @@ class BlackjackStateMachine:
     def step(self):
         print(f"Current state: {self.state}")
         match self.state:
-            case GameState.INITIALIZING:
-                print(f"Welcome to Blackjack! Please select game launch options from the ones listed below.")
-                prutils.view_game_launch_options()
-
-
-
-
-                #game_launch_option = self.get_game_option_input_character()
-
-                
-                
-                # 1a. Ask user if they want to run a default game (/w option to adjust settings and deviate from template)
-                # OR
-                # 1b. Ask user if they want to load a game preset JSON file (/w option to adjust settings and deviate from preset)
-                # OR
-                # 1c. Ask user to manually specify all game settings
-                # THEN
-                # 2. Create a Blackjack table /w specified settings
-                self.transition(GameState.WAITING)
             case GameState.WAITING:
                 self.wait_for_players_to_join()
             case GameState.STARTING:
