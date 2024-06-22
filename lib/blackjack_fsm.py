@@ -37,20 +37,65 @@ class BlackjackStateMachine:
     def __init__(self, num_of_decks):
         self.state = GameState.INITIALIZING
         self.num_of_decks = num_of_decks
-        self.pen = None
+        self.pen = None # set in SHUFFLING within bounds specified for given num_of_decks
         self.shoe = bjo.get_shoe_of_n_decks(self.num_of_decks)
         self.discard = []
+        self.min_bet = 1 # Options - 1 to 100
+        self.max_bet = 100 # Options - 100 to 10000 (usually 100x the min_bet)
+        self.blackjack_ratio = 3/2 # Options - 3/2, 6/5
+        self.seventeen_rule = 'S17' # Options - 'S17', 'H17'
+        self.surrender_rule = None # Options - None, 'ES', 'ES10', 'LS'
+        self.doubling_rule = 'DA2' # Options - 'DA2', 'D9', 'D10'
+        self.double_after_split_rule = 'DAS' # Options - 'DAS', 'NDAS'
+        self.splitting_rule = 'SP4' # Options - 'SP2', 'SP4'
+        self.split_10s_rule = 'Rank' # Options - 'Value', 'Rank'
+        self.ace_resplit_rule = 'RSA' # Options - 'RSA', 'NRSA'
+        self.unsupported_side_bet_shoe_size = 1 # single-deck shoes have no eligible side bets
+        self.supported_side_bet_names = ['Perfect Pairs', 'Match the Dealer', 'Lucky Ladies', "King's Bounty", 'Buster Blackjack']
+        self.supported_side_bet_limits = [(1, 100), (1, 500), (1, 25), (1, 100), (1, 100)]
+        self.supported_side_bet_payout_tables = [
+            {
+             'Perfect Pair': 25,
+             'Colored Pair': 12,
+             'Red/Black Pair': 6
+            },
+            {
+             '2 Suited Matches': 20,
+             '1 Non-Suited & 1 Suited Match': 14,
+             '1 Suited Match': 10,
+             '2 Non-Suited Matches': 8,
+             '1 Non-Suited Match': 4
+            },
+            {
+             'Queen of Hearts Pair (with Dealer Blackjack)': 1000,
+             'Queen of Hearts Pair': 125,
+             'Matched 20': 19,
+             'Suited 20': 9,
+             'Unsuited 20': 4
+            },
+            {
+             'King of Spades Pair (with Dealer Blackjack)': 1000,
+             'King of Spades Pair': 100,
+             'Suited Kings Pair (not spades)': 30,
+             'Suited Qs, Js, or 10s Pair': 20,
+             'Suited 20': 9,
+             'Unsuited Kings Pair': 6,
+             'Unsuited 20': 4
+            },
+            {
+             '8 or More Cards': 250,
+             '7 Cards': 50,
+             '6 Cards': 12,
+             '5 Cards': 4,
+             '3 or 4 Cards': 2
+            }
+        ]
+        self.table_side_bet_names = [] # Names of up to 2 supported side bets copied over in INITIALIZING state
+        self.table_side_bet_limits = [] # Each side bet's limits are a tuple of (min_side_bet, max_side_bet); added in INITIALIZING state
+        self.table_side_bet_payout_tables = [] # Tables of up to 2 supported side bets copied over in INITIALIZING state (optionally updated)
+
+        self.joining_restriction = None # Options - None, 'NMSE'
         self.dealer = bjp.Player.create_casino_dealer()
-        self.seventeen_rule = 'S17'
-        self.min_bet = 1
-        self.max_bet = 100
-        self.blackjack_ratio = 3/2
-        self.offered_side_bets = [] # Each side bet is a 3-tuple of (side_bet_name, min_side_bet, max_side_bet)
-        # Side Bet fields:
-        ## side_bet_name
-        ## min_side_bet
-        ## max_side_bet
-        ## {'condition1': payout1, 'condition2': payout2, 'condition3': payout3}
         self.waiting_players = []
         self.seated_players = {1: None, 2: None, 3: None, 4: None, 5: None, 6: None, 7: None}
         self.known_players = [] # list of all players who have played a shoe, now or in the past
@@ -63,6 +108,15 @@ class BlackjackStateMachine:
             'split': lambda: self.split(),
             'surrender': lambda: self.surrender(),
         }
+        """
+            'st': lambda: self.stand(),
+            'ht': lambda: self.hit(),
+            'dd': lambda: self.double_down(),
+            'sp': lambda: self.split(),
+            'es': lambda: self.early_surrender(),
+            'ls': lambda: self.late_surrender(),
+        }
+        """
         self.player_special_actions = {
             'join': lambda: self.join(),
             'color up': lambda: self.color_up(),
@@ -542,6 +596,9 @@ class BlackjackStateMachine:
         dealer_hole_card = self.dealer.hands['center_seat'][1]
         dealer_face_up_card_value = bjo.cards[dealer_face_up_card[:-1]][0] # Used only to check if face card is 10/face, gives incorrect Ace value on purpose
         dealer_hole_card_value = bjo.cards[dealer_hole_card[:-1]][0] # Used only to check if hole card is 10/face, gives incorrect Ace value on purpose
+        
+        # Todo AB: OFFER EARLY SURRENDER HERE IF TABLE RULE ALLOWS IT
+
         if (dealer_face_up_card in ['AH', 'AC', 'AD', 'AS']):
             print("Dealer's face card is an Ace!")
             print("Offering 'insurance' and 'even money' side bets:")
@@ -653,26 +710,25 @@ class BlackjackStateMachine:
 
     def play_player_hand(self, player, seat_name):
         #print(f"{player.name} has a hand of {player.hands[seat_name]}")
-        pass
-
-
-    def active_player_plays_all_of_their_hands(self):
-        """
-        DEBUG
-        """
-        #self.active_player.print_player_stats()
         # Get action from currently active player (starting leftmost at hand start)
-        self.active_player.action = input("Enter an action: ").strip().lower()
+        player.action = input("Enter an action: ").strip().lower()
         # Check that active player action is valid
-        if self.active_player.action not in self.player_turn_actions:
-            sys.stderr.write("Unknown action", repr(self.active_player.action), "from player", self.active_player.name,
+        if player.action not in self.player_turn_actions:
+            sys.stderr.write("Unknown action", repr(player.action), "from player", player.name,
                   "entered, please enter one of the following without quotes:\n")
             print(list(self.player_turn_actions.keys()))
-        else:
-            print("Executing Player "+self.active_player.name+"'s action "+repr(self.active_player.action))
+        elif player.action == 'stand':
+            print(f"Executing action '{player.action}' for player '{player.name}'")
             # Execute player's entered action
-            self.player_turn_actions[self.active_player.action]()
+            self.player_turn_actions[player.action]()
             # Transitions are handled by each respective player action function
+        else:
+            # Process:
+            # HIT
+            # DOUBLE
+            # SPLIT
+            # LATE SURRENDER
+            pass
 
 
     def dealer_plays(self):
@@ -764,10 +820,6 @@ class BlackjackStateMachine:
         else:
             self.transition(GameState.DEALING)
 
-
-    def view_game_launch_options(self):
-        pass
-
     """
     def get_game_option_input_character(self):
         key = msvcrt.getch().decode('utf-8') # Get a key (as a byte string) and decode it
@@ -790,9 +842,15 @@ class BlackjackStateMachine:
         print(f"Current state: {self.state}")
         match self.state:
             case GameState.INITIALIZING:
-                print(f"Welcome to Blackjack! Please select game start options from the ones listed below.")
-                self.view_game_launch_options()
+                print(f"Welcome to Blackjack! Please select game launch options from the ones listed below.")
+                prutils.view_game_launch_options()
+
+
+
+
                 #game_launch_option = self.get_game_option_input_character()
+
+                
                 
                 # 1a. Ask user if they want to run a default game (/w option to adjust settings and deviate from template)
                 # OR
