@@ -105,37 +105,37 @@ class BlackjackStateMachine:
         self.known_players = [] # list of all players who have played a shoe, now or in the past
         self.active_player = None
         self.current_round_natural_blackjacks = {} # dictionary of players and all of the seats to which blackjack hands were naturally dealt this round
+        self.player_turn_actions = ['stand', 'hit', 'double', 'split', 'surrender']
+        """
         self.player_turn_actions = {
             'stand': lambda: self.stand(),
             'hit': lambda: self.hit(),
-            'double down': lambda: self.double_down(),
+            'double down': lambda: self.double(),
             'split': lambda: self.split(),
             'surrender': lambda: self.surrender(),
         }
-        """
             'st': lambda: self.stand(),
             'ht': lambda: self.hit(),
-            'dd': lambda: self.double_down(),
+            'dd': lambda: self.double(),
             'sp': lambda: self.split(),
             'es': lambda: self.early_surrender(),
             'ls': lambda: self.late_surrender(),
         }
-        """
         self.player_special_actions = {
-            'join': lambda: self.join(),
             'color up': lambda: self.color_up(),
             'break down': lambda: self.break_down(),
             'skip': lambda: self.skip_turn(),
             'leave': lambda: self.leave()
         }
-
+        """
 
     def transition(self, next_state):
         self.state = next_state
 
-
     # Player Turn Actions #    
-    def stand(self):
+    def stand(self, player):
+        return True
+        """
         next_player_present = False
         current_active_table_seat = 0
         # Get table seat of currently active player
@@ -159,15 +159,17 @@ class BlackjackStateMachine:
                     self.active_player = seated_player
                     break
             self.transition(GameState.DEALER_PLAYING)
+        """
             
 
     def hit(self, player, seat_name):
         # Todo AB: Add hand_index as a variable to account for a single player playing multiple hands at a table
         self.handle_front_cut_card()
         player.hands[seat_name].append([self.shoe.pop(0)])
+        
         self.transition(GameState.INITIAL_SCORING)
 
-    def double_down(self):
+    def double(self):
         pass
 
     def split(self):
@@ -177,13 +179,12 @@ class BlackjackStateMachine:
         pass
 
     # Other Player Actions #
-    def join(self):
+    def color_up(self, player):
+        print("Colored up chips!")
         pass
 
-    def color_up(self):
-        pass
-
-    def break_down(self):
+    def break_down(self, player):
+        print("Broke down chips!")
         pass
     
     def skip_turn(self):
@@ -391,7 +392,7 @@ class BlackjackStateMachine:
             if (seat_pos != None): # Get each player's main bets from up to 3 seats they can occupy
                 # Get player's main bet at their given seat
                 player.init_main_bet_fields(seat_name)
-                print(f"Player '{player.name}' placing a main bet at Seat #{seat_pos} (their '{seat_name}')")
+                print(f"Player '{player.name}' is placing a main bet at Seat #{seat_pos} (their '{seat_name}')")
                 prutils.view_chip_betting_interface()
                 player.print_player_chip_pool()
                 while True: # Using this format instead of try-except and custom exception ExitBettingInterface, to pass tests
@@ -428,6 +429,37 @@ class BlackjackStateMachine:
             self.discard.extend([self.shoe.pop(0)])
 
 
+    def deal(self):
+        # Repeat the following twice:
+        for x in range(0, 2):
+            # Deal a card from shoe to each player
+            for player in self.seated_players.values():
+                if (player != None):
+                    for seat_name, seat_number in player.occupied_seats.items():
+                        if (seat_number != None):
+                            self.handle_front_cut_card() # Slide 'front_cut_card' to discard if encountered mid-shoe
+                            if (player.hands[seat_name] == None):
+                                player.hands[seat_name] = []
+                            player.hands[seat_name].append(self.shoe.pop(0))
+            # Deal a card from shoe to dealer
+            self.handle_front_cut_card() # Slide 'front_cut_card' to discard if encountered mid-shoe
+            if (self.dealer.hands['center_seat'] == None):
+                self.dealer.hands['center_seat'] = []
+            self.dealer.hands['center_seat'].append(self.shoe.pop(0))
+        # Print debug info on players hands and % of shoe dealt
+        """
+        # DEBUG
+        self.dealer.print_player_stats()
+        for player in self.seated_players:
+            player.print_player_stats()
+        """
+        self.print_all_hands()
+        percentage_of_shoe_dealt = int(round(100-(100*(len(self.shoe)/(2+self.num_of_decks*52))), 0))
+        print(f"{percentage_of_shoe_dealt}% of the shoe dealt (reshuffling at round end past {str(self.pen)}%)")
+        self.transition(GameState.INITIAL_SCORING)
+
+
+
     def score_all_hands_in_play(self):
         for player in self.seated_players.values():
             if player != None:
@@ -447,8 +479,35 @@ class BlackjackStateMachine:
         self.dealer.hand_scores['center_seat'] = dealer_hand_score
 
 
-    def offer_insurance_and_even_money_side_bets(self):
+    def offer_early_surrender_if_used_at_table_to_one_player(self):
+        if self.surrender_rule in ['ES', 'ES10']:
+            print("Would you like to make an early surrender and forfeit half your bet?")
+            print("Press 'y' for Yes', 'n' for No.")
+            key = msvcrt.getch().decode('utf-8') # Get a key (as a byte string) and decode it
+            match key:
+                case 'y':
+                    # Get an early surrender - either ES or ES10
+                    if self.surrender_rule == 'ES':
+                        pass
+                    elif self.surrender_rule == 'ES10':
+                        pass
+                    pass
+                case 'n':
+                    pass
+                case other:
+                    sys.stderr.write(f"Invalid input '{key}'\n")
+                    print("Provide one of the following valid keys - 'y' for Yes, 'n' for No.")
+
+    def offer_early_surrender_if_used_at_table_to_all_players(self):
         pass
+
+    def offer_even_money_and_insurance_side_bet(self):
+        pass
+
+
+    def offer_late_surrender_if_used_at_table(self):
+        if self.surrender_rule == 'LS':
+            pass
 
     def reveal_dealer_hand(self):
         print(f"Dealer hand is {self.dealer.hands['center_seat']}")
@@ -606,7 +665,7 @@ class BlackjackStateMachine:
         if (dealer_face_up_card in ['AH', 'AC', 'AD', 'AS']):
             print("Dealer's face card is an Ace!")
             print("Offering 'insurance' and 'even money' side bets:")
-            self.offer_insurance_and_even_money_side_bets() # Todo AB: Add functionality to offer side bets
+            self.offer_even_money_and_insurance_side_bet() # Todo AB: Add functionality to offer side bets
             if (dealer_hole_card_value == 10):
                 self.reveal_dealer_hand()
                 self.pay_winning_side_bets() # Todo AB: Add functionality to pay out winning side bet hands
@@ -673,49 +732,54 @@ class BlackjackStateMachine:
             else:
                 self.transition(GameState.PLAYERS_PLAYING)
 
-
-    def deal(self):
-        # Repeat the following twice:
-        for x in range(0, 2):
-            # Deal a card from shoe to each player
-            for player in self.seated_players.values():
-                if (player != None):
-                    for seat_name, seat_number in player.occupied_seats.items():
-                        if (seat_number != None):
-                            self.handle_front_cut_card() # Slide 'front_cut_card' to discard if encountered mid-shoe
-                            if (player.hands[seat_name] == None):
-                                player.hands[seat_name] = []
-                            player.hands[seat_name].append(self.shoe.pop(0))
-            # Deal a card from shoe to dealer
-            self.handle_front_cut_card() # Slide 'front_cut_card' to discard if encountered mid-shoe
-            if (self.dealer.hands['center_seat'] == None):
-                self.dealer.hands['center_seat'] = []
-            self.dealer.hands['center_seat'].append(self.shoe.pop(0))
-        # Print debug info on players hands and % of shoe dealt
-        """
-        # DEBUG
-        self.dealer.print_player_stats()
-        for player in self.seated_players:
-            player.print_player_stats()
-        """
-        self.print_all_hands()
-        percentage_of_shoe_dealt = int(round(100-(100*(len(self.shoe)/(2+self.num_of_decks*52))), 0))
-        print(f"{percentage_of_shoe_dealt}% of the shoe dealt (reshuffling at round end past {str(self.pen)}%)")
-        self.transition(GameState.INITIAL_SCORING)
-
-
     def play_all_remaining_players_hands(self):
         for player in self.seated_players.values():
             if (player != None):
                 for seat_name, seat_number in player.occupied_seats.items():
                     if (seat_number != None):
-                        print(f"Player '{player.name}' chooses action at Seat #{seat_number} (their '{seat_name}')")
-                        self.play_player_hand(player, seat_name)
+                        print(f"Player '{player.name}' is choosing an action at Seat #{seat_number} (their '{seat_name}')")
+                        prutils.view_player_turn_action_options()
+                        while True:
+                            # Maybe loop over until player stands?
+                            if self.play_player_hand(player, seat_name):
+                                print("Executed turn action choice, exiting...")
+                                break
 
     def play_player_hand(self, player, seat_name):
-        #print(f"{player.name} has a hand of {player.hands[seat_name]}")
-        # Get action from currently active player (starting leftmost at hand start)
-        player.action = input("Enter an action: ").strip().lower()
+        # Todo AB: Make sure the above code scales with player making multiple hand bets
+        key = msvcrt.getch().decode('utf-8') # Get a key (as a byte string) and decode it
+        match key:
+            case '1':
+                print(f"Executing action 'stand' for player {player}")
+                self.stand(player)
+            case '2':
+                print(f"Executing action 'hit' for player {player} at seat {seat_name}")
+                self.hit(player, seat_name)
+            case '3':
+                print(f"Executing action 'double' for player {player} at seat {seat_name}")
+                self.double(player, seat_name)
+            case '4':
+                print(f"Executing action 'split' for player {player} at seat {seat_name}")
+                self.split(player, seat_name)
+            case '5':
+                print(f"Executing action 'surrender' for player {player} at seat {seat_name}")
+                self.surrender(player, seat_name)
+            case 'v':
+                prutils.view_player_turn_action_options()
+            case 'p':
+                player.print_current_main_bet(seat_name)
+            case 'c':
+                self.color_up(player) # Todo AB: implement color_up()
+            case 'b':
+                self.break_down(player) # Todo AB: implement break_down()
+            case other:
+                sys.stderr.write(f"Invalid input '{key}'\n")
+                print("Provide a valid key or press 'v' to see valid key input options")
+
+
+
+
+        """
         # Check that active player action is valid
         if player.action not in self.player_turn_actions:
             sys.stderr.write("Unknown action", repr(player.action), "from player", player.name,
@@ -733,6 +797,7 @@ class BlackjackStateMachine:
             # SPLIT
             # LATE SURRENDER
             pass
+        """
 
 
     def dealer_plays(self):
@@ -859,7 +924,10 @@ class BlackjackStateMachine:
             case GameState.DEALING:
                 self.deal() # Todo AB: Update deal() to work with players occupying multiple seats
             case GameState.INITIAL_SCORING:
+                # OFFER EARLY SURRENDER HERE?
+
                 self.score_all_hands_in_play()
+                
                 self.check_for_and_handle_initial_dealer_blackjack_if_present()
                 if (self.dealer.hands['center_seat'] != []): # Happens only when dealer doesn't have blackjack
                     self.check_for_and_handle_initial_players_blackjacks_if_any_present()

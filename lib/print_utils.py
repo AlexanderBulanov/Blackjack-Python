@@ -50,6 +50,21 @@ special_main_bet_key_bindings = {
     'l': 'leave seat',
 }
 
+player_turn_core_actions_keybindings = {
+    '1': 'stand',
+    '2': 'hit',
+    '3': 'double',
+    '4': 'split',
+    '5': 'surrender'
+}
+
+player_turn_special_actions_keybindings = {
+    'v': 'view turn action options',
+    'p': 'print current bet',
+    'c': 'color up',
+    'b': 'break down'
+}
+
 def print_betting_interface_padding(chip_color):
         padding_spaces = 14
         for char in str(bjo.chips[chip_color]):
@@ -96,3 +111,22 @@ def view_game_launch_options(): # Todo AB: Implement
 
 def view_side_bet_options_interface(): # Todo AB: Implement
     pass
+
+
+def print_turn_action_option_interface_padding(action):
+        padding_spaces = 13
+        for char in action:
+            padding_spaces -= 1
+        for num in range(0, padding_spaces):
+            print(" ", end='')
+
+def view_player_turn_action_options():
+    print("Press one of the following number or letter keys to choose a turn action:")
+    for digit_key, action in player_turn_core_actions_keybindings.items():
+        print(f"{digit_key}: {action}", end='')
+        # Print padding, letter key and its meaning (4 special action keys available)
+        if int(digit_key) < 5:
+            print_turn_action_option_interface_padding(action)
+            turn_action_special_keybind, turn_action_special_keybind_description = list(player_turn_special_actions_keybindings.items())[int(digit_key)-1]
+            print(f"{turn_action_special_keybind}: {turn_action_special_keybind_description}")
+    print("")
