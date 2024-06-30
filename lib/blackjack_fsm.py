@@ -43,12 +43,12 @@ class BlackjackStateMachine:
         self.max_bet = 100 # Options - 100 to 10000 (usually 100x the min_bet)
         self.blackjack_ratio = 3/2 # Options - 3/2, 6/5
         self.seventeen_rule = 'H17' # Options - 'S17', 'H17'
-        self.surrender_rule = 'NS' # Options - 'NS', 'ES', 'ES10', 'LS'
+        self.surrender_rule = 'LS' # Options - 'NS', 'ES', 'ES10', 'LS'
         self.doubling_rule = 'DA2' # Options - 'DA2', 'D9', 'D10'
         self.double_after_split_rule = 'DAS' # Options - 'DAS', 'NDAS'
         self.splitting_rule = 'SP4' # Options - 'SP2', 'SP4'
         self.split_10s_rule = 'Rank' # Options - 'Value', 'Rank'
-        self.ace_resplit_rule = 'RSA' # Options - 'RSA', 'NRSA'
+        self.ace_resplit_rule = 'RSA' # Options - 'RSA', 'RSA3', 'NRSA'
         self.unsupported_side_bet_shoe_size = 1 # single-deck shoes have no eligible side bets
         self.supported_side_bet_names = ['Perfect Pairs', 'Match the Dealer', 'Lucky Ladies', "King's Bounty", 'Buster Blackjack']
         self.supported_side_bet_limits = [(1, 100), (1, 500), (1, 25), (1, 100), (1, 100)]
@@ -89,13 +89,20 @@ class BlackjackStateMachine:
              '3 or 4 Cards': 2
             }
         ]
-        self.table_side_bet_names = ['Perfect Pairs'] # Names of up to 2 supported side bets copied over in INITIALIZING state
-        self.table_side_bet_limits = [(1, 100)] # Each side bet's limits are a tuple of (min_side_bet, max_side_bet); added in INITIALIZING state
+        self.table_side_bet_names = ['Perfect Pairs', 'Buster Blackjack'] # Names of up to 2 supported side bets copied over in INITIALIZING state
+        self.table_side_bet_limits = [(1, 100), (1, 100)] # Each side bet's limits are a tuple of (min_side_bet, max_side_bet); added in INITIALIZING state
         self.table_side_bet_payout_tables = [
             {
              'Perfect Pair': 25,
              'Colored Pair': 12,
              'Red/Black Pair': 6
+            },
+            {
+             '8 or More Cards': 250,
+             '7 Cards': 50,
+             '6 Cards': 12,
+             '5 Cards': 4,
+             '3 or 4 Cards': 2
             }
         ] # Tables of up to 2 supported side bets copied over in INITIALIZING state (optionally updated)
         self.joining_restriction = 'NMSE' # Options - None, 'NMSE'
