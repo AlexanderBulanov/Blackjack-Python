@@ -103,31 +103,11 @@ class BlackjackStateMachine:
         self.waiting_players = []
         self.seated_players = {1: None, 2: None, 3: None, 4: None, 5: None, 6: None, 7: None}
         self.known_players = [] # list of all players who have played a shoe, now or in the past
+        self.last_occupied_seat = None
         self.active_player = None
         self.current_round_natural_blackjacks = {} # dictionary of players and all of the seats to which blackjack hands were naturally dealt this round
         self.player_turn_actions = ['stand', 'hit', 'double', 'split', 'surrender']
-        """
-        self.player_turn_actions = {
-            'stand': lambda: self.stand(),
-            'hit': lambda: self.hit(),
-            'double down': lambda: self.double(),
-            'split': lambda: self.split(),
-            'surrender': lambda: self.surrender(),
-        }
-            'st': lambda: self.stand(),
-            'ht': lambda: self.hit(),
-            'dd': lambda: self.double(),
-            'sp': lambda: self.split(),
-            'es': lambda: self.early_surrender(),
-            'ls': lambda: self.late_surrender(),
-        }
-        self.player_special_actions = {
-            'color up': lambda: self.color_up(),
-            'break down': lambda: self.break_down(),
-            'skip': lambda: self.skip_turn(),
-            'leave': lambda: self.leave()
-        }
-        """
+        
 
     def transition(self, next_state):
         self.state = next_state
@@ -135,48 +115,31 @@ class BlackjackStateMachine:
     # Player Turn Actions #    
     def stand(self, player):
         return True
-        """
-        next_player_present = False
-        current_active_table_seat = 0
-        # Get table seat of currently active player
-        for seated_player in self.seated_players.values():
-            current_active_table_seat += 1
-            if (seated_player == self.active_player):
-                break
-        # Scan for another player sitting at a higher-indexed table seat
-        for next_table_seat in range(current_active_table_seat+1, 8):
-            next_player = self.seated_players[next_table_seat]
-            # Assign next active player at a higher-indexed table seat
-            if next_player != None:
-                next_player_present = True
-                self.active_player = next_player
-                self.transition(GameState.PLAYERS_PLAYING)
-                break
-        # No next player at higher-indexed table seat --> set leftmost (w.r.t dealer) player to be active
-        if next_player_present == False:
-            for seated_player in self.seated_players.values():
-                if seated_player != None:
-                    self.active_player = seated_player
-                    break
-            self.transition(GameState.DEALER_PLAYING)
-        """
             
 
     def hit(self, player, seat_name):
         # Todo AB: Add hand_index as a variable to account for a single player playing multiple hands at a table
         self.handle_front_cut_card()
         player.hands[seat_name].append([self.shoe.pop(0)])
-        
-        self.transition(GameState.INITIAL_SCORING)
+
+        # Rescore hand internally after hit - if bust, return True
+        #return True
+
+        #self.transition(GameState.INITIAL_SCORING)
 
     def double(self):
+        # Rescore hand internally after double - if bust, return True
+        #return True
         pass
 
     def split(self):
         pass
 
     def surrender(self):
+        # Collect player's hand and half of bet, then return True
+        #return True
         pass
+
 
     # Other Player Actions #
     def color_up(self, player):
@@ -346,6 +309,11 @@ class BlackjackStateMachine:
         for seated_player in self.seated_players.values():
             if seated_player != None:
                 self.active_player = seated_player
+                break
+        # Log last player-occupied seat before Dealer
+        for seat_number, player in reversed(list(self.seated_players.items())):
+            if player != None:
+                self.last_occupied_seat = seat_number
                 break
         # Add all new joined players to known
         for seated_player in self.seated_players.values():
@@ -732,6 +700,7 @@ class BlackjackStateMachine:
             else:
                 self.transition(GameState.PLAYERS_PLAYING)
 
+
     def play_all_remaining_players_hands(self):
         for player in self.seated_players.values():
             if (player != None):
@@ -740,29 +709,32 @@ class BlackjackStateMachine:
                         print(f"Player '{player.name}' is choosing an action at Seat #{seat_number} (their '{seat_name}')")
                         prutils.view_player_turn_action_options()
                         while True:
-                            # Maybe loop over until player stands?
-                            if self.play_player_hand(player, seat_name):
-                                print("Executed turn action choice, exiting...")
+                            # Loop over until player chooses to stand or busts
+                            if self.play_player_hand(player, seat_name, seat_number):
+                                # Transition to DEALER_PLAYING if played hand is last before Dealer
+                                if seat_number == self.last_occupied_seat:
+                                    self.transition(GameState.DEALER_PLAYING)
+                                print("Finished playing a hand, passing...")
                                 break
 
-    def play_player_hand(self, player, seat_name):
+    def play_player_hand(self, player, seat_name, seat_number):
         # Todo AB: Make sure the above code scales with player making multiple hand bets
         key = msvcrt.getch().decode('utf-8') # Get a key (as a byte string) and decode it
         match key:
             case '1':
-                print(f"Executing action 'stand' for player {player}")
-                self.stand(player)
+                print(f"Executing action 'stand' for player '{player.name}' at Seat #{seat_number} (their '{seat_name}')")
+                return True # alternatively self.stand(player) returning True
             case '2':
-                print(f"Executing action 'hit' for player {player} at seat {seat_name}")
+                print(f"Executing action 'hit' for player '{player.name}' at Seat #{seat_number} (their '{seat_name}')")
                 self.hit(player, seat_name)
             case '3':
-                print(f"Executing action 'double' for player {player} at seat {seat_name}")
+                print(f"Executing action 'double' for player '{player.name}' at Seat #{seat_number} (their '{seat_name}')")
                 self.double(player, seat_name)
             case '4':
-                print(f"Executing action 'split' for player {player} at seat {seat_name}")
+                print(f"Executing action 'split' for player '{player.name}' at Seat #{seat_number} (their '{seat_name}')")
                 self.split(player, seat_name)
             case '5':
-                print(f"Executing action 'surrender' for player {player} at seat {seat_name}")
+                print(f"Executing action 'surrender' for player '{player.name}' at Seat #{seat_number} (their '{seat_name}')")
                 self.surrender(player, seat_name)
             case 'v':
                 prutils.view_player_turn_action_options()
@@ -775,29 +747,6 @@ class BlackjackStateMachine:
             case other:
                 sys.stderr.write(f"Invalid input '{key}'\n")
                 print("Provide a valid key or press 'v' to see valid key input options")
-
-
-
-
-        """
-        # Check that active player action is valid
-        if player.action not in self.player_turn_actions:
-            sys.stderr.write("Unknown action", repr(player.action), "from player", player.name,
-                  "entered, please enter one of the following without quotes:\n")
-            print(list(self.player_turn_actions.keys()))
-        elif player.action == 'stand':
-            print(f"Executing action '{player.action}' for player '{player.name}'")
-            # Execute player's entered action
-            self.player_turn_actions[player.action]()
-            # Transitions are handled by each respective player action function
-        else:
-            # Process:
-            # HIT
-            # DOUBLE
-            # SPLIT
-            # LATE SURRENDER
-            pass
-        """
 
 
     def dealer_plays(self):

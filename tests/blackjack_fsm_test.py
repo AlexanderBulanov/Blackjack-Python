@@ -177,6 +177,21 @@ class Test_STARTING:
         assert test_machine.seated_players[1] in test_machine.known_players
         assert test_machine.seated_players[2] in test_machine.known_players
 
+    def test_with_players_Alex_in_seat_2_Ahmed_in_seat_1_and_Jane_in_seat_5_last_player_occupied_seat_is_set_to_5(self, monkeypatch):
+        # Setup
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        simulated_input_values = ['Alex', '2', 'Ahmed', '1', 'Jane', '5']
+        iterable_simulated_input_values = iter(simulated_input_values)
+        simulated_char_values = [b'p', b'p', b's']
+        iterable_simulated_char_values = iter(simulated_char_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_values))
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
+        # Test
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
+        assert test_machine.last_occupied_seat == 5
+
     """
     def test_joined_known_player_not_readded_to_list_of_known_players_in_STARTING(self, monkeypatch):
         # Setup
