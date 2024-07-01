@@ -306,6 +306,10 @@ class BlackjackStateMachine:
                             print("Press 'p' to pass the keyboard to the next player or 's' to start the game with currently seated players")
         self.transition(GameState.STARTING)
 
+    def print_all_seated_players_stats(self):
+        for player in self.seated_players.values():
+            if (player != None):
+                player.print_player_stats()
 
     def start_game(self):
         print("STARTING GAME WITH THE FOLLOWING PLAYERS:")
@@ -869,9 +873,7 @@ class BlackjackStateMachine:
             case GameState.WAITING:
                 self.wait_for_players_to_join()
             case GameState.STARTING:
-                for player in self.seated_players.values():
-                    if (player != None):
-                        player.print_player_stats()
+                self.print_all_seated_players_stats()
                 self.start_game()
             case GameState.SHUFFLING:
                 self.shuffle_cut_and_burn(None) # Todo AB: pen % is different upon each reshuffle in a single session, need it fixed?
@@ -880,7 +882,9 @@ class BlackjackStateMachine:
             case GameState.DEALING:
                 self.deal() # Todo AB: Update deal() to work with players occupying multiple seats
             case GameState.INITIAL_SCORING:
-                # OFFER EARLY SURRENDER HERE?
+                # offer early surrender to all players --> if all players surrender, discard player hand and transition to BETTING
+                    # PROBLEM - how to make it so the rest of functions within INITIAL_SCORING are ignored?
+                self.offer_early_surrender_if_used_at_table_to_all_players()
 
                 self.score_all_hands_in_play()
                 
