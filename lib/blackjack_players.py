@@ -50,6 +50,16 @@ class Player:
             'center_seat': None,
             'left_seat': None,
         }
+        self.round_win_chips = { # each set of chip winnings is stored as a dictionary in format of chip_color: chip_count
+            'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
+        }
+        self.round_win_chip_totals = { # each chip total's winnings are stored as an integer
+            'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
+        }
         self.hands = { # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
             'right_seat': None,
             'center_seat': None,

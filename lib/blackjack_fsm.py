@@ -26,10 +26,11 @@ class GameState(Enum):
     SHUFFLING = 2
     BETTING = 3
     DEALING = 4
-    INITIAL_SCORING = 5
-    PLAYERS_PLAYING = 6
-    DEALER_PLAYING = 7
-    FINAL_SCORING = 8
+    PRE_SCORING = 5
+    INITIAL_SCORING = 6
+    PLAYERS_PLAYING = 7
+    DEALER_PLAYING = 8
+    FINAL_SCORING = 9
 
 
 class BlackjackStateMachine:
@@ -113,6 +114,7 @@ class BlackjackStateMachine:
         self.last_occupied_seat = None
         self.active_player = None
         self.current_round_natural_blackjacks = {} # dictionary of players and all of the seats to which blackjack hands were naturally dealt this round
+        self.current_round_remaining_player_hands = None
         self.player_turn_actions = ['stand', 'hit', 'double', 'split', 'surrender']
         
 
@@ -435,7 +437,7 @@ class BlackjackStateMachine:
         self.print_all_hands()
         percentage_of_shoe_dealt = int(round(100-(100*(len(self.shoe)/(2+self.num_of_decks*52))), 0))
         print(f"{percentage_of_shoe_dealt}% of the shoe dealt (reshuffling at round end past {str(self.pen)}%)")
-        self.transition(GameState.INITIAL_SCORING)
+        self.transition(GameState.PRE_SCORING)
 
 
 
@@ -458,27 +460,40 @@ class BlackjackStateMachine:
         self.dealer.hand_scores['center_seat'] = dealer_hand_score
 
 
-    def offer_early_surrender_if_used_at_table_to_one_player(self):
-        if self.surrender_rule in ['ES', 'ES10']:
-            print("Would you like to make an early surrender and forfeit half your bet?")
-            print("Press 'y' for Yes', 'n' for No.")
-            key = msvcrt.getch().decode('utf-8') # Get a key (as a byte string) and decode it
-            match key:
-                case 'y':
-                    # Get an early surrender - either ES or ES10
-                    if self.surrender_rule == 'ES':
-                        pass
-                    elif self.surrender_rule == 'ES10':
-                        pass
-                    pass
-                case 'n':
-                    pass
-                case other:
-                    sys.stderr.write(f"Invalid input '{key}'\n")
-                    print("Provide one of the following valid keys - 'y' for Yes, 'n' for No.")
-
-    def offer_early_surrender_if_used_at_table_to_all_players(self):
+    def handle_side_bets_if_any_placed():
+        # REFER TO EXISTING pay_winning_side_bets() and collect_losing_side_bets() METHODS FOR REFERENCE
         pass
+
+
+    def get_player_surrender_response(self, player, seat_name):
+        key = msvcrt.getch().decode('utf-8') # Get a key (as a byte string) and decode it
+        match key:
+            case 'y':
+                # Return half of bet rounded down (to where?)
+                # Collect half of bet rounded up
+                # Collect player hand at seat_name
+                # Reset player score at seat_name
+                pass
+            case 'n':
+                pass
+            case other:
+                sys.stderr.write(f"Invalid input '{key}'\n")
+                print("Provide one of the following valid keys - 'y' for Yes to early surrender, 'n' for No to early surrender.")
+
+    def offer_early_surrender_if_used_at_table_to_all_players(self): # Todo AB: Test offer_early_surrender_if_used_at_table_to_all_players()
+        if self.surrender_rule in ['ES', 'ES10']:
+            for player in self.seated_players.values():
+                if player != None:
+                    for seat_name, seat_number in player.occupied_seats.items():
+                        if seat_number != None:
+                            dealer_up_card = self.dealer.hands['center_seat'][0]
+                            dealer_up_card_rank = dealer_up_card[:-1]
+                            if ((self.surrender_rule == 'ES') or ((self.surrender_rule == 'ES10') and (dealer_up_card_rank in ['10', 'J', 'Q', 'K']))):
+                                print(f"Player '{player.name}', would you like to make an early surrender of hand {player.hands[seat_name]} at Seat 
+                                      #{player.occupied_seats[seat_name]} and forfeit half of your bet of ${player.main_bet_amounts[seat_name]} (rounded up)?")
+                                print("Press 'y' for Yes', 'n' for No.")
+                                self.get_player_surrender_response(player, seat_name)
+        self.transition(GameState.INITIAL_SCORING)
 
     def offer_even_money_and_insurance_side_bet(self):
         pass
@@ -636,18 +651,15 @@ class BlackjackStateMachine:
     def check_for_and_handle_initial_dealer_blackjack_if_present(self):
         dealer_face_up_card = self.dealer.hands['center_seat'][0]
         dealer_hole_card = self.dealer.hands['center_seat'][1]
-        dealer_face_up_card_value = bjo.cards[dealer_face_up_card[:-1]][0] # Used only to check if face card is 10/face, gives incorrect Ace value on purpose
-        dealer_hole_card_value = bjo.cards[dealer_hole_card[:-1]][0] # Used only to check if hole card is 10/face, gives incorrect Ace value on purpose
-        
-        # Todo AB: OFFER EARLY SURRENDER HERE IF TABLE RULE ALLOWS IT
-
+        dealer_face_up_card_value = bjo.cards[dealer_face_up_card[:-1]][0] # Used only to check if face card is 10/face, gives incorrect Ace value that doesn't get used
+        dealer_hole_card_value = bjo.cards[dealer_hole_card[:-1]][0] # Used only to check if hole card is 10/face, gives incorrect Ace value that doesn't get used
         if (dealer_face_up_card in ['AH', 'AC', 'AD', 'AS']):
             print("Dealer's face card is an Ace!")
             print("Offering 'insurance' and 'even money' side bets:")
             self.offer_even_money_and_insurance_side_bet() # Todo AB: Add functionality to offer side bets
             if (dealer_hole_card_value == 10):
                 self.reveal_dealer_hand()
-                self.pay_winning_side_bets() # Todo AB: Add functionality to pay out winning side bet hands
+                #self.pay_winning_side_bets()
                 self.reset_natural_blackjack_tracking()
                 self.collect_losing_main_bets() # Todo AB: Test functionality of collecting losing main bets
                 self.discard_all_hands_in_play_and_reset_all_hand_scores()
@@ -655,7 +667,7 @@ class BlackjackStateMachine:
                 self.transition(GameState.BETTING)
             else:
                 print("Dealer checks hole card - not a ten, doesn't have Blackjack.")
-                self.collect_losing_side_bets() # Todo AB: Test functionality of collecting losing side bets
+                #self.collect_losing_side_bets()
         elif (dealer_face_up_card_value == 10):
             print("Dealer's face card is a ten!")
             if (dealer_hole_card in ['AH', 'AC', 'AD', 'AS']):
@@ -837,7 +849,7 @@ class BlackjackStateMachine:
         for player in self.seated_players.values():
             if player != None:
                 for hand_index in range(0, len(player.current_hands)):
-                    self.discard.extend(player.current_hands.pop(0))    
+                    self.discard.extend(player.current_hands.pop(0))
                 # Reset all players' scores
                 player.current_hand_scores.clear()
         # Reset dealer's hand and hand score
@@ -881,16 +893,21 @@ class BlackjackStateMachine:
                 self.get_all_players_bets() # Todo AB: update get_all_players_bets() to work /w players occupying multiple seats
             case GameState.DEALING:
                 self.deal() # Todo AB: Update deal() to work with players occupying multiple seats
-            case GameState.INITIAL_SCORING:
-                # offer early surrender to all players --> if all players surrender, discard player hand and transition to BETTING
-                    # PROBLEM - how to make it so the rest of functions within INITIAL_SCORING are ignored?
+            case GameState.PRE_SCORING:
+                self.handle_side_bets_if_any_placed()
                 self.offer_early_surrender_if_used_at_table_to_all_players()
-
+                # Todo AB: Clean up and transition to betting if all players have surrendered in offer_early_surrender_if_used_at_table_to_all_players()
+            case GameState.INITIAL_SCORING:
                 self.score_all_hands_in_play()
-                
                 self.check_for_and_handle_initial_dealer_blackjack_if_present()
-                if (self.dealer.hands['center_seat'] != []): # Happens only when dealer doesn't have blackjack
+                self.offer_late_surrender_if_used_at_table_to_all_players()
+                if ((self.current_round_remaining_player_hands != 0) and (self.dealer.hands['center_seat'] != [])):
+                    
+                    # Happens only when dealer doesn't have blackjack???
                     self.check_for_and_handle_initial_players_blackjacks_if_any_present()
+                else:
+                    # This branch happens only when all hands in play have been surrendered LATE
+                    self.transition(GameState.BETTING)
             case GameState.PLAYERS_PLAYING:
                 self.play_all_remaining_players_hands()
             case GameState.DEALER_PLAYING:
