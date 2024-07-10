@@ -35,27 +35,37 @@ class Player:
             'center_seat': None,
             'left_seat': None,
         }
+        self.main_bet_winnings = { # each set of winnings is stored as a dictionary in format of chip_color: chip_count
+            'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
+        }
+        self.main_bet_winnings_amounts = { # each set of winnings has dollar value stored as an integer or a float
+            'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
+        }
         self.placed_side_bet_names = { # each group of names is stored in a list in format of ['Perfect Pairs', 'Lucky Ladies', etc.]
             'right_seat': None, # side_bet_names keeps track of which group of chips in side_bets is tied to which bet
             'center_seat': None, # Side bet options - 'Insurance', 'Perfect Pairs', 'Match the Dealer', 'Lucky Ladies', 'King's Bounty', 'Buster Blackjack', '21+3'
             'left_seat': None
         }
-        self.side_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
+        self.side_bets = { # each bet is stored as a list of dictionaries in format of chip_color: chip_count
             'right_seat': None,
             'center_seat': None,
             'left_seat': None,
         }
-        self.side_bet_amounts = { # each bet amount is stored as an integer (betting of $2.5 chips is restricted to pairs only)
+        self.side_bet_amounts = { # each bet amount is stored as a list of integers (betting of $2.5 chips is restricted to pairs only) - [2, 10, 20]
             'right_seat': None,
             'center_seat': None,
             'left_seat': None,
         }
-        self.round_win_chips = { # each set of chip winnings is stored as a dictionary in format of chip_color: chip_count
+        self.side_bet_winnings = { # each set of winnings is stored as list of dictionaries in format of chip_color: chip_count
             'right_seat': None,
             'center_seat': None,
             'left_seat': None,
         }
-        self.round_win_chip_totals = { # each chip total's winnings are stored as an integer
+        self.side_bet_winnings_amounts = { # each set of winnings is stored as a list of integers or floats, as appropriate - [3, 15, 30]
             'right_seat': None,
             'center_seat': None,
             'left_seat': None,
@@ -110,6 +120,16 @@ class Player:
             'center_seat': None,
             'left_seat': None,
         }
+        Dealer.main_bet_winnings = { # each set of winnings is stored as a dictionary in format of chip_color: chip_count
+            'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
+        }
+        Dealer.main_bet_winnings_amounts = { # each set of winnings has dollar value stored as an integer or a float
+            'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
+        }
         Dealer.placed_side_bet_names = { # each group of names is stored in a list in format of ['Perfect Pairs', 'Lucky Ladies', etc.]
             'right_seat': None, # side_bet_names keeps track of which group of chips in side_bets is tied to which bet
             'center_seat': None, # Side bet options - 'Perfect Pairs', 'Match the Dealer', 'Lucky Ladies', 'King's Bounty', 'Buster Blackjack', '21+3'
@@ -121,6 +141,16 @@ class Player:
             'left_seat': None,
         }
         Dealer.side_bet_amounts = { # each bet amount is stored as an integer (betting of $2.5 chips is restricted to pairs only)
+            'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
+        }
+        Dealer.side_bet_winnings = { # each set of winnings is stored as list of dictionaries in format of chip_color: chip_count
+            'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
+        }
+        Dealer.side_bet_winnings_amounts = { # each set of winnings is stored as a list of integers or floats, as appropriate - [3, 15, 30]
             'right_seat': None,
             'center_seat': None,
             'left_seat': None,
@@ -166,6 +196,16 @@ class Player:
             'center_seat': None,
             'left_seat': None,
         }
+        NewPlayer.main_bet_winnings = { # each set of winnings is stored as a dictionary in format of chip_color: chip_count
+            'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
+        }
+        NewPlayer.main_bet_winnings_amounts = { # each set of winnings has dollar value stored as an integer or a float
+            'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
+        }
         NewPlayer.placed_side_bet_names = { # each group of names is stored in a list in format of ['Perfect Pairs', 'Lucky Ladies', etc.]
             'right_seat': None, # side_bet_names keeps track of which group of chips in side_bets is tied to which bet
             'center_seat': None, # Side bet options - 'Perfect Pairs', 'Match the Dealer', 'Lucky Ladies', 'King's Bounty', 'Buster Blackjack', '21+3'
@@ -177,6 +217,16 @@ class Player:
             'left_seat': None,
         }
         NewPlayer.side_bet_amounts = { # each bet amount is stored as an integer (betting of $2.5 chips is restricted to pairs only)
+            'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
+        }
+        NewPlayer.side_bet_winnings = { # each set of winnings is stored as list of dictionaries in format of chip_color: chip_count
+            'right_seat': None,
+            'center_seat': None,
+            'left_seat': None,
+        }
+        NewPlayer.side_bet_winnings_amounts = { # each set of winnings is stored as a list of integers or floats, as appropriate - [3, 15, 30]
             'right_seat': None,
             'center_seat': None,
             'left_seat': None,
@@ -339,7 +389,7 @@ class Player:
             self.chip_pool_balance = int(self.chip_pool_balance)
 
     # Bet initialization helper functions
-    def init_main_bet_fields(self, seat_name):
+    def init_main_bet_fields(self, seat_name): # Todo AB: Update the name to reflect it is for a given seat and not all?
         empty_bet = dict.fromkeys(bjo.chip_names, 0)
         self.main_bets[seat_name] = empty_bet # Note - different format from side bet fields
         self.main_bet_amounts[seat_name] = 0 # Note - different format from side bet fields

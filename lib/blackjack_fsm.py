@@ -113,7 +113,9 @@ class BlackjackStateMachine:
         self.known_players = [] # list of all players who have played a shoe, now or in the past
         self.last_occupied_seat = None
         self.active_player = None
-        self.current_round_natural_blackjacks = {} # dictionary of players and all of the seats to which blackjack hands were naturally dealt this round
+        self.current_round_natural_blackjacks = {} # dictionary of players and all of their seats at which blackjack hands were naturally dealt this round ('center_seat', etc.)
+        self.current_round_placed_side_bets_1 = {} # dictionary of players and all of their seats at which they placed a bet on Side Bet #1
+        self.current_round_placed_side_bets_2 = {} # dictionary of players and all of their seats at which they placed a bet on Side Bet #2
         self.current_round_remaining_player_hands = None
         self.player_turn_actions = ['stand', 'hit', 'double', 'split', 'surrender']
         
@@ -228,8 +230,8 @@ class BlackjackStateMachine:
 
     def print_all_players_with_natural_blackjack_hands(self):
         for player in self.current_round_natural_blackjacks.keys():
-            for hand in self.current_round_natural_blackjacks[player]:
-                print(f"{player.name} has natural blackjack of {hand}")
+            for seat_name in self.current_round_natural_blackjacks[player]:
+                print(f"{player.name} has natural blackjack of {player.hands[seat_name]}")
 
     # State Machine Actions #
     def print_blackjack_table(self):
@@ -318,6 +320,12 @@ class BlackjackStateMachine:
         for table_seat, seated_player in self.seated_players.items():
             if seated_player != None:
                 print(f"'{seated_player.name}' in seat #{table_seat}")
+                #seated_player.print_player_stats()
+        # Initialize natural blackjack and side bet tracking dictionaries for each unique player
+        for seated_player in set(self.seated_players.values()):
+            self.current_round_natural_blackjacks[seated_player] = []
+            self.current_round_placed_side_bets_1[seated_player] = []
+            self.current_round_placed_side_bets_2[seated_player] = []
         # Initialize first player (sitting leftmost w.r.t. dealer) to be active
         for seated_player in self.seated_players.values():
             if seated_player != None:
@@ -333,12 +341,6 @@ class BlackjackStateMachine:
             if seated_player != None:
                 if seated_player not in self.known_players:
                     self.known_players.append(seated_player)
-        """
-        # DEBUG
-        self.dealer.print_player_stats()
-        for player in self.seated_players:
-            player.print_player_stats()
-        """
         self.transition(GameState.SHUFFLING)
 
 
@@ -440,7 +442,6 @@ class BlackjackStateMachine:
         self.transition(GameState.PRE_SCORING)
 
 
-
     def score_all_hands_in_play(self):
         for player in self.seated_players.values():
             if player != None:
@@ -451,16 +452,32 @@ class BlackjackStateMachine:
                         player.hand_scores[seat_name] = player_hand_score
                         # Track natural blackjack hands for each player, as they're encountered
                         if (player_hand_score == 21):
-                            if (player not in self.current_round_natural_blackjacks.keys()):
-                                self.current_round_natural_blackjacks[player] = [seat_name]
-                            else:
-                                self.current_round_natural_blackjacks[player].append(seat_name)
+                            self.current_round_natural_blackjacks[player].append(seat_name)
         #self.print_all_players_with_natural_blackjack_hands()
         dealer_hand_score = bjl.highest_hand_score(self.dealer.hands['center_seat'])
         self.dealer.hand_scores['center_seat'] = dealer_hand_score
 
+    def handle_side_bets_if_any_placed(self):
+        # Iterate over and handle all placed side bets for Side Bet #1
+        if (len(self.current_round_natural_blackjacks.keys()) == 0):
+            print(f"No players have placed Side Bet #1 of '{self.table_side_bet_names[0]}'")
+            #self.transition(GameState.PLAYERS_PLAYING)
+        else:
+            pass
 
-    def handle_side_bets_if_any_placed():
+            """
+            print("Paying Blackjacks to each eligible player hand")
+            self.reveal_dealer_hand()
+            self.pay_winning_main_bets()
+            self.reset_natural_blackjack_tracking()
+            """
+
+        # Iterate over and handle all placed side bets for Side Bet #2
+
+
+
+
+
         # REFER TO EXISTING pay_winning_side_bets() and collect_losing_side_bets() METHODS FOR REFERENCE
         pass
 
@@ -469,10 +486,33 @@ class BlackjackStateMachine:
         key = msvcrt.getch().decode('utf-8') # Get a key (as a byte string) and decode it
         match key:
             case 'y':
-                # Return half of bet rounded down (to where?)
-                # Collect half of bet rounded up
-                # Collect player hand at seat_name
-                # Reset player score at seat_name
+                print(f"Player '{player.name}' surrenders hand {player.hands[seat_name]}")
+                ## Collect player's bet from seat_name ##
+                player_chip_bet = player.main_bets[seat_name]
+                for chip_color, chip_count in player_chip_bet.items():
+                    # Move all bet chips from Player's betting circle to Dealer and update Dealer's balance
+                    chip_value = bjo.chips[chip_color]
+                    player_chip_bet[chip_color] -= chip_count
+                    self.dealer.chips[chip_color] += chip_count
+                    self.dealer.chip_pool_balance += chip_count*chip_value
+                # Refund Player half of their bet amount rounded down, placing it in the betting circle
+                
+
+
+                self.dealer.cast_whole_number_chip_pool_balance_to_int()
+                ## Reset losing player's bet ##
+                getattr(player, bets_name)[seat_name] = None # player.main_bets[seat_name] OR player.side_bets[seat_name]
+                bet_amounts_name = bet_type + '_bet_amounts'
+                getattr(player, bet_amounts_name)[seat_name] = None # player.main_bet_amounts[seat_name] OR player.side_bet_amounts[seat_name]
+                # No need to subtract chips and chip_pool_balance for Player - already done when a bet is submitted
+                
+
+
+
+
+
+                # Return half of player's bet (rounded down) back to the betting circle at seat_name
+                # Collect player hand at seat_name and reset score --> WRITE A FUNCTION TO HANDLE THIS RECURRING PROCEDURE
                 pass
             case 'n':
                 pass
@@ -481,19 +521,21 @@ class BlackjackStateMachine:
                 print("Provide one of the following valid keys - 'y' for Yes to early surrender, 'n' for No to early surrender.")
 
     def offer_early_surrender_if_used_at_table_to_all_players(self): # Todo AB: Test offer_early_surrender_if_used_at_table_to_all_players()
-        if self.surrender_rule in ['ES', 'ES10']:
+        dealer_up_card = self.dealer.hands['center_seat'][0]
+        dealer_up_card_rank = dealer_up_card[:-1]
+        if ((self.surrender_rule == 'ES') or ((self.surrender_rule == 'ES10') and (dealer_up_card_rank in ['10', 'J', 'Q', 'K']))):
             for player in self.seated_players.values():
                 if player != None:
                     for seat_name, seat_number in player.occupied_seats.items():
                         if seat_number != None:
-                            dealer_up_card = self.dealer.hands['center_seat'][0]
-                            dealer_up_card_rank = dealer_up_card[:-1]
-                            if ((self.surrender_rule == 'ES') or ((self.surrender_rule == 'ES10') and (dealer_up_card_rank in ['10', 'J', 'Q', 'K']))):
-                                print(f"Player '{player.name}', would you like to make an early surrender of hand {player.hands[seat_name]} at Seat 
-                                      #{player.occupied_seats[seat_name]} and forfeit half of your bet of ${player.main_bet_amounts[seat_name]} (rounded up)?")
-                                print("Press 'y' for Yes', 'n' for No.")
-                                self.get_player_surrender_response(player, seat_name)
+                            print(f"Player '{player.name}', would you like to make an early surrender of hand {player.hands[seat_name]} at Seat ", end='')
+                            print(f"#{player.occupied_seats[seat_name]} and forfeit half of your bet of ${player.main_bet_amounts[seat_name]} (rounded up)?")
+                            print("Press 'y' for Yes', 'n' for No.")
+                            self.get_player_surrender_response(player, seat_name)
+        else:
+            print(f"Early surrender isn't used at the table - table's surrender rule is '{self.surrender_rule}'")
         self.transition(GameState.INITIAL_SCORING)
+
 
     def offer_even_money_and_insurance_side_bet(self):
         pass
@@ -513,30 +555,36 @@ class BlackjackStateMachine:
             self.current_round_natural_blackjacks[player].clear()
 
 
-    # Collects just one losing bet from a player - an example would be collecting player's losing side bet before game goes on /w their main bet still in play
-    def collect_losing_player_bet(self, player, seat_name, bet_type):
+    def collect_losing_player_bet(self, player, seat_name, bet_type, side_bet_index = None):
         if seat_name not in ['right_seat', 'center_seat', 'left_seat']:
             sys.stderr.write(f"Invalid seat_name '{seat_name}' provided! Valid seat names are 'right_seat', 'center_seat', and 'left_seat'")
         if bet_type in ['main', 'side']:
+            # Retrieve a losing bet dictionary
             bets_name = bet_type + '_bets'
-            player_chip_bet = getattr(player, bets_name)[seat_name] # player.main_bets[seat_name] OR player.side_bets[seat_name]
+            if side_bet_index == None:
+                player_chip_bet = getattr(player, bets_name)[seat_name] # player.main_bets[seat_name]
+            else:
+                player_chip_bet = getattr(player, bets_name)[seat_name][side_bet_index] # player.side_bets[seat_name][1] or player.side_bets[seat_name][2]
             if player_chip_bet != None:
+                # Transfer chips from a losing bet dictionary to dealer chip pool; update dealer chip balance
                 for chip_color, chip_count in player_chip_bet.items():
-                    # Move bet chips from Player to Dealer and update Dealer's balance
                     chip_value = bjo.chips[chip_color]
                     self.dealer.chips[chip_color] += chip_count
-                    self.dealer.chip_pool_balance += chip_count*chip_value
+                    self.dealer.chip_pool_balance += chip_count*chip_value # No need to subtract chips and chip_pool_balance for Player - happened when bet was submitted
                 self.dealer.cast_whole_number_chip_pool_balance_to_int()
-                # Reset losing player's bet
-                getattr(player, bets_name)[seat_name] = None # player.main_bets[seat_name] OR player.side_bets[seat_name]
+                # Reset player's losing bet dictionary and discard hand
                 bet_amounts_name = bet_type + '_bet_amounts'
-                getattr(player, bet_amounts_name)[seat_name] = None # player.main_bet_amounts[seat_name] OR player.side_bet_amounts[seat_name]
-                # No need to subtract chips and chip_pool_balance for Player - already done when a bet is submitted
+                if side_bet_index == None:
+                    getattr(player, bets_name)[seat_name] = None # player.main_bets[seat_name]
+                    getattr(player, bet_amounts_name)[seat_name] = None # player.main_bet_amounts[seat_name]
+                    self.discard.extend(player.hands[seat_name])
+                else:
+                    getattr(player, bets_name)[seat_name][side_bet_index] = None # player.side_bets[seat_name][1] or player.side_bets[seat_name][2]
+                    getattr(player, bet_amounts_name)[seat_name][side_bet_index] = None # player.side_bet_amounts[seat_name][1] or player.side_bet_amounts[seat_name][2]
             else:
-                sys.stderr.write(f"Player chip bet is {None}! Chip transfer from player '{player.name}' to Dealer cannot be completed.")
+                sys.stderr.write(f"Player chip bet is {player_chip_bet}! Chip transfer from player '{player.name}' to Dealer cannot be completed.")
         else:
             sys.stderr.write(f"Invalid bet type provided! Valid bet types are either 'main' or 'side'")
-
 
     def collect_losing_main_bets(self):
         # Go through main bet hands left-to-right from dealer's POV and collect losing main bets
@@ -548,8 +596,7 @@ class BlackjackStateMachine:
                         print(f"Player '{player.name}' loses with hand of {player.hands[seat_name]} to Dealer's Blackjack of {self.dealer.hands['center_seat']}")
                         self.collect_losing_player_bet(player, seat_name, 'main')
 
-
-    def collect_losing_side_bets(self):
+    def collect_losing_side_bets(self, side_bet_index):
         # Go through side bet hands left-to-right from dealer's POV and collect losing side bets
         # Note: Player model is structured in order from rightmost to leftmost player hand, allowing to simply iterate over occupied_seats
         for player in self.seated_players.values():
@@ -557,15 +604,169 @@ class BlackjackStateMachine:
                 for seat_name, seat_number in player.occupied_seats.items():
                     if seat_number != None:
                         print(f"Player '{player.name}' loses side bet of hand {player.hands[seat_name]} to Dealer")
-                        self.collect_losing_player_bet(player, seat_name, 'side')
+                        self.collect_losing_player_bet(player, seat_name, 'side', side_bet_index)
 
 
-    # Possible to follow similar structure to losing bets above?
-    def pay_winning_player_bet(self, player, seat_name, bet_type):
+    # Chip transfer functions
+    # Examples:
+    # src_dict = dealer.chips // dst_dict = player.main_bet_winnings[seat_name]
+    # // Update dealer.chip_pool_balance AND player.main_bet_winnings_amounts[seat_name]
+    # src_dict = dealer.chips // dst_dict = player.side_bet_winnings[seat_name][side_bet_index]
+    # // Update 
+    # src_dict = player.main_bets[seat_name] // dst_dict = dealer.chips
+    # // Update 
+    # src_dict = player.side_bets[seat_name] // dst_dict = dealer.chips
+    # // Update 
+    # Todo AB: Test transfer_chips_from_dealer_to_player()
+
+    
+    def pay_winning_player_bet(self, player, seat_name, bet_type, side_bet_index = None):
+        if seat_name not in ['right_seat', 'center_seat', 'left_seat']:
+            sys.stderr.write(f"Invalid seat_name '{seat_name}' provided! Valid seat names are 'right_seat', 'center_seat', and 'left_seat'")
+        if bet_type in ['main', 'side']:
+            # 1. Retrieve all fields related to chip transfer
+            bets_name = bet_type + '_bets'
+            bet_amounts_name = bet_type + '_bet_amounts'
+            bet_winnings_name = bet_type + '_bet_winnings'
+            bet_winnings_amounts_name = bet_type + '_bet_winnings_amounts'
+            # Handle main bets
+            if side_bet_index == None:
+                player_chip_bet = getattr(player, bets_name)[seat_name] # player.main_bets[seat_name]
+                player_win_bet_value = getattr(player, bet_amounts_name)[seat_name] # player.main_bet_amounts[seat_name]
+                player_chip_winnings = getattr(player, bet_winnings_name)[seat_name] # player.main_bet_winnings[seat_name]
+                player_winnings_value = getattr(player, bet_winnings_amounts_name)[seat_name] # player.main_bet_winnings_amounts[seat_name]
+            # Handle side bets
+            else:
+                player_chip_bet = getattr(player, bets_name)[seat_name][side_bet_index] # player.side_bets[seat_name][1] or player.side_bets[seat_name][2]
+                player_win_bet_value = getattr(player, bet_amounts_name)[seat_name][side_bet_index] # player.side_bet_amounts[seat_name][1] or player.side_bet_amounts[seat_name][2]
+                player_chip_winnings = getattr(player, bet_winnings_name)[seat_name][side_bet_index] # player.side_bet_winnings[seat_name][1] or player.side_bet_winnings[seat_name][2]
+                player_winnings_value = getattr(player, bet_winnings_amounts_name)[seat_name][side_bet_index] # player.side_bet_winnings_amounts[seat_name][1] or player.side_bet_winnings_amounts[seat_name][2]
+            if player_win_bet_value != None:
+                # 2. Is this Blackjack? Apply Blackjack payout ratio if so.
+                chip_payout_amount = player_win_bet_value
+                if (self.state == GameState.INITIAL_SCORING and bet_type == 'main' and player.hand_scores[seat_name] == 21):
+                    chip_payout_amount *= self.blackjack_ratio
+                    if self.blackjack_ratio == 1.2:
+                        chip_payout_amount = round(chip_payout_amount)
+                # 3. Pay a Pink chip for every fractional bet (has to be a multiple of 0.5)
+                if (type(chip_payout_amount) == float):
+                    if (chip_payout_amount == 1.5):
+                        # Special Case - Swap $1 chip in betting circle /w a Pink chip
+                        player_chip_bet['White'] -= 1
+                        self.dealer.chips['White'] += 1
+                        self.dealer.chips['Pink'] -= 1
+                        player_chip_bet['Pink'] += 1
+                        # Player bet amount stays at $1
+                        
+                    else:
+                        # Base Case - Pay one Pink chip
+                        pass
+                # 4. Pay remaining payout amount with minimum number of chips starting at highest denomination
+
+                    
+                    self.dealer.chips['Pink'] -= 1
+                    self.dealer.chip_pool_balance -= 2.5
+                    self.dealer.clean_up_fractions('center_seat') # WILL THIS MESS UP EXISTING FRACTIONAL BALANCE?
+                    player.chips['Pink'] += 1
+                    player.chip_pool_balance += 2.5
+                    player.clean_up_fractions(seat_name)
+
+
+                
+                if chip_payout_amount == 1.5:
+                    # Collect player's bet
+                    pass
+                if (type(chip_payout_amount) == float):
+                    self.dealer.chips['Pink'] -= 1
+                    self.dealer.chip_pool_balance -= 2.5
+                    self.dealer.clean_up_fractions('center_seat') # WILL THIS MESS UP EXISTING FRACTIONAL BALANCE?
+                    player.chips['Pink'] += 1
+                    player.chip_pool_balance += 2.5
+                    player.clean_up_fractions(seat_name) # WILL THIS MESS UP EXISTING FRACTIONAL BALANCE?
+
+                    remaining_payout -= 1*2.5
+                    remaining_payout = int(remaining_payout)
+                # Pay remaining part of winnings, if any
+                if (remaining_payout != 0):
+                    for chip_name, chip_value in bjo.reverse_chips.items():
+                        if chip_name != 'Pink':
+                            remainder = remaining_payout % chip_value
+                            if (remainder in range(0, remaining_payout)):
+                                chip_count = math.floor(remaining_payout/chip_value)
+                                self.transfer_main_bet_chips_and_update_balance(self.dealer, 'center_seat', player)
+
+                                self.dealer.chips[chip_name] -= chip_count
+                                self.dealer.chip_pool_balance -= chip_count*chip_value
+                                self.dealer.clean_up_fractions('center_seat') # WILL THIS MESS UP EXISTING FRACTIONAL BALANCE?
+                                player.chips[chip_name] += chip_count
+                                player.chip_pool_balance += chip_count*chip_value
+                                player.clean_up_fractions(seat_name) # WILL THIS MESS UP EXISTING FRACTIONAL BALANCE?
+
+                                remaining_payout -= chip_count*chip_value
+                                if (remaining_payout == 0):
+                                    break
+
+
+
+
+
+
+
+                # Retrieve a losing bet dictionary
+                bets_name = bet_type + '_bets'
+                if side_bet_index == None:
+                    player_chip_bet = getattr(player, bets_name)[seat_name] # player.main_bets[seat_name]
+                else:
+                    player_chip_bet = getattr(player, bets_name)[seat_name][side_bet_index] # player.side_bets[seat_name][1] or player.side_bets[seat_name][2]
+                if player_chip_bet != None:
+                    # Transfer chips from a losing bet dictionary to dealer chip pool; update dealer chip balance
+                    for chip_color, chip_count in player_chip_bet.items():
+                        chip_value = bjo.chips[chip_color]
+                        self.dealer.chips[chip_color] += chip_count
+                        self.dealer.chip_pool_balance += chip_count*chip_value # No need to subtract chips and chip_pool_balance for Player - happened when bet was submitted
+                    self.dealer.cast_whole_number_chip_pool_balance_to_int()
+                    # Reset player's losing bet dictionary
+                    bet_amounts_name = bet_type + '_bet_amounts'
+                    if side_bet_index == None:
+                        getattr(player, bets_name)[seat_name] = None # player.main_bets[seat_name]
+                        getattr(player, bet_amounts_name)[seat_name] = None # player.main_bet_amounts[seat_name]
+                        self.discard.extend(player.hands[seat_name])
+                    else:
+                        getattr(player, bets_name)[seat_name][side_bet_index] = None # player.side_bets[seat_name][1] or player.side_bets[seat_name][2]
+                        getattr(player, bet_amounts_name)[seat_name][side_bet_index] = None # player.side_bet_amounts[seat_name][1] or player.side_bet_amounts[seat_name][2]
+                else:
+                    sys.stderr.write(f"Player chip bet is {player_chip_bet}! Chip transfer from player '{player.name}' to Dealer cannot be completed.")
+            else:
+                sys.stderr.write(f"Invalid bet type provided! Valid bet types are either 'main' or 'side'")
+
+
+
+
+    def pay_winning_main_bets(self):
         pass
 
+
+
+    def pay_winning_side_bets(self):
+        # Go through side bet hands left-to-right from dealer's POV and collect losing side bets
+        # Note: Player model is structured in order from rightmost to leftmost player hand, allowing to simply iterate over occupied_seats
+        for player in self.seated_players.values():
+            if player != None:
+                for seat_name, seat_number in player.occupied_seats.items():
+                    if seat_number != None:
+                        # HOW DO I KNOW WHICH SIDE BETS TO PAY OUT?
+                        # Could track side bets, similar to how natural blackjacks are tracked
+
+
+
+                        print(f"Player '{player.name}' wins side bet of hand {player.hands[seat_name]}")
+                        self.pay_winning_side_bet(player, seat_name)
+                        self.pay_winning_player_bet(player, seat_name, 'side')
+
+
+
     # Todo AB: fix pay_winning_main_bets() to be functional and unit-test it
-    def pay_winning_main_bets(self):
+    def pays_winning_main_bets(self):
         # Go through main bet hands left-to-right from dealer's POV and pay winning main bets
         if self.state == GameState.INITIAL_SCORING:
             #players_with_blackjacks = [player for player in self.current_round_natural_blackjacks.keys()]
@@ -624,17 +825,6 @@ class BlackjackStateMachine:
             pass
 
 
-    def pay_winning_side_bets(self):
-        # Go through side bet hands left-to-right from dealer's POV and collect losing side bets
-        # Note: Player model is structured in order from rightmost to leftmost player hand, allowing to simply iterate over occupied_seats
-        for player in self.seated_players.values():
-            if player != None:
-                for seat_name, seat_number in player.occupied_seats.items():
-                    if seat_number != None:
-                        print(f"Player '{player.name}' wins side bet of hand {player.hands[seat_name]} to Dealer")
-                        self.pay_winning_player_bet(player, seat_name, 'side')
-
-
     def discard_all_hands_in_play_and_reset_all_hand_scores(self):
         for player in self.seated_players.values():
             if player != None:
@@ -660,7 +850,7 @@ class BlackjackStateMachine:
             if (dealer_hole_card_value == 10):
                 self.reveal_dealer_hand()
                 #self.pay_winning_side_bets()
-                self.reset_natural_blackjack_tracking()
+                #self.reset_natural_blackjack_tracking()
                 self.collect_losing_main_bets() # Todo AB: Test functionality of collecting losing main bets
                 self.discard_all_hands_in_play_and_reset_all_hand_scores()
                 print("ROUND END")
@@ -672,7 +862,7 @@ class BlackjackStateMachine:
             print("Dealer's face card is a ten!")
             if (dealer_hole_card in ['AH', 'AC', 'AD', 'AS']):
                 self.reveal_dealer_hand()
-                self.reset_natural_blackjack_tracking()
+                #self.reset_natural_blackjack_tracking()
                 self.collect_losing_main_bets() # Todo AB: Test functionality of collecting losing main bets
                 self.discard_all_hands_in_play_and_reset_all_hand_scores()
                 print("ROUND END")
@@ -691,7 +881,7 @@ class BlackjackStateMachine:
             print("Paying Blackjacks to each eligible player hand")
             self.reveal_dealer_hand()
             self.pay_winning_main_bets()
-            self.reset_natural_blackjack_tracking()
+            #self.reset_natural_blackjack_tracking()
 
 
             
@@ -778,7 +968,7 @@ class BlackjackStateMachine:
             print(f"{self.seventeen_rule} rule is in play")
             if (initial_dealer_hand_score >= 17):
                 print(f"Dealer stands with a score of {initial_dealer_hand_score}")
-                self.transition(GameState.ROUND_ENDING)
+                self.transition(GameState.FINAL_SCORING)
             else:
                 while (self.dealer.hand_scores['center_seat'] < 17) and (self.dealer.hand_scores['center_seat'] > 0):
                     # Execute 'hit'
@@ -800,12 +990,12 @@ class BlackjackStateMachine:
                     print("Paying all remaining in-play hands")
                 else:
                     print("Dealer stands with a final score of", self.dealer.hand_scores['center_seat'])
-            self.transition(GameState.ROUND_ENDING)
+            self.transition(GameState.FINAL_SCORING)
         elif self.seventeen_rule == 'H17':
             print(f"{self.seventeen_rule} rule is in play")
             if (initial_dealer_hand_score > 17):
                 print(f"Dealer stands with a score of {initial_dealer_hand_score}")
-                self.transition(GameState.ROUND_ENDING)
+                self.transition(GameState.FINAL_SCORING)
             else:
                 while (self.dealer.hand_scores['center_seat'] <= 17) and (self.dealer.hand_scores['center_seat'] > 0):
                     # Execute 'hit'
@@ -823,7 +1013,7 @@ class BlackjackStateMachine:
                     print("Remaining players win!")
                 else:
                     print("Dealer stands with a final score of", self.dealer.hand_scores['center_seat'])
-                self.transition(GameState.ROUND_ENDING)
+                self.transition(GameState.FINAL_SCORING)
         # debug log and assert
         else:
             sys.stderr.write("[ERROR] Seventeen rule syntax not recognized\n")

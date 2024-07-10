@@ -1158,6 +1158,32 @@ class Test_INITIAL_SCORING_Tracking_Natural_Blackjacks:
 
     # Add tests to verify that no natural blackjacks are tracked after INITIAL_SCORING state is exited
 
+"""
+def test_11_USD_bet_correctly_transferred_to_dealer_from_player(self):
+        # Setup
+        test_dealer = bjp.Player.create_casino_dealer()
+        test_player = bjp.Player.create_new_player_from_template('Alex', '2')
+        empty_bet = dict.fromkeys(bjo.chip_names, 0)
+        placed_bet = dict.fromkeys(bjo.chip_names, 0)
+        test_player.chips['White'] -= 1
+        placed_bet['White'] = 1
+        test_player.chips['Red'] -= 2
+        placed_bet['Red'] = 2
+        test_player.main_bets['center_seat'] = placed_bet # {'White': 1, 'Red': 2} ; all other chip counts set to 0
+        test_player.chip_pool_balance -= 11
+        test_player.main_bet_amounts['center_seat'] = 11
+        # Test
+        assert test_player.main_bets['center_seat'] == placed_bet
+        assert test_player.main_bet_amounts['center_seat'] == 11
+
+        # Looks convoluted, how to clean up? Can this be cleaned up?
+        test_player.main_bet_amounts['center_seat'] = test_player.transfer_bet_chips_to_dealer(test_dealer, test_player.main_bets['center_seat'], 
+                                                                                               test_player.main_bet_amounts['center_seat'])
+        assert test_player.main_bets['center_seat'] == empty_bet
+        assert test_player.main_bet_amounts['center_seat'] == 0
+"""
+
+
 
 class TestPayouts_6_to_5_Blackjack:
     def test_3_USD_bet_pays_out_4_USD_as_4_White_chips(self):
