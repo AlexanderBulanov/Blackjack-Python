@@ -373,6 +373,14 @@ class Player:
                 displayed_bet[chip_color] = chip_count
         print(f"{self.name}'s ${self.main_bet_amounts[seat]} bet - {displayed_bet}")
 
+    def print_current_side_bet(self, seat, side_bet_index):
+        player_bet = self.side_bets[seat][side_bet_index]
+        displayed_bet = {}
+        for chip_color, chip_count in player_bet.items():
+            if (chip_count > 0):
+                displayed_bet[chip_color] = chip_count
+        print(f"{self.name}'s ${self.side_bet_amounts[seat][side_bet_index]} bet - {displayed_bet}")
+
     # Whole number float cleanup helper functions
     def cast_whole_number_chip_pool_balance_to_int(self):
         chip_pool_balance_fraction = self.chip_pool_balance % 1
@@ -389,7 +397,7 @@ class Player:
             self.chip_pool_balance = int(self.chip_pool_balance)
 
     # Bet initialization helper functions
-    def init_main_bet_fields(self, seat_name): # Todo AB: Update the name to reflect it is for a given seat and not all?
+    def init_main_bet_field(self, seat_name):
         empty_bet = dict.fromkeys(bjo.chip_names, 0)
         self.main_bets[seat_name] = empty_bet # Note - different format from side bet fields
         self.main_bet_amounts[seat_name] = 0 # Note - different format from side bet fields

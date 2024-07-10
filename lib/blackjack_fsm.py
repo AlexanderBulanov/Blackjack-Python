@@ -374,7 +374,7 @@ class BlackjackStateMachine:
         for seat_name, seat_pos in player.occupied_seats.items():
             if (seat_pos != None): # Get each player's main bets from up to 3 seats they can occupy
                 # Get player's main bet at their given seat
-                player.init_main_bet_fields(seat_name)
+                player.init_main_bet_field(seat_name)
                 print(f"Player '{player.name}' is placing a main bet at Seat #{seat_pos} (their '{seat_name}')")
                 prutils.view_chip_betting_interface()
                 player.print_player_chip_pool()
