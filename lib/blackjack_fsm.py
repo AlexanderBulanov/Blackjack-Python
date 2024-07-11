@@ -40,8 +40,8 @@ class BlackjackStateMachine:
         self.pen = None # set in SHUFFLING within bounds specified for given num_of_decks
         self.shoe = bjo.get_shoe_of_n_decks(self.num_of_decks)
         self.discard = []
-        self.min_bet = 1 # Options - 1 to 100
-        self.max_bet = 100 # Options - 100 to 10000 (usually 100x the min_bet)
+        self.min_table_bet = 1 # Options - 1 to 100
+        self.max_table_bet = 100 # Options - 100 to 10000 (usually 100x the min_bet)
         self.blackjack_ratio = 3/2 # Options - 3/2, 6/5
         self.seventeen_rule = 'H17' # Options - 'S17', 'H17'
         self.surrender_rule = 'LS' # Options - 'NS', 'ES', 'ES10', 'LS'
@@ -321,6 +321,11 @@ class BlackjackStateMachine:
             if seated_player != None:
                 print(f"'{seated_player.name}' in seat #{table_seat}")
                 #seated_player.print_player_stats()
+        # Initialize main bet fields for all occupied seats
+        for seat_name, seat_pos in player.occupied_seats.items():
+            if seat_pos != None:
+                player.init_main_bet_fields(seat_name)
+                player.init_side_bet_fields
         # Initialize natural blackjack and side bet tracking dictionaries for each unique player
         for seated_player in set(self.seated_players.values()):
             self.current_round_natural_blackjacks[seated_player] = []
@@ -368,32 +373,59 @@ class BlackjackStateMachine:
         self.transition(GameState.BETTING)
 
 
+    def get_player_main_bet(self, player, seat_name):
+        prutils.view_chip_betting_interface()
+        player.print_player_chip_pool()
+        while True:
+            if player.get_main_bet_input_character(self.min_table_bet, self.max_table_bet, seat_name):
+                print("Exiting betting interface...")
+                break
+
+    def get_player_side_bet(self, player, seat_name, side_bet_index):
+        min_side_bet = self.table_side_bet_limits[side_bet_index][0]
+        max_side_bet = self.table_side_bet_limits[side_bet_index][1]
+        prutils.view_chip_betting_interface()
+        player.print_player_chip_pool()
+        while True:
+            if player.get_side_bet_input_character(min_side_bet, max_side_bet, seat_name, side_bet_index):
+                print("Exiting betting interface...")
+                break
+
+
+    # UNIFY get_main_bet_input_character() and get_side_bet_input_character() INTO ONE FUNCTION
+
 
     # Todo AB: Get main and side bet for each given seat (max of 2 non-insurance side bets as those are offered only in INITIAL_SCORING)
-    def get_bets_from_all_one_player_occupied_seats(self, player, min_bet, max_bet):
+    def get_bets_from_all_one_player_occupied_seats(self, player):
+        # Get each player's main and side bets from up to 3 seats they can occupy
         for seat_name, seat_pos in player.occupied_seats.items():
-            if (seat_pos != None): # Get each player's main bets from up to 3 seats they can occupy
-                # Get player's main bet at their given seat
-                player.init_main_bet_field(seat_name)
+            if (seat_pos != None):
+                # Get main bet for chosen seat
                 print(f"Player '{player.name}' is placing a main bet at Seat #{seat_pos} (their '{seat_name}')")
-                prutils.view_chip_betting_interface()
-                player.print_player_chip_pool()
-                while True: # Using this format instead of try-except and custom exception ExitBettingInterface, to pass tests
-                    if player.get_bet_input_character(min_bet, max_bet, seat_name):
-                        print("Exiting betting interface...")
-                        break
-                # Get user input of which side bet they would like to make (limit 2) or press SKIP
-                
-                #print(f"Player '{player.name}' placing a side bet at Seat #{seat_pos} (their '{seat_name}')")
-                #prutils.view_side_bet_options_interface()
+                self.get_player_main_bet(player, seat_name)
+                # Get up to 2 side bets for chosen seat
+                for side_bet_name in self.table_side_bet_names:
+                    print(f"Player '{player.name}, would you like to place a side bet of {side_bet_name} at Seat #{seat_pos}?")
+                    # Continuously prompt player for 'y' or 'n' response until they enter correct character
+                    while True:
+                        key = msvcrt.getch().decode('utf-8') # Get a key (as a byte string) and decode it
+                        match key:
+                            case 'y':
+                                # INITIALIZE SIDE BET FIELDS FOR CHOSEN SEAT HERE
 
-                # Get player's side bets at their given seat (up to 2 per seat)
-                # PROMPT PLAYER TO PLACE A SIDE BET OUT OF OFFERED ONES (AND MENTION LIMIT IS 2) OR SKIP
-                
-                #self.init_side_bet_fields(seat_name)
-                
-                    # AFTER RESOLVING AN OFFERED SIDE BET, ASK IF PLAYER WANTS TO MAKE ANOTHER ONE (AND MENTION LIMIT IS 2) OR SKIP
-                
+                                # TRACK PLACED SIDE BETS HERE FOR ITERATING LATER TO SCORE THEM AND TRANSFER FUNDS
+
+                                print(f"Player '{player.name}' is placing a side bet of {side_bet_name} at Seat #{seat_pos} (their '{seat_name}')")
+                                side_bet_index = self.table_side_bet_names.index(side_bet_name)
+                                self.get_player_side_bet(player, seat_name, side_bet_index)
+                                break
+                            case 'n':
+                                print(f"Player '{player.name}' chooses not to place side bet of {side_bet_name} at Seat #{seat_pos} (their '{seat_name}')")
+                                break
+                            case other:
+                                sys.stderr.write(f"Invalid input '{key}'\n")
+                                print(f"Provide one of the following valid keys - 'y' to place a side bet of {side_bet_name}, 'n' to skip it this round.")
+
 
 
 
@@ -402,7 +434,7 @@ class BlackjackStateMachine:
     def get_all_players_bets(self):
         for seated_player in self.seated_players.values():
             if (seated_player != None):
-                self.get_bets_from_all_one_player_occupied_seats(seated_player, self.min_bet, self.max_bet)
+                self.get_bets_from_all_one_player_occupied_seats(seated_player)
                 #self.active_player.print_player_stats()
         self.transition(GameState.DEALING)
 

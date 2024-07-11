@@ -46,29 +46,29 @@ class Player:
             'left_seat': None,
         }
         self.placed_side_bet_names = { # each group of names is stored in a list in format of ['Perfect Pairs', 'Lucky Ladies', etc.]
-            'right_seat': None, # side_bet_names keeps track of which group of chips in side_bets is tied to which bet
-            'center_seat': None, # Side bet options - 'Insurance', 'Perfect Pairs', 'Match the Dealer', 'Lucky Ladies', 'King's Bounty', 'Buster Blackjack', '21+3'
-            'left_seat': None
+            'right_seat': [], # side_bet_names keeps track of which group of chips in side_bets is tied to which bet
+            'center_seat': [], # Side bet options - 'Perfect Pairs', 'Match the Dealer', 'Lucky Ladies', 'King's Bounty', 'Buster Blackjack', '21+3'
+            'left_seat': []
         }
         self.side_bets = { # each bet is stored as a list of dictionaries in format of chip_color: chip_count
-            'right_seat': None,
-            'center_seat': None,
-            'left_seat': None,
+            'right_seat': [],
+            'center_seat': [],
+            'left_seat': [],
         }
         self.side_bet_amounts = { # each bet amount is stored as a list of integers (betting of $2.5 chips is restricted to pairs only) - [2, 10, 20]
-            'right_seat': None,
-            'center_seat': None,
-            'left_seat': None,
+            'right_seat': [],
+            'center_seat': [],
+            'left_seat': [],
         }
         self.side_bet_winnings = { # each set of winnings is stored as list of dictionaries in format of chip_color: chip_count
-            'right_seat': None,
-            'center_seat': None,
-            'left_seat': None,
+            'right_seat': [],
+            'center_seat': [],
+            'left_seat': [],
         }
         self.side_bet_winnings_amounts = { # each set of winnings is stored as a list of integers or floats, as appropriate - [3, 15, 30]
-            'right_seat': None,
-            'center_seat': None,
-            'left_seat': None,
+            'right_seat': [],
+            'center_seat': [],
+            'left_seat': [],
         }
         self.hands = { # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
             'right_seat': None,
@@ -131,29 +131,29 @@ class Player:
             'left_seat': None,
         }
         Dealer.placed_side_bet_names = { # each group of names is stored in a list in format of ['Perfect Pairs', 'Lucky Ladies', etc.]
-            'right_seat': None, # side_bet_names keeps track of which group of chips in side_bets is tied to which bet
-            'center_seat': None, # Side bet options - 'Perfect Pairs', 'Match the Dealer', 'Lucky Ladies', 'King's Bounty', 'Buster Blackjack', '21+3'
-            'left_seat': None
+            'right_seat': [], # side_bet_names keeps track of which group of chips in side_bets is tied to which bet
+            'center_seat': [], # Side bet options - 'Perfect Pairs', 'Match the Dealer', 'Lucky Ladies', 'King's Bounty', 'Buster Blackjack', '21+3'
+            'left_seat': []
         }
-        Dealer.side_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
-            'right_seat': None,
-            'center_seat': None,
-            'left_seat': None,
+        Dealer.side_bets = { # each bet is stored as a list of dictionaries in format of chip_color: chip_count
+            'right_seat': [],
+            'center_seat': [],
+            'left_seat': [],
         }
-        Dealer.side_bet_amounts = { # each bet amount is stored as an integer (betting of $2.5 chips is restricted to pairs only)
-            'right_seat': None,
-            'center_seat': None,
-            'left_seat': None,
+        Dealer.side_bet_amounts = { # each bet amount is stored as a list of integers (betting of $2.5 chips is restricted to pairs only) - [2, 10, 20]
+            'right_seat': [],
+            'center_seat': [],
+            'left_seat': [],
         }
         Dealer.side_bet_winnings = { # each set of winnings is stored as list of dictionaries in format of chip_color: chip_count
-            'right_seat': None,
-            'center_seat': None,
-            'left_seat': None,
+            'right_seat': [],
+            'center_seat': [],
+            'left_seat': [],
         }
         Dealer.side_bet_winnings_amounts = { # each set of winnings is stored as a list of integers or floats, as appropriate - [3, 15, 30]
-            'right_seat': None,
-            'center_seat': None,
-            'left_seat': None,
+            'right_seat': [],
+            'center_seat': [],
+            'left_seat': [],
         }
         Dealer.hands = { # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
             'right_seat': None,
@@ -207,29 +207,29 @@ class Player:
             'left_seat': None,
         }
         NewPlayer.placed_side_bet_names = { # each group of names is stored in a list in format of ['Perfect Pairs', 'Lucky Ladies', etc.]
-            'right_seat': None, # side_bet_names keeps track of which group of chips in side_bets is tied to which bet
-            'center_seat': None, # Side bet options - 'Perfect Pairs', 'Match the Dealer', 'Lucky Ladies', 'King's Bounty', 'Buster Blackjack', '21+3'
-            'left_seat': None
+            'right_seat': [], # side_bet_names keeps track of which group of chips in side_bets is tied to which bet
+            'center_seat': [], # Side bet options - 'Perfect Pairs', 'Match the Dealer', 'Lucky Ladies', 'King's Bounty', 'Buster Blackjack', '21+3'
+            'left_seat': []
         }
-        NewPlayer.side_bets = { # each bet is stored as a dictionary in format of chip_color: chip_count
-            'right_seat': None,
-            'center_seat': None,
-            'left_seat': None,
+        NewPlayer.side_bets = { # each bet is stored as a list of dictionaries in format of chip_color: chip_count
+            'right_seat': [],
+            'center_seat': [],
+            'left_seat': [],
         }
-        NewPlayer.side_bet_amounts = { # each bet amount is stored as an integer (betting of $2.5 chips is restricted to pairs only)
-            'right_seat': None,
-            'center_seat': None,
-            'left_seat': None,
+        NewPlayer.side_bet_amounts = { # each bet amount is stored as a list of integers (betting of $2.5 chips is restricted to pairs only) - [2, 10, 20]
+            'right_seat': [],
+            'center_seat': [],
+            'left_seat': [],
         }
         NewPlayer.side_bet_winnings = { # each set of winnings is stored as list of dictionaries in format of chip_color: chip_count
-            'right_seat': None,
-            'center_seat': None,
-            'left_seat': None,
+            'right_seat': [],
+            'center_seat': [],
+            'left_seat': [],
         }
         NewPlayer.side_bet_winnings_amounts = { # each set of winnings is stored as a list of integers or floats, as appropriate - [3, 15, 30]
-            'right_seat': None,
-            'center_seat': None,
-            'left_seat': None,
+            'right_seat': [],
+            'center_seat': [],
+            'left_seat': [],
         }
         NewPlayer.hands = { # each hand is stored as a list of shorthand card names, such as ['8H', 'JC']
             'right_seat': None,
@@ -397,16 +397,25 @@ class Player:
             self.chip_pool_balance = int(self.chip_pool_balance)
 
     # Bet initialization helper functions
-    def init_main_bet_field(self, seat_name):
+    def init_main_bet_fields(self, seat_name):
         empty_bet = dict.fromkeys(bjo.chip_names, 0)
-        self.main_bets[seat_name] = empty_bet # Note - different format from side bet fields
-        self.main_bet_amounts[seat_name] = 0 # Note - different format from side bet fields
+        self.main_bets[seat_name] = empty_bet
+        self.main_bet_amounts[seat_name] = 0
+        self.main_bet_winnings[seat_name] = empty_bet
+        self.main_bet_winnings_amounts[seat_name] = 0
+
 
     def init_side_bet_fields(self, seat_name, side_bet_name):
         self.placed_side_bet_names[seat_name] = [side_bet_name]
         empty_bet = dict.fromkeys(bjo.chip_names, 0)
         self.side_bets[seat_name] = [empty_bet]
         self.side_bet_amounts[seat_name] = [0]
+        self.side_bet_winnings[seat_name] = [empty_bet]
+        self.side_bet_winnings_amounts[seat_name] = [0]
+
+
+    # Bet clear isn't needed unless Player moves seats or leaves the game
+
 
     # Bet manipulation helper functions
     def increase_current_bet(self, seat, key):
@@ -484,7 +493,7 @@ class Player:
         print(char)
     """
 
-    def get_bet_input_character(self, min_bet, max_bet, seat):
+    def get_main_bet_input_character(self, min_table_bet, max_table_bet, seat_name):
         # Todo AB: Make sure the above code scales with player making multiple hand bets
         key = msvcrt.getch().decode('utf-8') # Get a key (as a byte string) and decode it
         match key:
@@ -493,28 +502,80 @@ class Player:
             case 'd':
                 self.print_player_chip_pool()
             case 'p':
-                self.print_current_main_bet(seat)
+                self.print_current_main_bet(seat_name)
             case 'r':
-                self.reset_current_bet(seat)
+                self.reset_current_bet(seat_name)
             case 'f':
-                player_bet_value = self.main_bet_amounts[seat]
+                player_bet_value = self.main_bet_amounts[seat_name]
                 fraction = player_bet_value % 1
                 if (fraction != 0):
                     sys.stderr.write(f"Invalid (fractional) bet amount of ${player_bet_value} - please resubmit a bet /w an even number of Pink chips!\n")
-                elif (player_bet_value < min_bet):
-                    sys.stderr.write(f"{self.name}'s ${player_bet_value} bet is below table minimum, please submit a bet between inclusive bounds of ${min_bet} and ${max_bet}\n")
-                elif (player_bet_value > max_bet):
-                    sys.stderr.write(f"{self.name}'s ${player_bet_value} bet is above table maximum, please submit a bet between inclusive bounds of ${min_bet} and ${max_bet}\n")
+                elif (player_bet_value < min_table_bet):
+                    sys.stderr.write(f"{self.name}'s ${player_bet_value} bet is below allowed table minimum, please submit a bet between inclusive bounds of ${min_table_bet} and ${max_table_bet}\n")
+                elif (player_bet_value > max_table_bet):
+                    sys.stderr.write(f"{self.name}'s ${player_bet_value} bet is above allowed table maximum, please submit a bet between inclusive bounds of ${min_table_bet} and ${max_table_bet}\n")
                 else:
                     return True # finalize bet for current seat
             case 's':
-                self.skip_bet(seat)
+                self.skip_bet(seat_name)
             case '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9':
-                self.increase_current_bet(seat, key)
+                self.increase_current_bet(seat_name, key)
                 #prutils.print_player_chip_pool()
                 #self.print_current_main_bet()
             case '!' | '@' | '#' | '$' | '%' | '^' | '&' | '*' | '(':
-                self.decrease_current_bet(seat, key)
+                self.decrease_current_bet(seat_name, key)
+                #prutils.print_player_chip_pool()
+                #self.print_current_main_bet()
+            case 'g' | 'c' | 'b' | 'm' | 'a' | 'l':
+                match key:
+                    case 'g':
+                        self.get_chips() # Todo AB: implement get_chips()
+                    case 'c':
+                        self.color_up() # Todo AB: implement color_up()
+                    case 'b':
+                        self.break_down() # Todo AB: implement break_down()
+                    case 'm':
+                        self.skip_bet() # Todo AB: implement skip_bet()
+                    case 'a':
+                        self.add_seat() # Todo AB: implement add_seat()
+                    case 'l':
+                        self.leave_seat() # Todo AB: implement leave_table()
+            case other:
+                sys.stderr.write(f"Invalid input '{key}'\n")
+                print("Provide a valid key or press 'v' to see valid key input options")
+
+
+    def get_side_bet_input_character(self, min_side_bet, max_side_bet, seat_name, side_bet_index):
+        # Todo AB: Make sure the above code scales with player making multiple hand bets
+        key = msvcrt.getch().decode('utf-8') # Get a key (as a byte string) and decode it
+        match key:
+            case 'v':
+                prutils.view_chip_betting_interface()
+            case 'd':
+                self.print_player_chip_pool()
+            case 'p':
+                self.print_current_side_bet(seat_name, side_bet_index)
+            case 'r':
+                self.reset_current_bet(seat_name)
+            case 'f':
+                player_bet_value = self.main_bet_amounts[seat_name]
+                fraction = player_bet_value % 1
+                if (fraction != 0):
+                    sys.stderr.write(f"Invalid (fractional) bet amount of ${player_bet_value} - please resubmit a bet /w an even number of Pink chips!\n")
+                elif (player_bet_value < min_side_bet):
+                    sys.stderr.write(f"{self.name}'s ${player_bet_value} bet is below allowed side bet minimum, please submit a bet between inclusive bounds of ${min_side_bet} and ${max_side_bet}\n")
+                elif (player_bet_value > max_side_bet):
+                    sys.stderr.write(f"{self.name}'s ${player_bet_value} bet is above allowed side bet maximum, please submit a bet between inclusive bounds of ${min_side_bet} and ${max_side_bet}\n")
+                else:
+                    return True # finalize bet for current seat
+            case 's':
+                self.skip_bet(seat_name)
+            case '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9':
+                self.increase_current_bet(seat_name, key)
+                #prutils.print_player_chip_pool()
+                #self.print_current_main_bet()
+            case '!' | '@' | '#' | '$' | '%' | '^' | '&' | '*' | '(':
+                self.decrease_current_bet(seat_name, key)
                 #prutils.print_player_chip_pool()
                 #self.print_current_main_bet()
             case 'g' | 'c' | 'b' | 'm' | 'a' | 'l':
