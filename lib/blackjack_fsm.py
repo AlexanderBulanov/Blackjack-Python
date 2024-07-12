@@ -90,9 +90,9 @@ class BlackjackStateMachine:
              '3 or 4 Cards': 2
             }
         ]
-        self.table_side_bet_names = ['Perfect Pairs', 'Buster Blackjack'] # Names of up to 2 supported side bets copied over in INITIALIZING state
-        self.table_side_bet_limits = [(1, 100), (1, 100)] # Each side bet's limits are a tuple of (min_side_bet, max_side_bet); added in INITIALIZING state
-        self.table_side_bet_payout_tables = [
+        self.table_active_side_bet_names = ['Perfect Pairs', 'Buster Blackjack'] # Names of up to 2 supported side bets copied over in INITIALIZING state
+        self.table_active_side_bet_limits = [(1, 100), (1, 100)] # Each side bet's limits are a tuple of (min_side_bet, max_side_bet); added in INITIALIZING state
+        self.table_active_side_bet_payout_tables = [
             {
              'Perfect Pair': 25,
              'Colored Pair': 12,
@@ -321,11 +321,10 @@ class BlackjackStateMachine:
             if seated_player != None:
                 print(f"'{seated_player.name}' in seat #{table_seat}")
                 #seated_player.print_player_stats()
-        # Initialize main bet fields for all occupied seats
-        for seat_name, seat_pos in player.occupied_seats.items():
-            if seat_pos != None:
-                player.init_main_bet_fields(seat_name)
-                player.init_side_bet_fields
+                # Initialize main bet fields for all occupied seats
+                for seat_name, seat_pos in seated_player.occupied_seats.items():
+                    if seat_pos != None:
+                        seated_player.init_main_bet_fields(seat_name)
         # Initialize natural blackjack and side bet tracking dictionaries for each unique player
         for seated_player in set(self.seated_players.values()):
             self.current_round_natural_blackjacks[seated_player] = []
@@ -373,6 +372,27 @@ class BlackjackStateMachine:
         self.transition(GameState.BETTING)
 
 
+    # COMPACT
+    def get_player_bet(self, player, seat_name, side_bet_name):
+        if side_bet_name == None:
+            min_bet = self.min_table_bet
+            max_bet = self.max_table_bet
+            player_side_bet_index = None
+        else:
+            side_bet_index = self.table_active_side_bet_names.index(side_bet_name)
+            min_bet = self.table_active_side_bet_limits[side_bet_index][0]
+            max_bet = self.table_active_side_bet_limits[side_bet_index][1]
+            player_side_bet_index = player.placed_side_bet_names[seat_name].index(side_bet_name)
+        prutils.view_chip_betting_interface()
+        player.print_player_chip_pool()
+        while True:
+            # player_side_bet_index is None for main_bet, 0 if this is first side bet placed, 1 if this is second side bet
+            if player.get_bet_input_character(min_bet, max_bet, seat_name, player_side_bet_index):
+                print("Exiting betting interface...")
+                break
+
+
+    """
     def get_player_main_bet(self, player, seat_name):
         prutils.view_chip_betting_interface()
         player.print_player_chip_pool()
@@ -382,17 +402,22 @@ class BlackjackStateMachine:
                 break
 
     def get_player_side_bet(self, player, seat_name, side_bet_index):
-        min_side_bet = self.table_side_bet_limits[side_bet_index][0]
-        max_side_bet = self.table_side_bet_limits[side_bet_index][1]
+        min_side_bet = self.table_active_side_bet_limits[side_bet_index][0]
+        max_side_bet = self.table_active_side_bet_limits[side_bet_index][1]
         prutils.view_chip_betting_interface()
         player.print_player_chip_pool()
         while True:
             if player.get_side_bet_input_character(min_side_bet, max_side_bet, seat_name, side_bet_index):
                 print("Exiting betting interface...")
                 break
-
+    """
 
     # UNIFY get_main_bet_input_character() and get_side_bet_input_character() INTO ONE FUNCTION
+
+
+    # Check where main bet fields are initialized AND reset for next round
+    # Repeat for side bets
+
 
 
     # Todo AB: Get main and side bet for each given seat (max of 2 non-insurance side bets as those are offered only in INITIAL_SCORING)
@@ -402,22 +427,26 @@ class BlackjackStateMachine:
             if (seat_pos != None):
                 # Get main bet for chosen seat
                 print(f"Player '{player.name}' is placing a main bet at Seat #{seat_pos} (their '{seat_name}')")
-                self.get_player_main_bet(player, seat_name)
+                self.get_player_bet(player, seat_name, None)
+                #self.get_player_main_bet(player, seat_name)
                 # Get up to 2 side bets for chosen seat
-                for side_bet_name in self.table_side_bet_names:
-                    print(f"Player '{player.name}, would you like to place a side bet of {side_bet_name} at Seat #{seat_pos}?")
-                    # Continuously prompt player for 'y' or 'n' response until they enter correct character
+                for side_bet_name in self.table_active_side_bet_names:
+                    print(f"Player '{player.name}', would you like to place a side bet of '{side_bet_name}' at Seat #{seat_pos}?")
+                    print("Press 'y' for Yes', 'n' for No.")
+                    # Continuously prompt player for 'y' or 'n' response until they enter a valid response
                     while True:
                         key = msvcrt.getch().decode('utf-8') # Get a key (as a byte string) and decode it
                         match key:
                             case 'y':
-                                # INITIALIZE SIDE BET FIELDS FOR CHOSEN SEAT HERE
-
-                                # TRACK PLACED SIDE BETS HERE FOR ITERATING LATER TO SCORE THEM AND TRANSFER FUNDS
-
-                                print(f"Player '{player.name}' is placing a side bet of {side_bet_name} at Seat #{seat_pos} (their '{seat_name}')")
-                                side_bet_index = self.table_side_bet_names.index(side_bet_name)
-                                self.get_player_side_bet(player, seat_name, side_bet_index)
+                                player.init_side_bet_fields(seat_name, side_bet_name)
+                                # Track side bets for each player, as they're placed
+                                # USE TRACKED SIDE BETS FOR SCORING AND FUND TRANSFER
+                                if side_bet_name == self.table_active_side_bet_names[0]:
+                                    self.current_round_placed_side_bets_1[player].append(seat_name)
+                                else:
+                                    self.current_round_placed_side_bets_2[player].append(seat_name)
+                                print(f"Player '{player.name}' is placing a side bet of '{side_bet_name}' at Seat #{seat_pos} (their '{seat_name}')")
+                                self.get_player_bet(player, seat_name, side_bet_name)
                                 break
                             case 'n':
                                 print(f"Player '{player.name}' chooses not to place side bet of {side_bet_name} at Seat #{seat_pos} (their '{seat_name}')")
@@ -425,7 +454,6 @@ class BlackjackStateMachine:
                             case other:
                                 sys.stderr.write(f"Invalid input '{key}'\n")
                                 print(f"Provide one of the following valid keys - 'y' to place a side bet of {side_bet_name}, 'n' to skip it this round.")
-
 
 
 
@@ -492,7 +520,7 @@ class BlackjackStateMachine:
     def handle_side_bets_if_any_placed(self):
         # Iterate over and handle all placed side bets for Side Bet #1
         if (len(self.current_round_natural_blackjacks.keys()) == 0):
-            print(f"No players have placed Side Bet #1 of '{self.table_side_bet_names[0]}'")
+            print(f"No players have placed Side Bet #1 of '{self.table_active_side_bet_names[0]}'")
             #self.transition(GameState.PLAYERS_PLAYING)
         else:
             pass
@@ -984,7 +1012,8 @@ class BlackjackStateMachine:
             case 'v':
                 prutils.view_player_turn_action_options()
             case 'p':
-                player.print_current_main_bet(seat_name)
+                player.print_current_bet(seat_name, None)
+                #player.print_current_main_bet(seat_name)
             case 'c':
                 self.color_up(player) # Todo AB: implement color_up()
             case 'b':
@@ -1092,7 +1121,7 @@ class BlackjackStateMachine:
             case 'd':
                 self.print_player_chip_pool()
             case 'p':
-                self.print_current_bet(seat)
+                self.print_current_bet(seat_name)
             case 'r':
                 self.reset_current_bet(seat)
             case other:
@@ -1107,7 +1136,7 @@ class BlackjackStateMachine:
             case GameState.WAITING:
                 self.wait_for_players_to_join()
             case GameState.STARTING:
-                self.print_all_seated_players_stats()
+                #self.print_all_seated_players_stats()
                 self.start_game()
             case GameState.SHUFFLING:
                 self.shuffle_cut_and_burn(None) # Todo AB: pen % is different upon each reshuffle in a single session, need it fixed?

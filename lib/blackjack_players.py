@@ -365,6 +365,21 @@ class Player:
                 displayed_bet[chip_color] = chip_count
         print(f"{self.name}'s ${self.chip_pool_balance} chip pool - {displayed_bet}")
 
+    def print_current_bet(self, seat_name, side_bet_index):
+        if side_bet_index == None:
+            player_bet = self.main_bets[seat_name]
+            player_bet_amount = self.main_bet_amounts[seat_name]
+        else:
+            player_bet = self.side_bets[seat_name][side_bet_index]
+            player_bet_amount = self.side_bet_amounts[seat_name][side_bet_index]
+        displayed_bet = {}
+        for chip_color, chip_count in player_bet.items():
+            if (chip_count > 0):
+                displayed_bet[chip_color] = chip_count
+        print(f"{self.name}'s ${player_bet_amount} bet - {displayed_bet}")
+
+
+    """
     def print_current_main_bet(self, seat):
         player_bet = self.main_bets[seat]
         displayed_bet = {}
@@ -380,6 +395,7 @@ class Player:
             if (chip_count > 0):
                 displayed_bet[chip_color] = chip_count
         print(f"{self.name}'s ${self.side_bet_amounts[seat][side_bet_index]} bet - {displayed_bet}")
+    """
 
     # Whole number float cleanup helper functions
     def cast_whole_number_chip_pool_balance_to_int(self):
@@ -387,11 +403,20 @@ class Player:
         if (chip_pool_balance_fraction == 0):
             self.chip_pool_balance = int(self.chip_pool_balance)
 
-    def clean_up_fractions(self, seat):
-        if self.main_bet_amounts[seat] != None:
-            bet_amount_fraction = self.main_bet_amounts[seat] % 1
-            if (bet_amount_fraction == 0):
-                self.main_bet_amounts[seat] = int(self.main_bet_amounts[seat])
+    def clean_up_fractions(self, seat_name, player_side_bet_index):
+        # Clean up bet amounts /w trailing 0s for display --> 10.0 to 10, 3.0 to 3, etc.
+        if player_side_bet_index == None:
+            if self.main_bet_amounts[seat_name] != None:
+                bet_amount_fraction = self.main_bet_amounts[seat_name] % 1
+                if (bet_amount_fraction == 0):
+                    self.main_bet_amounts[seat_name] = int(self.main_bet_amounts[seat_name])
+        else:
+            if self.side_bet_amounts[seat_name][player_side_bet_index] != None:
+                bet_amount_fraction = self.side_bet_amounts[seat_name][player_side_bet_index] % 1
+                if (bet_amount_fraction == 0):
+                    self.side_bet_amounts[seat_name][player_side_bet_index] = (
+                        int(self.side_bet_amounts[seat_name][player_side_bet_index]))
+        # Clean up chip balance /w trailing 0s for display --> 98.0 to 98, etc.
         chip_pool_balance_fraction = self.chip_pool_balance % 1
         if (chip_pool_balance_fraction == 0):
             self.chip_pool_balance = int(self.chip_pool_balance)
@@ -404,23 +429,24 @@ class Player:
         self.main_bet_winnings[seat_name] = empty_bet
         self.main_bet_winnings_amounts[seat_name] = 0
 
-
     def init_side_bet_fields(self, seat_name, side_bet_name):
-        self.placed_side_bet_names[seat_name] = [side_bet_name]
+        self.placed_side_bet_names[seat_name].append(side_bet_name)
         empty_bet = dict.fromkeys(bjo.chip_names, 0)
-        self.side_bets[seat_name] = [empty_bet]
-        self.side_bet_amounts[seat_name] = [0]
-        self.side_bet_winnings[seat_name] = [empty_bet]
-        self.side_bet_winnings_amounts[seat_name] = [0]
-
+        self.side_bets[seat_name].append(empty_bet)
+        self.side_bet_amounts[seat_name].append(0)
+        self.side_bet_winnings[seat_name].append(empty_bet)
+        self.side_bet_winnings_amounts[seat_name].append(0)
 
     # Bet clear isn't needed unless Player moves seats or leaves the game
 
-
     # Bet manipulation helper functions
-    def increase_current_bet(self, seat, key):
+    def increase_current_bet(self, seat_name, player_side_bet_index, key):
+        # Adapt this function to work for side bets
         chip_color = prutils.key_to_chip_default_bindings[key]
-        player_bet = self.main_bets[seat]
+        if player_side_bet_index == None:
+            player_bet = self.main_bets[seat_name]
+        else:
+            player_bet = self.side_bets[seat_name][player_side_bet_index]
         if (self.chips[chip_color] == 0):
             sys.stderr.write(f"Cannot add {chip_color} (${bjo.chips[chip_color]}) chip - not enough chips of this type in {self.name}'s chip pool!\n")
             self.print_player_chip_pool()
@@ -429,36 +455,64 @@ class Player:
             self.chips[chip_color] -= 1
             player_bet[chip_color] += 1
             chip_worth = bjo.chips[chip_color]
-            self.main_bet_amounts[seat] += chip_worth
             self.chip_pool_balance -= chip_worth
-            self.clean_up_fractions(seat)
-            self.print_current_main_bet(seat)
+            if player_side_bet_index == None:
+                self.main_bet_amounts[seat_name] += chip_worth
+            else:
+                self.side_bet_amounts[seat_name][player_side_bet_index] += chip_worth
+            self.clean_up_fractions(seat_name, player_side_bet_index)
+            self.print_current_bet(seat_name, player_side_bet_index)
+            #self.print_current_main_bet(seat_name)
 
-    def decrease_current_bet(self, seat, key):
+    def decrease_current_bet(self, seat_name, player_side_bet_index, key):
+        # Adapt this function to work for side bets
         chip_color = prutils.key_to_chip_decrement_bindings[key]
-        player_bet = self.main_bets[seat]
+        if player_side_bet_index == None:
+            player_bet = self.main_bets[seat_name]
+        else:
+            player_bet = self.side_bets[seat_name][player_side_bet_index]
         if player_bet[chip_color] > 0:
             player_bet[chip_color] -= 1
             self.chips[chip_color] += 1
             chip_worth = bjo.chips[chip_color]
-            self.main_bet_amounts[seat] -= chip_worth
+            if player_side_bet_index == None:
+                self.main_bet_amounts[seat_name] -= chip_worth
+            else:
+                self.side_bet_amounts[seat_name][player_side_bet_index] -= chip_worth
             self.chip_pool_balance += chip_worth
-            self.clean_up_fractions(seat)
-            self.print_current_main_bet(seat)
+            self.clean_up_fractions(seat_name, player_side_bet_index)
+            self.print_current_bet(seat_name, player_side_bet_index)
+            #self.print_current_main_bet(seat_name)
     
-    def reset_current_bet(self, seat):
-        player_bet = self.main_bets[seat]
-        player_bet_values = self.main_bet_amounts
+    def reset_current_bet(self, seat_name, player_side_bet_index):
+        # Adapt this function to work for side bets
+        if player_side_bet_index == None:
+            player_bet = self.main_bets[seat_name]
+            player_bet_values = self.main_bet_amounts
+        else:
+            player_bet = self.side_bets[seat_name][player_side_bet_index]
+            player_bet_values = self.side_bet_amounts
         #print(player_bet)
         for chip_color, chip_count in player_bet.items():
             chip_worth = bjo.chips[chip_color]
+            self.chips[chip_color] += chip_count
+            self.chip_pool_balance += chip_worth*chip_count
+            """
             for chip in range(0, chip_count):
                 self.chips[chip_color] += 1
                 self.chip_pool_balance += chip_worth
+            """
             player_bet[chip_color] = 0
-            player_bet_values[seat] = 0
-        self.clean_up_fractions(seat)
-        print(f"Reset {self.name}'s bet to ${self.main_bet_amounts[seat]}!")
+        if player_side_bet_index == None:
+            player_bet_values[seat_name] = 0
+            self.clean_up_fractions(seat_name, player_side_bet_index)
+            print(f"Reset {self.name}'s main bet to ${self.main_bet_amounts[seat_name]}!")
+        else:
+            player_bet_values[seat_name][player_side_bet_index] = 0
+            self.clean_up_fractions(seat_name, player_side_bet_index)
+            print(f"Reset {self.name}'s side bet of '{self.placed_side_bet_names[seat_name][player_side_bet_index]}'", end='')
+            print(f" to ${self.side_bet_amounts[seat_name][player_side_bet_index]}!")
+            
 
     def get_chips(self):
         pass
@@ -470,6 +524,8 @@ class Player:
         pass
 
     def skip_bet(self):
+        # Todo AB: Write out skip_bet()
+
         pass
 
     def add_seat(self): # Todo AB: How to propagate seat adding/moving/leaving to blackjack_fsm.py
@@ -493,6 +549,62 @@ class Player:
         print(char)
     """
 
+
+    def get_bet_input_character(self, min_bet, max_bet, seat_name, player_side_bet_index):
+        # Todo AB: Make sure the above code scales with player making multiple hand bets
+        key = msvcrt.getch().decode('utf-8') # Get a key (as a byte string) and decode it
+        match key:
+            case 'v':
+                prutils.view_chip_betting_interface()
+            case 'd':
+                self.print_player_chip_pool()
+            case 'p':
+                self.print_current_bet(seat_name, player_side_bet_index)
+            case 'r':
+                self.reset_current_bet(seat_name, player_side_bet_index)
+            case 'f':
+                if player_side_bet_index == None:
+                    player_bet_value = self.main_bet_amounts[seat_name]
+                else:
+                    player_bet_value = self.side_bet_amounts[seat_name][player_side_bet_index]
+                fraction = player_bet_value % 1
+                if (fraction != 0):
+                    sys.stderr.write(f"Invalid (fractional) bet amount of ${player_bet_value} - please resubmit a bet /w an even number of Pink chips!\n")
+                elif (player_bet_value < min_bet):
+                    sys.stderr.write(f"{self.name}'s ${player_bet_value} bet is below allowed minimum, please submit a bet between inclusive bounds of ${min_bet} and ${max_bet}\n")
+                elif (player_bet_value > max_bet):
+                    sys.stderr.write(f"{self.name}'s ${player_bet_value} bet is above allowed maximum, please submit a bet between inclusive bounds of ${min_bet} and ${max_bet}\n")
+                else:
+                    return True # finalize bet for current seat
+            case 's':
+                self.skip_bet(seat_name, player_side_bet_index)
+            case '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9':
+                self.increase_current_bet(seat_name, player_side_bet_index, key)
+                #prutils.print_player_chip_pool()
+                #self.print_current_main_bet()
+            case '!' | '@' | '#' | '$' | '%' | '^' | '&' | '*' | '(':
+                self.decrease_current_bet(seat_name, player_side_bet_index, key)
+                #prutils.print_player_chip_pool()
+                #self.print_current_main_bet()
+            case 'g' | 'c' | 'b' | 'm' | 'a' | 'l':
+                match key:
+                    case 'g':
+                        self.get_chips() # Todo AB: implement get_chips()
+                    case 'c':
+                        self.color_up() # Todo AB: implement color_up()
+                    case 'b':
+                        self.break_down() # Todo AB: implement break_down()
+                    case 'm':
+                        self.skip_bet() # Todo AB: implement skip_bet()
+                    case 'a':
+                        self.add_seat() # Todo AB: implement add_seat()
+                    case 'l':
+                        self.leave_seat() # Todo AB: implement leave_table()
+            case other:
+                sys.stderr.write(f"Invalid input '{key}'\n")
+                print("Provide a valid key or press 'v' to see valid key input options")
+
+    """
     def get_main_bet_input_character(self, min_table_bet, max_table_bet, seat_name):
         # Todo AB: Make sure the above code scales with player making multiple hand bets
         key = msvcrt.getch().decode('utf-8') # Get a key (as a byte string) and decode it
@@ -595,3 +707,4 @@ class Player:
             case other:
                 sys.stderr.write(f"Invalid input '{key}'\n")
                 print("Provide a valid key or press 'v' to see valid key input options")
+    """
