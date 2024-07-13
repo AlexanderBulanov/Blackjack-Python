@@ -306,7 +306,14 @@ class Player:
                     bet_type = getattr(self, key) # player.main_bets or player.side_bets
                     for seat, seat_number in self.occupied_seats.items():
                         if (flag == 'v'):
-                            print(f"\n    '{seat}': {bet_type[seat]}", end='')
+                            if key == 'side_bets':
+                                
+                                # FILL THIS IN
+                                # CHECK FOR SIDE BET HERE
+
+                                pass
+                            else:
+                                print(f"\n    '{seat}': {bet_type[seat]}", end='')
                         elif ((key == 'main_bets') and (self.player_has_no_main_bets_in_play())):
                             print(" None", end='')
                             break
@@ -316,9 +323,13 @@ class Player:
                         else:
                             if ((seat_number != None) and (bet_type[seat] != None)):
                                 non_zero_bet_chips = {}
-                                for chip_color, chip_count in bet_type[seat].items():
-                                    if (chip_count != 0):
-                                        non_zero_bet_chips[chip_color] = chip_count
+                                # CHECK FOR SIDE BET HERE
+                                if key == 'side_bets':
+                                    pass
+                                elif key == 'main_bets':
+                                    for chip_color, chip_count in bet_type[seat].items():
+                                        if (chip_count != 0):
+                                            non_zero_bet_chips[chip_color] = chip_count
                                 print(f"\n    '{seat}': {non_zero_bet_chips}", end='')
                     print("")
                 case 'main_bet_amounts' | 'side_bet_amounts':

@@ -90,8 +90,8 @@ class BlackjackStateMachine:
              '3 or 4 Cards': 2
             }
         ]
-        self.table_active_side_bet_names = ['Perfect Pairs', 'Buster Blackjack'] # Names of up to 2 supported side bets copied over in INITIALIZING state
-        self.table_active_side_bet_limits = [(1, 100), (1, 100)] # Each side bet's limits are a tuple of (min_side_bet, max_side_bet); added in INITIALIZING state
+        self.table_active_side_bet_names = ['Perfect Pairs', 'Match the Dealer'] # Names of up to 2 supported side bets copied over in INITIALIZING state
+        self.table_active_side_bet_limits = [(1, 100), (1, 500)] # Each side bet's limits are a tuple of (min_side_bet, max_side_bet); added in INITIALIZING state
         self.table_active_side_bet_payout_tables = [
             {
              'Perfect Pair': 25,
@@ -99,11 +99,11 @@ class BlackjackStateMachine:
              'Red/Black Pair': 6
             },
             {
-             '8 or More Cards': 250,
-             '7 Cards': 50,
-             '6 Cards': 12,
-             '5 Cards': 4,
-             '3 or 4 Cards': 2
+             '2 Suited Matches': 20,
+             '1 Non-Suited & 1 Suited Match': 14,
+             '1 Suited Match': 10,
+             '2 Non-Suited Matches': 8,
+             '1 Non-Suited Match': 4
             }
         ] # Tables of up to 2 supported side bets copied over in INITIALIZING state (optionally updated)
         self.joining_restriction = 'NMSE' # Options - None, 'NMSE'
@@ -319,7 +319,7 @@ class BlackjackStateMachine:
         print("STARTING GAME WITH THE FOLLOWING PLAYERS:")
         for table_seat, seated_player in self.seated_players.items():
             if seated_player != None:
-                print(f"'{seated_player.name}' in seat #{table_seat}")
+                print(f"'{seated_player.name}' in Seat #{table_seat}")
                 #seated_player.print_player_stats()
                 # Initialize main bet fields for all occupied seats
                 for seat_name, seat_pos in seated_player.occupied_seats.items():
@@ -327,9 +327,10 @@ class BlackjackStateMachine:
                         seated_player.init_main_bet_fields(seat_name)
         # Initialize natural blackjack and side bet tracking dictionaries for each unique player
         for seated_player in set(self.seated_players.values()):
-            self.current_round_natural_blackjacks[seated_player] = []
-            self.current_round_placed_side_bets_1[seated_player] = []
-            self.current_round_placed_side_bets_2[seated_player] = []
+            if seated_player != None:
+                self.current_round_natural_blackjacks[seated_player] = []
+                self.current_round_placed_side_bets_1[seated_player] = []
+                self.current_round_placed_side_bets_2[seated_player] = []
         # Initialize first player (sitting leftmost w.r.t. dealer) to be active
         for seated_player in self.seated_players.values():
             if seated_player != None:
@@ -388,7 +389,6 @@ class BlackjackStateMachine:
         while True:
             # player_side_bet_index is None for main_bet, 0 if this is first side bet placed, 1 if this is second side bet
             if player.get_bet_input_character(min_bet, max_bet, seat_name, player_side_bet_index):
-                print("Exiting betting interface...")
                 break
 
 
@@ -454,7 +454,7 @@ class BlackjackStateMachine:
                             case other:
                                 sys.stderr.write(f"Invalid input '{key}'\n")
                                 print(f"Provide one of the following valid keys - 'y' to place a side bet of {side_bet_name}, 'n' to skip it this round.")
-
+                print("Exiting betting interface...")
 
 
 
@@ -518,6 +518,12 @@ class BlackjackStateMachine:
         self.dealer.hand_scores['center_seat'] = dealer_hand_score
 
     def handle_side_bets_if_any_placed(self):
+        # Pay all winning side bets
+
+        # Collect all losing side bets
+
+
+
         # Iterate over and handle all placed side bets for Side Bet #1
         if (len(self.current_round_natural_blackjacks.keys()) == 0):
             print(f"No players have placed Side Bet #1 of '{self.table_active_side_bet_names[0]}'")
@@ -1145,6 +1151,8 @@ class BlackjackStateMachine:
             case GameState.DEALING:
                 self.deal() # Todo AB: Update deal() to work with players occupying multiple seats
             case GameState.PRE_SCORING:
+                print(f"Placed {self.table_active_side_bet_names[0]} side bets:\n{self.current_round_placed_side_bets_1}")
+                print(f"Placed {self.table_active_side_bet_names[1]} side bets:\n{self.current_round_placed_side_bets_2}")
                 self.handle_side_bets_if_any_placed()
                 self.offer_early_surrender_if_used_at_table_to_all_players()
                 # Todo AB: Clean up and transition to betting if all players have surrendered in offer_early_surrender_if_used_at_table_to_all_players()
