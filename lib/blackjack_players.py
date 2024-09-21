@@ -408,29 +408,51 @@ class Player:
         print(f"{self.name}'s ${self.side_bet_amounts[seat][side_bet_index]} bet - {displayed_bet}")
     """
 
+    # Seat assignment helper functions
+    def swap_center_seat(self, new_center_seat):
+        current_seats = self.occupied_seats
+        current_center_seat = self.occupied_seats['center_seat']
+
+        
+
+
     # Whole number float cleanup helper functions
     def cast_whole_number_chip_pool_balance_to_int(self):
         chip_pool_balance_fraction = self.chip_pool_balance % 1
-        if (chip_pool_balance_fraction == 0):
+        if (chip_pool_balance_fraction == 0 and type(chip_pool_balance_fraction) == float):
             self.chip_pool_balance = int(self.chip_pool_balance)
 
-    def clean_up_fractions(self, seat_name, player_side_bet_index):
+    def clean_up_bet_amount_and_chip_pool_balance_fractions(self, seat_name, player_side_bet_index):
         # Clean up bet amounts /w trailing 0s for display --> 10.0 to 10, 3.0 to 3, etc.
         if player_side_bet_index == None:
             if self.main_bet_amounts[seat_name] != None:
                 bet_amount_fraction = self.main_bet_amounts[seat_name] % 1
-                if (bet_amount_fraction == 0):
+                if (bet_amount_fraction == 0 and type(bet_amount_fraction) == float):
                     self.main_bet_amounts[seat_name] = int(self.main_bet_amounts[seat_name])
         else:
             if self.side_bet_amounts[seat_name][player_side_bet_index] != None:
                 bet_amount_fraction = self.side_bet_amounts[seat_name][player_side_bet_index] % 1
-                if (bet_amount_fraction == 0):
+                if (bet_amount_fraction == 0 and type(bet_amount_fraction) == float):
                     self.side_bet_amounts[seat_name][player_side_bet_index] = (
                         int(self.side_bet_amounts[seat_name][player_side_bet_index]))
         # Clean up chip balance /w trailing 0s for display --> 98.0 to 98, etc.
+        self.cast_whole_number_chip_pool_balance_to_int()
+
+
+
+
+
+    def cast_whole_number_bet_winnings_amount_to_int(self):
+
+        # Todo AB: write cast function for bet_winnings_amount after chip transfer is complete in pay_winning_bet()
+
         chip_pool_balance_fraction = self.chip_pool_balance % 1
-        if (chip_pool_balance_fraction == 0):
+        if (chip_pool_balance_fraction == 0 and type(chip_pool_balance_fraction) == float):
             self.chip_pool_balance = int(self.chip_pool_balance)
+
+
+
+
 
     # Bet initialization helper functions
     def init_main_bet_fields(self, seat_name):
@@ -471,7 +493,7 @@ class Player:
                 self.main_bet_amounts[seat_name] += chip_worth
             else:
                 self.side_bet_amounts[seat_name][player_side_bet_index] += chip_worth
-            self.clean_up_fractions(seat_name, player_side_bet_index)
+            self.clean_up_bet_amount_and_chip_pool_balance_fractions(seat_name, player_side_bet_index)
             self.print_current_bet(seat_name, player_side_bet_index)
             #self.print_current_main_bet(seat_name)
 
@@ -491,7 +513,7 @@ class Player:
             else:
                 self.side_bet_amounts[seat_name][player_side_bet_index] -= chip_worth
             self.chip_pool_balance += chip_worth
-            self.clean_up_fractions(seat_name, player_side_bet_index)
+            self.clean_up_bet_amount_and_chip_pool_balance_fractions(seat_name, player_side_bet_index)
             self.print_current_bet(seat_name, player_side_bet_index)
             #self.print_current_main_bet(seat_name)
     
@@ -516,11 +538,11 @@ class Player:
             player_bet[chip_color] = 0
         if player_side_bet_index == None:
             player_bet_values[seat_name] = 0
-            self.clean_up_fractions(seat_name, player_side_bet_index)
+            self.clean_up_bet_amount_and_chip_pool_balance_fractions(seat_name, player_side_bet_index)
             print(f"Reset {self.name}'s main bet to ${self.main_bet_amounts[seat_name]}!")
         else:
             player_bet_values[seat_name][player_side_bet_index] = 0
-            self.clean_up_fractions(seat_name, player_side_bet_index)
+            self.clean_up_bet_amount_and_chip_pool_balance_fractions(seat_name, player_side_bet_index)
             print(f"Reset {self.name}'s side bet of '{self.placed_side_bet_names[seat_name][player_side_bet_index]}'", end='')
             print(f" to ${self.side_bet_amounts[seat_name][player_side_bet_index]}!")
             

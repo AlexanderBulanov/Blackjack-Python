@@ -13,13 +13,14 @@ import lib.blackjack_game_settings as bjs
 import lib.blackjack_game_objects as bjo
 
 
-class Test_WAITING:
+class Test_WAITING_Seat_Count_Independent:
     def test_blackjack_state_machine_beginning_state_is_WAITING(self):
         # Test
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
         assert test_machine.state == bjfsm.GameState.WAITING
 
+class Test_WAITING_One_Seat_per_Player:
     def test_blackjack_state_machine_transitions_to_STARTING_from_WAITING_after_one_player_starts_game(self, monkeypatch):
         # Setup
         num_of_decks = 1
@@ -32,7 +33,7 @@ class Test_WAITING:
         test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
         assert test_machine.state == bjfsm.GameState.STARTING
 
-    def test_first_player_Alex_correctly_assigned_to_seat_2(self, monkeypatch):
+    def test_first_player_Alex_successfully_sits_at_chosen_seat_2(self, monkeypatch):
         # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
@@ -44,7 +45,13 @@ class Test_WAITING:
         test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
         assert test_machine.seated_players[2].name == 'Alex'
 
-    def test_second_player_Jim_tries_to_sit_in_Alex_occupied_seat_2_then_chooses_seat_3_is_seated_correctly(self, monkeypatch):
+    def test_first_player_Alex_succesfully_adds_then_removes_seat_2_and_sits_at_different_chosen_seat_4(self, monkeypatch):
+        pass
+
+    def test_second_player_Jim_denied_sitting_in_Alex_occupied_seat_2(self, monkeypatch):
+        pass
+
+    def test_second_player_Jim_denied_sitting_at_Alex_occupied_seat_2_then_successfully_sits_at_different_chosen_seat_3(self, monkeypatch):
         # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
@@ -59,6 +66,9 @@ class Test_WAITING:
         assert test_machine.seated_players[2].name == 'Alex'
         assert test_machine.seated_players[3].name == 'Jim'
         assert test_machine.state == bjfsm.GameState.STARTING
+
+    def test_second_player_Jim_tries_to_sit_in_Alex_occupied_seat_2_then_adds_and_removes_seat_3_and_sits_at_different_chosen_seat_4(self, monkeypatch):
+        pass
 
     def test_Alex_Jim_John_correctly_seated_in_seats_2_3_7_respectively(self, monkeypatch):
         # Setup
@@ -97,6 +107,44 @@ class Test_WAITING:
         assert test_machine.seated_players[6].name == 'Bob'
         assert test_machine.seated_players[7].name == 'John'
         assert test_machine.state == bjfsm.GameState.STARTING
+
+
+class Test_WAITING_Up_to_Two_Seats_per_Player:
+    def test_blackjack_state_machine_transitions_to_STARTING_from_WAITING_after_two_players_with_two_seats_each_start_game(self, monkeypatch):
+        pass
+    
+    def test_first_player_Alex_successfully_sits_at_adjacent_seats_2_and_3_with_center_seat_2(self, monkeypatch):
+        pass
+
+    def test_first_player_Alex_successfully_sits_at_adjacent_seats_2_and_3_with_center_seat_3(self, monkeypatch):
+        pass
+
+    def test_first_player_Alex_denied_sitting_at_non_adjacent_seats_2_and_4(self, monkeypatch):
+        pass
+
+    def test_second_player_Jim_cannot_sit_in_Alex_occupied_seats_2_and_3(self, monkeypatch):
+        pass
+
+    def test_second_player_Jim_successfully_selects_seats_4_5_after_trying_to_sit_in_Alex_occupied_seats_2_3(self, monkeypatch):
+        pass
+
+    def test_second_player_Jim_successfully_selects_adjacent_seats_4_5_after_first_player_Alex_sits_at_seats_2_3(self, monkeypatch):
+        pass
+
+    def test_second_player_Jim_successfully_submits_adjacent_seats_4_5_after_Alex_sits_at_seats_2_3(self, monkeypatch):
+        pass
+
+    
+
+
+
+
+
+
+
+class Test_WAITING_Up_to_Three_Seats_per_Player:
+    pass
+
 
 class Test_STARTING:
     def test_blackjack_state_machine_transitions_to_SHUFFLING_from_STARTING(self, monkeypatch):
@@ -569,8 +617,7 @@ class Test_SHUFFLING:
             #print(card,"has",card_occurrence_counts[card],"occurrences in the shoe")
             assert card_occurrence_counts[card] == 8
 
-
-class Test_BETTING_One_Hand_per_Player:
+class Test_MAIN_BETTING_Hand_Independent:
     def test_blackjack_state_machine_transitions_to_DEALING_from_BETTING(self, monkeypatch):
         # Setup
         num_of_decks = 1
@@ -584,13 +631,14 @@ class Test_BETTING_One_Hand_per_Player:
         test_machine.step() # executes shuffle_cut_and_burn() in SHUFFLING and transitions to BETTING
         # Test
         #simulated_char_inputs = [b'1', b'3', b'4', b'5', b'f']
-        simulated_char_inputs = [b'1', b'f'] # player Alex in seat 2 makes a bet of 1 White chip
+        simulated_char_inputs = [b'1', b'f', b'n', b'n'] # player Alex in seat 2 makes a bet of 1 White chip
         iterable_simulated_char_inputs = iter(simulated_char_inputs)
         monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_char_inputs))
         test_machine.step() # executes get_all_players_bets() in BETTING and transitions to DEALING
         assert test_machine.state == bjfsm.GameState.DEALING
 
-    def test_one_hand_bet_of_5_by_player_Alex_in_seat_2_handled_correctly(self, monkeypatch):
+class Test_MAIN_BETTING_One_Hand_per_Player:
+    def test_one_hand_bet_of_50_in_Whites_by_player_Alex_in_seat_2_handled_correctly(self, monkeypatch):
         # Setup
         num_of_decks = 1
         test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
@@ -604,7 +652,7 @@ class Test_BETTING_One_Hand_per_Player:
         test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
         test_machine.step() # executes shuffle_cut_and_burn() in SHUFFLING and transitions to BETTING
         # Test
-        simulated_player_bet_char_inputs = [b'1']*50 + [b'f']
+        simulated_player_bet_char_inputs = [b'1']*50 + [b'f', b'n', b'n']
         iterable_simulated_player_bet_char_inputs = iter(simulated_player_bet_char_inputs)
         monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_player_bet_char_inputs))
         test_machine.step() # executes get_all_players_bets() in BETTING and transitions to DEALING
@@ -626,7 +674,7 @@ class Test_BETTING_One_Hand_per_Player:
         test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
         test_machine.step() # executes shuffle_cut_and_burn() in SHUFFLING and transitions to BETTING
         # Test
-        simulated_player_bet_char_inputs = [b'3', b'f', b'3', b'3', b'f']
+        simulated_player_bet_char_inputs = [b'3', b'f', b'n', b'n', b'3', b'3', b'f', b'n', b'n']
         iterable_simulated_player_bet_char_inputs = iter(simulated_player_bet_char_inputs)
         monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_player_bet_char_inputs))
         test_machine.step() # executes get_all_players_bets() in BETTING and transitions to DEALING
@@ -651,7 +699,7 @@ class Test_BETTING_One_Hand_per_Player:
         test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
         test_machine.step() # executes shuffle_cut_and_burn() in SHUFFLING and transitions to BETTING
         # Test
-        simulated_player_bet_char_inputs = [b'4']*1 + [b'f'] + [b'4']*3 + [b'f'] + [b'4']*2 + [b'f']
+        simulated_player_bet_char_inputs = [b'4']*1 + [b'f', b'n', b'n'] + [b'4']*3 + [b'f', b'n', b'n'] + [b'4']*2 + [b'f', b'n', b'n']
         iterable_simulated_player_bet_char_inputs = iter(simulated_player_bet_char_inputs)
         monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_player_bet_char_inputs))
         test_machine.step() # executes get_all_players_bets() in BETTING and transitions to DEALING
@@ -665,9 +713,48 @@ class Test_BETTING_One_Hand_per_Player:
         assert player_Alex.chips['Blue'] == 12
         assert player_Kim.chips['Blue'] == 13
 
-class Test_BETTING_Multiple_Hands_per_Player:
+class Test_MAIN_BETTING_Two_Hands_per_Player:
     def test_two_hand_bet_of_5_and_10_in_Reds_by_player_Alex_in_seats_2_and_3_handled_correctly(self, monkeypatch):
+        # Setup
+        num_of_decks = 1
+        test_machine = bjfsm.BlackjackStateMachine(num_of_decks)
+        simulated_player_init_input_values = ['Alex', '2']
+        iterable_simulated_player_init_input_values = iter(simulated_player_init_input_values)
+        simulated_player_init_char_values = [b's']
+        iterable_simulated_player_init_char_values = iter(simulated_player_init_char_values)
+        monkeypatch.setattr('builtins.input', lambda _: next(iterable_simulated_player_init_input_values))
+        monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_player_init_char_values))
+        test_machine.step() # executes wait_for_players_to_join() in WAITING and transitions to STARTING
+        test_machine.step() # executes start_game() in STARTING and transitions to SHUFFLING
+        test_machine.step() # executes shuffle_cut_and_burn() in SHUFFLING and transitions to BETTING
+        # Test
+        simulated_player_bet_char_inputs = [b'1']*50 + [b'f', b'n', b'n']
+        iterable_simulated_player_bet_char_inputs = iter(simulated_player_bet_char_inputs)
+        monkeypatch.setattr('msvcrt.getch', lambda: next(iterable_simulated_player_bet_char_inputs))
+        test_machine.step() # executes get_all_players_bets() in BETTING and transitions to DEALING
+        player_Alex = test_machine.seated_players[2]
+        assert player_Alex.chip_pool_balance == 500-50
+        assert player_Alex.chips['White'] == 0
         pass
+
+    def test_two_hand_bets_of_5_10_and_15_20_in_Reds_by_players_Ahmed_and_Alex_in_seats_1_2_and_3_4_handled_correctly(self, monkeypatch):
+        pass
+
+    def test_two_hand_bets_of_10_20_and_30_40_and_50_60_in_Blues_by_players_Ahmed_Alex_Kim_in_seats_1_2_and_4_5_and_6_7_handled_correctly(self, monkeypatch):
+        pass
+
+class Test_MAIN_BETTING_Three_Hands_per_Player:
+    def test_three_hand_bet_of_5_10_15_in_Reds_by_player_Alex_in_seats_2_3_4_handled_correctly(self, monkeypatch):
+        pass
+
+    def test_three_hand_bets_of_10_20_30_and_40_50_60_in_Blues_by_players_Ahmed_and_Alex_in_seats_1_2_3_and_5_6_7_handled_correctly(self, monkeypatch):
+        pass
+
+class Test_SIDE_BETTING_One_Hand_per_Player:
+    pass
+
+class Test_SIDE_BETTING_Multiple_Hands_per_Player:
+    pass
 
 
 class Test_DEALING_One_Hand_per_Player:

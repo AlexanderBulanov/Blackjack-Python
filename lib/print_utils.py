@@ -20,7 +20,7 @@ key_to_chip_default_bindings = {
     '6': 'Black',
     '7': 'Purple',
     '8': 'Yellow',
-    '9': 'Brown',
+    '9': 'Brown'
 }
 
 key_to_chip_decrement_bindings = {
@@ -32,7 +32,7 @@ key_to_chip_decrement_bindings = {
     '^': 'Black',
     '&': 'Purple',
     '*': 'Yellow',
-    '(': 'Brown',
+    '(': 'Brown'
 }
 
 special_main_bet_key_bindings = {
@@ -47,7 +47,7 @@ special_main_bet_key_bindings = {
     'b': 'break down',
     'm': 'move seat',
     'a': 'add seat',
-    'l': 'leave seat',
+    'l': 'leave seat'
 }
 
 player_turn_core_actions_keybindings = {
@@ -65,6 +65,54 @@ player_turn_special_actions_keybindings = {
     'b': 'break down'
 }
 
+# Usage - print(f"Add seat {seat_selection_bindings[index]}")
+seat_selection_bindings = {
+    '1': '#1',
+    '2': '#2',
+    '3': '#3',
+    '4': '#4',
+    '5': '#5',
+    '6': '#6',
+    '7': '#7'
+}
+
+# Usage - print(f"Remove seat {seat_selection_bindings[index]}")
+seat_deselection_bindings = {
+    '!': '#1',
+    '@': '#2',
+    '#': '#3',
+    '$': '#4',
+    '%': '#5',
+    '^': '#6',
+    '&': '#7'
+}
+
+special_seat_selection_keybindings = {
+    'v': 'view seat selection interface',
+    'r': 'reset chosen seats',
+    'c': 'confirm chosen seats'
+}
+
+def view_seat_selection_interface():
+    print("Press the following number keys to select seats, symbol keys to deselect seats, and letter keys to execute special actions:")
+    for seat_add_keybind, seat_name_to_add in seat_selection_bindings.items():
+        print(f"{seat_add_keybind}: Add seat {seat_name_to_add}", end='')
+        print_seat_selection_interface_padding()
+        seat_remove_keybind = list(seat_deselection_bindings.keys())[int(seat_add_keybind)-1]
+        seat_name_to_remove = seat_deselection_bindings[seat_remove_keybind]
+        print(f"{seat_remove_keybind}: Remove seat {seat_name_to_remove}", end='')
+        if len(list(special_seat_selection_keybindings.keys())) >= int(seat_add_keybind):
+            print_seat_selection_interface_padding()
+            special_seat_selection_keybind = list(special_seat_selection_keybindings.keys())[int(seat_add_keybind)-1]
+            special_seat_selection_keybind_description = special_seat_selection_keybindings[special_seat_selection_keybind]
+            print(f"{special_seat_selection_keybind}: {special_seat_selection_keybind_description}")
+        else:
+            print()
+
+def print_seat_selection_interface_padding():
+    for num in range(0, 4):
+        print(" ", end='')
+
 def print_betting_interface_padding(chip_color):
         padding_spaces = 14
         for char in str(bjo.chips[chip_color]):
@@ -74,7 +122,7 @@ def print_betting_interface_padding(chip_color):
         for num in range(0, padding_spaces):
             print(" ", end='')
 
-def print_letter_keybinding(chip_keybind, chip_color):
+def print_chip_bet_keybinding(chip_keybind, chip_color):
     if ((int(chip_keybind)-1) < 6):
         other_keybindings_list = list(special_main_bet_key_bindings.keys())
         # Print 6 keybindings in one column, then 6 more in the padded one to the right
@@ -102,7 +150,7 @@ def view_chip_betting_interface():
         print_betting_interface_padding(chip_color)
         chip_decrement_keybind = list(key_to_chip_decrement_bindings.keys())[int(chip_keybind)-1]
         print(f"{chip_decrement_keybind}: -${bjo.chips[chip_color]} ({chip_color})", end='')
-        print_letter_keybinding(chip_keybind, chip_color)
+        print_chip_bet_keybinding(chip_keybind, chip_color)
 
 
 def view_game_launch_options(): # Todo AB: Implement
